@@ -3,28 +3,30 @@ package com.example.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.cors.reactive.CorsWebFilter;
+import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
 
 @Configuration
 public class CorsConfig {
+
         @Bean
-        public CorsConfigurationSource corsConfigurationSource() {
-                CorsConfiguration configuration = new CorsConfiguration();
-                configuration.setAllowedOrigins(
-                                Arrays.asList("http://localhost:3000", "http://localhost:4173",
-                                                "http://localhost:5173"));
-                configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE",
-                                "OPTIONS")); // Allowed methods
-                configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type",
-                                "Accept", "x-no-retry"));
-                configuration.setAllowCredentials(true);
-                configuration.setMaxAge(3600L);
-                // How long the response from a pre-flight request can be cached by clients
+        public CorsWebFilter corsFilter() {
+                CorsConfiguration config = new CorsConfiguration();
+                config.setAllowedOrigins(Arrays.asList(
+                        "http://localhost:3000",
+                        "http://localhost:4173",
+                        "http://localhost:5173"
+                ));
+                config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+                config.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept", "x-no-retry"));
+                config.setAllowCredentials(true);
+                config.setMaxAge(3600L);
+
                 UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-                source.registerCorsConfiguration("/**", configuration); // Apply this configuration to all paths
-                return source;
+                source.registerCorsConfiguration("/**", config);
+
+                return new CorsWebFilter(source);
         }
 }

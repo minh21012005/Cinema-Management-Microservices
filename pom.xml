@@ -15,6 +15,7 @@
         <module>api-gateway</module>
         <module>user-service</module>
         <module>common</module>
+        <module>auth-service</module>
     </modules>
 
     <properties>
