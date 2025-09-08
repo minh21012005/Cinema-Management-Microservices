@@ -1,0 +1,42 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      # Bật auto-discovery route từ Eureka
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+
+      # Nếu muốn định nghĩa route thủ công (tùy chỉnh filter), dùng phần này
+      routes:
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=/users/**
+          filters:
+            - name: StripPrefix
+              args:
+                parts: 1
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+    # Chỉ dùng khi chạy local, nếu deploy nhiều máy nên để hostname
+    ip-address: 127.0.0.1
+    hostname: localhost
+
+minhnb:
+  jwt:
+    base64-secret: Muw9kQMoEFTnfKm5sHbvqus3GvSYF4mSCL3ay11sjkRGLpMnvBTpsRF/bDHZmuI5ROhJ23QuZhOb1Cx3OZxy0w==
+    access-token-validity-in-seconds: 86400
+    refresh-token-validity-in-seconds: 8640000
+
