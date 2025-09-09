@@ -22,7 +22,7 @@ public class ResLoginDTO {
     public static class UserLogin {
         private long id;
         private String email;
-        private RoleDTO roleDTO;
+        private RoleDTO role;
     }
 
     @Getter

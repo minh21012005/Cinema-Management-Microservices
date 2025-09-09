@@ -1,7 +1,10 @@
 package com.example.controller;
 
+import com.example.domain.entity.RoleDTO;
 import com.example.domain.entity.UserProfileDTO;
 import com.example.domain.request.CreateUserRequest;
+import com.example.domain.request.ReqLoginDTO;
+import com.example.domain.response.ResLoginDTO;
 import com.example.domain.response.ResUserDTO;
 import com.example.entity.AuthUser;
 import com.example.entity.Role;
@@ -9,14 +12,20 @@ import com.example.service.AuthUserService;
 import com.example.service.RoleService;
 import com.example.client.UserClient;
 import com.example.util.JwtUtil;
+import com.example.util.SecurityUtil;
 import com.example.util.annotation.ApiMessage;
 import com.example.util.error.IdInvalidException;
 import jakarta.validation.Valid;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -101,5 +110,54 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.CREATED).body(res);
     }
 
+    @PostMapping("/auth/login")
+    public ResponseEntity<ResLoginDTO> login(@Valid @RequestBody ReqLoginDTO loginDto) {
+        // Nạp input gồm username/password vào Security
+        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
+                loginDto.getUsername(), loginDto.getPassword());
 
+        // xác thực người dùng => cần viết hàm loadUserByUsername
+        Authentication authentication = authenticationManagerBuilder.getObject()
+                .authenticate(authenticationToken);
+
+        // set thông tin người dùng đăng nhập vào context (có thể sử dụng sau này)
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        ResLoginDTO res = new ResLoginDTO();
+        AuthUser currentUserDB = this.authUserService.handleGetUserByUsername(loginDto.getUsername());
+        if (currentUserDB != null) {
+            RoleDTO roleDTO = new RoleDTO();
+            roleDTO.setId(currentUserDB.getRole().getId());
+            roleDTO.setName(currentUserDB.getRole().getName());
+
+            ResLoginDTO.UserLogin userLogin = new ResLoginDTO.UserLogin(
+                    currentUserDB.getId(),
+                    currentUserDB.getEmail(),
+                    roleDTO);
+            res.setUser(userLogin);
+        }
+
+        // create access token
+        String access_token = this.jwtUtil.createAccessToken(authentication.getName(), res);
+        res.setAccessToken(access_token);
+
+        // create refresh token
+        String refresh_token = this.jwtUtil.createRefreshToken(loginDto.getUsername(), res);
+
+        // update user
+        this.authUserService.updateUserToken(refresh_token, loginDto.getUsername());
+
+        // set cookies
+        ResponseCookie resCookies = ResponseCookie
+                .from("refresh_token", refresh_token)
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(refreshTokenExpiration)
+                .build();
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, resCookies.toString())
+                .body(res);
+    }
 }
