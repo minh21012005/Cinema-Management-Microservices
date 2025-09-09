@@ -4,8 +4,9 @@ server:
 spring:
   application:
     name: user-service
+
   datasource:
-      url: jdbc:mysql://localhost:3306/cnm
+      url: jdbc:mysql://localhost:3306/user_db
       username: root
       password: 21012005
       driver-class-name: com.mysql.cj.jdbc.Driver
@@ -17,6 +18,18 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect
+
+  rabbitmq:
+    host: localhost   # đổi thành host RabbitMQ trong docker/k8s nếu cần
+    port: 5672
+    username: guest
+    password: guest
+
+app:
+  rabbitmq:
+    exchange: user.exchange
+    queue: user.created.queue
+    routing-key: user.created
 
 eureka:
   client:

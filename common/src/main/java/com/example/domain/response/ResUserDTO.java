@@ -1,6 +1,6 @@
 package com.example.domain.response;
 
-import com.example.domain.entity.Role;
+import com.example.domain.entity.RoleDTO;
 import com.example.util.constant.GenderEnum;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -21,6 +21,6 @@ public class ResUserDTO {
     private String address;
     private LocalDate dateOfBirth;
     private String phone;
-    private Role role;
+    private RoleDTO roleDTO;
     private boolean enabled;
 }

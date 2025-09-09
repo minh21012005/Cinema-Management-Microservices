@@ -1,0 +1,35 @@
+package com.example.config;
+
+import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.rabbit.connection.ConnectionFactory;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class RabbitMQConfig {
+    @Value("${app.rabbitmq.queue}")
+    private String userCreatedQueue;
+
+    @Bean
+    public Queue userCreatedQueue() {
+        return new Queue(userCreatedQueue, true);
+    }
+
+    // 👇 Dùng JSON converter để gửi message
+    @Bean
+    public Jackson2JsonMessageConverter messageConverter() {
+        return new Jackson2JsonMessageConverter();
+    }
+
+    // RabbitTemplate dùng để gửi message
+    @Bean
+    public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory, Jackson2JsonMessageConverter converter) {
+        RabbitTemplate template = new RabbitTemplate(connectionFactory);
+        template.setMessageConverter(converter); // Sử dụng JSON converter
+        return template;
+    }
+}
+

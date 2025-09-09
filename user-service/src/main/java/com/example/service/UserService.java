@@ -1,9 +1,8 @@
 package com.example.service;
 
-
-
-import com.example.domain.entity.Role;
-import com.example.domain.entity.User;
+import com.example.domain.entity.RoleDTO;
+import com.example.entity.Role;
+import com.example.entity.User;
 import com.example.domain.request.CreateUserRequest;
 import com.example.domain.response.ResCreateUserDTO;
 import com.example.domain.response.ResUserDTO;
@@ -113,6 +112,11 @@ public class UserService {
 
     public ResUserDTO convertToResUserDTO(User user) {
         ResUserDTO res = new ResUserDTO();
+        RoleDTO roleDTO = new RoleDTO();
+
+        roleDTO.setId(user.getRole().getId());
+        roleDTO.setName(user.getRole().getName());
+
         res.setId(user.getId());
         res.setEmail(user.getEmail());
         res.setName(user.getName());
@@ -120,7 +124,7 @@ public class UserService {
         res.setAddress(user.getAddress());
         res.setDateOfBirth(user.getDateOfBirth());
         res.setPhone(user.getPhone());
-        res.setRole(user.getRole());
+        res.setRoleDTO(roleDTO);
         res.setEnabled(user.isEnabled());
         return res;
     }

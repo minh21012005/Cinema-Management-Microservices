@@ -6,7 +6,7 @@ spring:
     name: auth-service
 
   datasource:
-    url: jdbc:mysql://localhost:3306/cnm
+    url: jdbc:mysql://localhost:3306/auth_db
     username: root
     password: 21012005
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -18,6 +18,16 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect
+
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+
+app:
+  rabbitmq:
+    queue: user.created.queue
 
 eureka:
   client:

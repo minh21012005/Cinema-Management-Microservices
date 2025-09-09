@@ -45,7 +45,7 @@ public class JwtUtil {
 
         // hardcode permission (for testing)
         List<String> listAuthority = new ArrayList<String>();
-        String role = dto.getUser().getRole().getName();
+        String role = dto.getUser().getRoleDTO().getName();
         listAuthority.add(role);
 
         // @formatter:off
