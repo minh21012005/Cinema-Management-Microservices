@@ -14,28 +14,12 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class RabbitMQConfig {
 
-    @Value("${app.rabbitmq.exchange}")
-    private String exchangeName;
-
     @Value("${app.rabbitmq.queue}")
-    private String queueName;
-
-    @Value("${app.rabbitmq.routing-key}")
-    private String routingKey;
+    private String userCreatedQueue;
 
     @Bean
-    public DirectExchange userExchange() {
-        return new DirectExchange(exchangeName);
-    }
-
-    @Bean
-    public Queue userQueue() {
-        return new Queue(queueName, true);
-    }
-
-    @Bean
-    public Binding bindingUserQueue(Queue userQueue, DirectExchange userExchange) {
-        return BindingBuilder.bind(userQueue).to(userExchange).with(routingKey);
+    public Queue userCreatedQueue() {
+        return new Queue(userCreatedQueue, true);
     }
 
     // 👇 Dùng JSON converter để gửi message

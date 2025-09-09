@@ -22,7 +22,6 @@ public class ResLoginDTO {
     public static class UserLogin {
         private long id;
         private String email;
-        private String name;
         private RoleDTO roleDTO;
     }
 
@@ -41,7 +40,6 @@ public class ResLoginDTO {
     public static class UserInsideToken {
         private long id;
         private String email;
-        private String name;
     }
 
 }

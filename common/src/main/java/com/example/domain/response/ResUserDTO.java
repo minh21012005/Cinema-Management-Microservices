@@ -17,10 +17,4 @@ public class ResUserDTO {
     private Long id;
     private String email;
     private String name;
-    private GenderEnum gender;
-    private String address;
-    private LocalDate dateOfBirth;
-    private String phone;
-    private RoleDTO roleDTO;
-    private boolean enabled;
 }

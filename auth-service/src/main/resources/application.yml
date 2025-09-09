@@ -13,7 +13,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: create
     show-sql: true
     properties:
       hibernate:
@@ -27,7 +27,9 @@ spring:
 
 app:
   rabbitmq:
+    exchange: user.exchange
     queue: user.created.queue
+    routing-key: user.created
 
 eureka:
   client:
