@@ -7,6 +7,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.List;
+
 @Getter
 @Setter
 public class ResLoginDTO {
@@ -23,6 +25,7 @@ public class ResLoginDTO {
         private long id;
         private String email;
         private RoleDTO role;
+        private List<String> permissions;
     }
 
     @Getter
@@ -40,6 +43,7 @@ public class ResLoginDTO {
     public static class UserInsideToken {
         private long id;
         private String email;
+        private String role;
     }
 
 }

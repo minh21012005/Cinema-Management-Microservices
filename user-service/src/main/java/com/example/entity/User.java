@@ -1,5 +1,6 @@
 package com.example.entity;
 
+import com.example.domain.entity.BaseEntity;
 import com.example.util.constant.GenderEnum;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -14,12 +15,7 @@ import java.time.LocalDate;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class User {
-
-    @Id
-    @Column(nullable = false, unique = true)
-    private Long id;
-
+public class User extends BaseEntity<Long> {
     private String name;
 
     @Column(nullable = false, unique = true)

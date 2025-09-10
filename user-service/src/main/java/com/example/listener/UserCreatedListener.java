@@ -27,14 +27,13 @@ public class UserCreatedListener {
 
         // Tạo User profile
         User user = new User();
-        user.setId(profileDTO.getId()); // giữ cùng id với AuthUser
         user.setName(profileDTO.getName());
         user.setEmail(profileDTO.getEmail());
         user.setPhone(profileDTO.getPhone());
         user.setAddress(profileDTO.getAddress());
         user.setDateOfBirth(profileDTO.getDateOfBirth());
         user.setGender(GenderEnum.valueOf(profileDTO.getGender()));
-        userService.handleCreateUser(user);
+        userService.save(user);
     }
 }
 

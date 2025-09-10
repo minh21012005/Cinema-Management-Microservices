@@ -38,14 +38,17 @@ public class JwtUtil {
         ResLoginDTO.UserInsideToken userToken = new ResLoginDTO.UserInsideToken();
         userToken.setId(dto.getUser().getId());
         userToken.setEmail(dto.getUser().getEmail());
+        userToken.setRole(dto.getUser().getRole().getName());
 
         Instant now = Instant.now();
         Instant validity = now.plus(this.accessTokenExpiration, ChronoUnit.SECONDS);
 
-        // hardcode permission (for testing)
         List<String> listAuthority = new ArrayList<String>();
         String role = dto.getUser().getRole().getName();
-        listAuthority.add(role);
+        List<String> permissions = dto.getUser().getPermissions();
+        if(permissions != null && !permissions.isEmpty()){
+            listAuthority.addAll(permissions);
+        }
 
         // @formatter:off
         JwtClaimsSet claims = JwtClaimsSet.builder()

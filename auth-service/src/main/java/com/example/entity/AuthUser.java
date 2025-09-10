@@ -1,5 +1,6 @@
 package com.example.entity;
 
+import com.example.domain.entity.BaseEntity;
 import com.example.util.SecurityUtil;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -13,18 +14,14 @@ import java.time.Instant;
 @AllArgsConstructor
 @Entity
 @Table(name = "auth_users")
-public class AuthUser {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
+public class AuthUser extends BaseEntity<Long> {
     @Column(unique = true, nullable = false)
     private String email;
 
     @Column(nullable = false)
     private String password;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "role_id")
     private Role role;
 
@@ -32,27 +29,4 @@ public class AuthUser {
     private String refreshToken;
 
     private boolean enabled = true;
-
-    private Instant createdAt;
-    private Instant updatedAt;
-    private String createdBy;
-    private String updatedBy;
-
-    @PrePersist
-    public void handleBeforeCreate() {
-        this.createdBy = SecurityUtil.getCurrentUserLogin().isPresent() == true
-                ? SecurityUtil.getCurrentUserLogin().get()
-                : "";
-
-        this.createdAt = Instant.now();
-    }
-
-    @PreUpdate
-    public void handleBeforeUpdate() {
-        this.updatedBy = SecurityUtil.getCurrentUserLogin().isPresent() == true
-                ? SecurityUtil.getCurrentUserLogin().get()
-                : "";
-
-        this.updatedAt = Instant.now();
-    }
 }

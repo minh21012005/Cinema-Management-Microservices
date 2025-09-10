@@ -1,24 +1,21 @@
 package com.example.controller;
 
+import com.example.entity.User;
 import com.example.service.UserService;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1")
-public class UserController {
+@RequestMapping("/api/v1/users")
+public class UserController extends BaseController<User, Long>{
 
     private final UserService userService;
-    private final PasswordEncoder passwordEncoder;
 
-
-    public UserController(UserService userService, PasswordEncoder passwordEncoder) {
-        this.userService = userService;
-        this.passwordEncoder = passwordEncoder;
+    public UserController(UserService service) {
+        super(service);
+        this.userService = service;
     }
 
-    @GetMapping("/users/check-phone")
+    @GetMapping("/check-phone")
     public Boolean checkPhone(@RequestParam("phone") String phone) {
         return userService.isPhoneExist(phone);
     }

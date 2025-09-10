@@ -10,7 +10,6 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserProfileDTO {
-    private Long id;
     private String name;
     private String phone;
     private LocalDate dateOfBirth;

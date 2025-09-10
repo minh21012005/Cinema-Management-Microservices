@@ -7,12 +7,12 @@ import com.example.domain.request.ReqLoginDTO;
 import com.example.domain.response.ResLoginDTO;
 import com.example.domain.response.ResUserDTO;
 import com.example.entity.AuthUser;
+import com.example.entity.Permission;
 import com.example.entity.Role;
 import com.example.service.AuthUserService;
 import com.example.service.RoleService;
 import com.example.client.UserClient;
 import com.example.util.JwtUtil;
-import com.example.util.SecurityUtil;
 import com.example.util.annotation.ApiMessage;
 import com.example.util.error.IdInvalidException;
 import jakarta.validation.Valid;
@@ -32,9 +32,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/v1")
-public class AuthController {
+public class AuthController extends BaseController<AuthUser, Long>{
 
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final JwtUtil jwtUtil;
@@ -54,6 +56,7 @@ public class AuthController {
             RoleService roleService,
             RabbitTemplate rabbitTemplate,
             UserClient userClient) {
+        super(authUserService);
         this.authenticationManagerBuilder = authenticationManagerBuilder;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
@@ -78,17 +81,16 @@ public class AuthController {
 
         String hashedPassword = passwordEncoder.encode(userRequest.getPassword());
 
-        Role role = this.roleService.findByName("CUSTOMER");
+        Role role = this.roleService.findByName("CUSTOMER").orElse(null);
 
         AuthUser authUser = new AuthUser();
         authUser.setEmail(userRequest.getEmail());
         authUser.setPassword(hashedPassword);
         authUser.setRole(role);
 
-        AuthUser savedUser = this.authUserService.saveUser(authUser);
+        AuthUser savedUser = this.authUserService.save(authUser);
 
         UserProfileDTO profileEvent = new UserProfileDTO(
-                savedUser.getId(),
                 userRequest.getName(),
                 userRequest.getPhone(),
                 userRequest.getDateOfBirth(),
@@ -124,16 +126,21 @@ public class AuthController {
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         ResLoginDTO res = new ResLoginDTO();
-        AuthUser currentUserDB = this.authUserService.handleGetUserByUsername(loginDto.getUsername());
+        AuthUser currentUserDB = this.authUserService.findByEmail(loginDto.getUsername()).orElse(null);
         if (currentUserDB != null) {
             RoleDTO roleDTO = new RoleDTO();
             roleDTO.setId(currentUserDB.getRole().getId());
             roleDTO.setName(currentUserDB.getRole().getName());
 
+            List<String> permissions = currentUserDB.getRole().getPermissions().stream()
+                    .map(Permission::getCode)
+                    .toList();
+
             ResLoginDTO.UserLogin userLogin = new ResLoginDTO.UserLogin(
                     currentUserDB.getId(),
                     currentUserDB.getEmail(),
-                    roleDTO);
+                    roleDTO,
+                    permissions);
             res.setUser(userLogin);
         }
 
@@ -145,7 +152,7 @@ public class AuthController {
         String refresh_token = this.jwtUtil.createRefreshToken(loginDto.getUsername(), res);
 
         // update user
-        this.authUserService.updateUserToken(refresh_token, loginDto.getUsername());
+        this.authUserService.updateRefreshToken(refresh_token, loginDto.getUsername());
 
         // set cookies
         ResponseCookie resCookies = ResponseCookie
