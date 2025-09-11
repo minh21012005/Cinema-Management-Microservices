@@ -1,6 +1,6 @@
 package com.example.service.impl;
 
-import com.example.entity.Role;
+import com.example.domain.entity.Role;
 import com.example.repository.RoleRepository;
 import com.example.service.RoleService;
 import org.springframework.stereotype.Service;

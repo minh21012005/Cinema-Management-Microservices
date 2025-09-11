@@ -1,6 +1,6 @@
 package com.example.config;
 
-import com.example.entity.AuthUser;
+import com.example.domain.entity.AuthUser;
 import com.example.repository.AuthUserRepository;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;

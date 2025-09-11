@@ -1,6 +1,6 @@
 package com.example.repository;
 
-import com.example.entity.User;
+import com.example.domain.User;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 

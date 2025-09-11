@@ -1,6 +1,5 @@
-package com.example.entity;
+package com.example.domain.entity;
 
-import com.example.domain.entity.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;

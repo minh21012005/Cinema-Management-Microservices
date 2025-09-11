@@ -1,47 +1,93 @@
 package com.example.config;
 
+import com.nimbusds.jose.util.Base64;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
+import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
-import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
+import org.springframework.security.oauth2.jwt.NimbusReactiveJwtDecoder;
+import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
-import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.security.web.server.authorization.HttpStatusServerAccessDeniedHandler;
+import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatchers;
 import org.springframework.web.cors.reactive.CorsWebFilter;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
-
+import org.springframework.web.cors.CorsConfiguration;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 import java.util.Arrays;
 
 @Configuration
 @EnableWebFluxSecurity
 public class SecurityConfig {
 
-        @Bean
-        public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
-                http.csrf(ServerHttpSecurity.CsrfSpec::disable)
-                        .authorizeExchange(exchange -> exchange.anyExchange().permitAll());
-                return http.build();
-        }
+    @Value("${minhnb.jwt.base64-secret}")
+    private String jwtKey;
 
-        @Bean
-        public CorsWebFilter corsFilter() {
-                CorsConfiguration config = new CorsConfiguration();
-                config.setAllowedOrigins(Arrays.asList(
-                        "http://localhost:3000",
-                        "http://localhost:4173",
-                        "http://localhost:5173"
-                ));
-                config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-                config.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept", "x-no-retry"));
-                config.setAllowCredentials(true);
-                config.setMaxAge(3600L);
+    private static final MacAlgorithm JWT_ALGORITHM = MacAlgorithm.HS512;
 
-                UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-                source.registerCorsConfiguration("/**", config);
+    @Bean
+    @Order(1)
+    public SecurityWebFilterChain publicSecurityWebFilterChain(ServerHttpSecurity http) {
+        return http
+                .securityMatcher(ServerWebExchangeMatchers.pathMatchers(
+                        "/auth-service/api/v1/auth/login",
+                        "/auth-service/api/v1/auth/register",
+                        "/auth-service/api/v1/auth/refresh"
+                ))
+                .csrf(ServerHttpSecurity.CsrfSpec::disable)
+                .authorizeExchange(ex -> ex.anyExchange().permitAll())
+                .build();
+    }
 
-                return new CorsWebFilter(source);
-        }
+    @Bean
+    @Order(2)
+    public SecurityWebFilterChain securedSecurityWebFilterChain(ServerHttpSecurity http,
+                                                                CustomReactiveAuthenticationEntryPoint entryPoint) {
+        return http
+                .csrf(ServerHttpSecurity.CsrfSpec::disable)
+                .authorizeExchange(ex -> ex.anyExchange().authenticated())
+                .oauth2ResourceServer(oauth2 -> oauth2
+                        .jwt(jwt -> jwt.jwtDecoder(jwtDecoder()))
+                        .authenticationEntryPoint(entryPoint) // đảm bảo token sai cũng gọi đây
+                )
+                .exceptionHandling(ex -> ex
+                        .accessDeniedHandler(new HttpStatusServerAccessDeniedHandler(HttpStatus.FORBIDDEN))
+                )
+                .addFilterAfter(new JwtUserHeaderFilter(), SecurityWebFiltersOrder.AUTHENTICATION)
+                .cors(cors -> {})
+                .build();
+    }
+
+    // JWT Decoder
+    @Bean
+    public ReactiveJwtDecoder jwtDecoder() {
+        byte[] keyBytes = Base64.from(jwtKey).decode();
+        SecretKey key = new SecretKeySpec(keyBytes, 0, keyBytes.length, JWT_ALGORITHM.getName());
+        return NimbusReactiveJwtDecoder.withSecretKey(key).macAlgorithm(JWT_ALGORITHM).build();
+    }
+
+    // CORS WebFilter
+    @Bean
+    public CorsWebFilter corsWebFilter() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOrigins(Arrays.asList(
+                "http://localhost:3000",
+                "http://localhost:4173",
+                "http://localhost:5173"
+        ));
+        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept", "x-no-retry"));
+        config.setAllowCredentials(true);
+        config.setMaxAge(3600L);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return new CorsWebFilter(source);
+    }
 }

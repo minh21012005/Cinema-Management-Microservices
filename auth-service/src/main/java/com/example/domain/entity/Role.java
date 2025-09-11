@@ -1,6 +1,5 @@
-package com.example.entity;
+package com.example.domain.entity;
 
-import com.example.domain.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;

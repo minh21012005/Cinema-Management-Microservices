@@ -1,6 +1,6 @@
 package com.example.service;
 
-import com.example.entity.AuthUser;
+import com.example.domain.entity.AuthUser;
 
 import java.util.Optional;
 

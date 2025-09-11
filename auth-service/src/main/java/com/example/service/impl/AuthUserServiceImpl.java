@@ -1,6 +1,6 @@
 package com.example.service.impl;
 
-import com.example.entity.AuthUser;
+import com.example.domain.entity.AuthUser;
 import com.example.repository.AuthUserRepository;
 import com.example.service.AuthUserService;
 import org.springframework.stereotype.Service;

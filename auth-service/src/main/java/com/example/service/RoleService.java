@@ -1,6 +1,6 @@
 package com.example.service;
 
-import com.example.entity.Role;
+import com.example.domain.entity.Role;
 import java.util.Optional;
 
 public interface RoleService extends BaseService<Role, Long>  {

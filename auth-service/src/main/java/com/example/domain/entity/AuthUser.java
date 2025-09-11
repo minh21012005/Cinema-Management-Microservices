@@ -1,13 +1,9 @@
-package com.example.entity;
+package com.example.domain.entity;
 
-import com.example.domain.entity.BaseEntity;
-import com.example.util.SecurityUtil;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.time.Instant;
 
 @Data
 @NoArgsConstructor

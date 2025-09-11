@@ -1,6 +1,6 @@
 package com.example.service.specification;
 
-import com.example.entity.User;
+import com.example.domain.User;
 import org.springframework.data.jpa.domain.Specification;
 
 public class UserSpecification {

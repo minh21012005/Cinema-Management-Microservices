@@ -6,9 +6,9 @@ import com.example.domain.request.CreateUserRequest;
 import com.example.domain.request.ReqLoginDTO;
 import com.example.domain.response.ResLoginDTO;
 import com.example.domain.response.ResUserDTO;
-import com.example.entity.AuthUser;
-import com.example.entity.Permission;
-import com.example.entity.Role;
+import com.example.domain.entity.AuthUser;
+import com.example.domain.entity.Permission;
+import com.example.domain.entity.Role;
 import com.example.service.AuthUserService;
 import com.example.service.RoleService;
 import com.example.client.UserClient;
@@ -34,7 +34,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping("/api/v1/auth")
 public class AuthController extends BaseController<AuthUser, Long> {
 
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
@@ -170,10 +170,13 @@ public class AuthController extends BaseController<AuthUser, Long> {
 
     @GetMapping("/account")
     @ApiMessage("fetch account")
-    public ResponseEntity<ResLoginDTO.UserGetAccount> getAccount() {
-        String email = SecurityUtil.getCurrentUserLogin().isPresent()
-                ? SecurityUtil.getCurrentUserLogin().get()
-                : "";
+    public ResponseEntity<ResLoginDTO.UserGetAccount> getAccount(
+            @RequestHeader(value = "X-User-Email", required = false) String email) {
+        if (email == null || email.isEmpty()) {
+            email = SecurityUtil.getCurrentUserLogin().isPresent()
+                    ? SecurityUtil.getCurrentUserLogin().get()
+                    : "";
+        }
 
         AuthUser currentUserDB = this.authUserService.findByEmail(email).orElse(null);
         ResLoginDTO.UserLogin userLogin = new ResLoginDTO.UserLogin();

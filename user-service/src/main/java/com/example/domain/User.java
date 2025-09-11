@@ -1,4 +1,4 @@
-package com.example.entity;
+package com.example.domain;
 
 import com.example.domain.entity.BaseEntity;
 import com.example.util.constant.GenderEnum;
