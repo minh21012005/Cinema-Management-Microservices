@@ -34,4 +34,18 @@ public class AuthUserServiceImpl extends BaseServiceImpl<AuthUser, Long> impleme
             this.authUserRepository.save(currentUser);
         }
     }
+
+    @Override
+    public Optional<AuthUser> findByRefreshTokenAndEmail(String refreshToken, String email) {
+        return this.authUserRepository.findByRefreshTokenAndEmail(refreshToken, email);
+    }
+
+    @Override
+    public void updateUserToken(String token, String email) {
+        AuthUser currentUser = this.findByEmail(email).orElse(null);
+        if (currentUser != null) {
+            currentUser.setRefreshToken(token);
+            this.authUserRepository.save(currentUser);
+        }
+    }
 }

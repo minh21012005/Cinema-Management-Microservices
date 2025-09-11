@@ -17,6 +17,7 @@ public class Role extends BaseEntity<Long> {
     @Column(unique = true, nullable = false)
     private String name;
     private String description;
+    private boolean active = true;
 
     @ManyToMany
     @JoinTable(

@@ -18,7 +18,16 @@ public class Permission extends BaseEntity<Long> {
     private String code; // MOVIE_CREATE, BOOKING_MANAGE...
 
     @Column(nullable = false)
-    private String name; // Hiển thị: "Tạo phim", "Quản lý đặt vé"
+    private String name;
+
+    @Column(nullable = false)
+    private String method;
+
+    @Column(nullable = false)
+    private String apiPath;
+
+    @Column(nullable = false)
+    private String module;
 
     private String description; // optional
 }

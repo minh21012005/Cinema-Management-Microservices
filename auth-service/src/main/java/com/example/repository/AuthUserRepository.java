@@ -9,7 +9,7 @@ import java.util.Optional;
 @Repository
 public interface AuthUserRepository extends BaseRepository<AuthUser, Long> {
     Optional<AuthUser> findByEmail(String email);
-
+    Optional<AuthUser> findByRefreshTokenAndEmail(String token, String email);
     boolean existsByEmail(String email);
 }
 
