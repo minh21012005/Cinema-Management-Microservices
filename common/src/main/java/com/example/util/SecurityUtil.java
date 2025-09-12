@@ -25,7 +25,7 @@
             } else if (authentication.getPrincipal() instanceof UserDetails springSecurityUser) {
                 return springSecurityUser.getUsername();
             } else if (authentication.getPrincipal() instanceof Jwt jwt) {
-                return jwt.getSubject();
+                return jwt.getClaimAsString("email");
             } else if (authentication.getPrincipal() instanceof String s) {
                 return s;
             }
