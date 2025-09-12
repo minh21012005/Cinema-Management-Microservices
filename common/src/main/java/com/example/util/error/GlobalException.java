@@ -4,6 +4,7 @@ import com.example.domain.response.RestResponse;
 import io.jsonwebtoken.JwtException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.BindingResult;
@@ -78,7 +79,7 @@ public class GlobalException {
     }
 
     @ExceptionHandler(value = {
-            PermissionException.class,
+            PermissionException.class, AccessDeniedException.class
     })
     public ResponseEntity<RestResponse<Object>> handlePermissionException(Exception ex) {
         RestResponse<Object> res = new RestResponse<Object>();
