@@ -3,6 +3,7 @@ package com.example.controller;
 import com.example.domain.User;
 import com.example.service.UserService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import com.example.interceptor.RequiredPermission;
 
@@ -32,5 +33,11 @@ public class UserController extends BaseController<User, Long>{
     @RequiredPermission("BOOKING_VIEW")
     public ResponseEntity<String> createPost() {
         return ResponseEntity.ok("Post created");
+    }
+
+    @GetMapping("test")
+    @PreAuthorize("hasPermission(null, 'BOOKING_MANAGE')")
+    public ResponseEntity<String> test() {
+        return ResponseEntity.ok("test created");
     }
 }

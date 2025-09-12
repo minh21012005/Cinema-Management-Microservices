@@ -8,6 +8,7 @@ import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -17,6 +18,8 @@ public class JwtUtil {
 
     @Value("${minhnb.jwt.base64-secret}")
     private String jwtKey;
+
+    public static final MacAlgorithm JWT_ALGORITHM = MacAlgorithm.HS512;
 
     private JwtParser parser;
 

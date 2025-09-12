@@ -49,7 +49,7 @@ public class SecurityConfiguration {
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers(whiteList).permitAll()
-                        .anyRequest().permitAll() // ✅ tất cả request không bắt buộc JWT
+                        .anyRequest().authenticated() // ✅ tất cả request không bắt buộc JWT
                 )
                 .formLogin(f -> f.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
