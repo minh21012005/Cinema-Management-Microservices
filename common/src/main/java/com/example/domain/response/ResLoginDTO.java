@@ -25,7 +25,6 @@ public class ResLoginDTO {
         private long id;
         private String email;
         private RoleDTO role;
-        private List<String> permissions;
     }
 
     @Getter

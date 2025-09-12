@@ -18,7 +18,9 @@ import com.example.util.annotation.ApiMessage;
 import com.example.util.error.IdInvalidException;
 import jakarta.validation.Valid;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
@@ -31,7 +33,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -44,6 +49,9 @@ public class AuthController extends BaseController<AuthUser, Long> {
     private final RoleService roleService;
     private final RabbitTemplate rabbitTemplate;
     private final UserClient userClient;
+
+    @Autowired
+    private RedisTemplate<String, String> redisTemplate;
 
     @Value("${minhnb.jwt.refresh-token-validity-in-seconds}")
     private long refreshTokenExpiration;
@@ -136,11 +144,16 @@ public class AuthController extends BaseController<AuthUser, Long> {
                     .map(Permission::getCode)
                     .toList();
 
+            String redisKey = "user:permissions:" + currentUserDB.getId();
+            Map<String, String> permissionMap = new HashMap<>();
+            permissions.forEach(perm -> permissionMap.put(perm, "1"));
+            redisTemplate.opsForHash().putAll(redisKey, permissionMap);
+            redisTemplate.expire(redisKey, 1, TimeUnit.HOURS);
+
             ResLoginDTO.UserLogin userLogin = new ResLoginDTO.UserLogin(
                     currentUserDB.getId(),
                     currentUserDB.getEmail(),
-                    roleDTO,
-                    permissions);
+                    roleDTO);
             res.setUser(userLogin);
         }
 
@@ -194,8 +207,6 @@ public class AuthController extends BaseController<AuthUser, Long> {
             userLogin.setId(currentUserDB.getId());
             userLogin.setEmail(currentUserDB.getEmail());
             userLogin.setRole(roleDTO);
-            userLogin.setPermissions(permissions);
-
             userGetAccount.setUser(userLogin);
         }
 
@@ -228,14 +239,25 @@ public class AuthController extends BaseController<AuthUser, Long> {
             roleDTO.setId(currentUserDB.getRole().getId());
             roleDTO.setName(currentUserDB.getRole().getName());
 
+            String redisKey = "user:permissions:" + currentUserDB.getId();
+
+            // Xóa cache cũ
+            redisTemplate.delete(redisKey);
+
+            // Thiết lập lại cache mới
             List<String> permissions = currentUserDB.getRole().getPermissions().stream()
                     .map(Permission::getCode)
                     .toList();
 
+            Map<String, String> permissionMap = new HashMap<>();
+            permissions.forEach(perm -> permissionMap.put(perm, "1"));
+            redisTemplate.opsForHash().putAll(redisKey, permissionMap);
+            redisTemplate.expire(redisKey, 1, TimeUnit.HOURS);
+
             ResLoginDTO.UserLogin userLogin = new ResLoginDTO.UserLogin(
                     currentUserDB.getId(),
                     currentUserDB.getEmail(),
-                    roleDTO, permissions);
+                    roleDTO);
             res.setUser(userLogin);
         }
 
@@ -272,8 +294,17 @@ public class AuthController extends BaseController<AuthUser, Long> {
             throw new IdInvalidException("Access Token không hợp lệ");
         }
 
+        AuthUser user = this.authUserService.findByEmail(email).orElse(null);
+        if (user == null) {
+            throw new IdInvalidException("User không tồn tại trong hệ thống");
+        }
+
         // update refresh token = null
         this.authUserService.updateUserToken(null, email);
+
+        // Xóa cache cũ
+        String redisKey = "user:permissions:" + user.getId();
+        redisTemplate.delete(redisKey);
 
         // remove refresh token cookie
         ResponseCookie deleteSpringCookie = ResponseCookie

@@ -43,20 +43,13 @@ public class JwtUtil {
         Instant now = Instant.now();
         Instant validity = now.plus(this.accessTokenExpiration, ChronoUnit.SECONDS);
 
-        List<String> listAuthority = new ArrayList<String>();
-        String role = dto.getUser().getRole().getName();
-        List<String> permissions = dto.getUser().getPermissions();
-        if(permissions != null && !permissions.isEmpty()){
-            listAuthority.addAll(permissions);
-        }
-
         // @formatter:off
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .issuedAt(now)
                 .expiresAt(validity)
-                .subject(email)
-                .claim("user", userToken)
-                .claim("permission", listAuthority)
+                .subject(String.valueOf(dto.getUser().getId()))
+                .claim("email", userToken.getEmail())
+                .claim("role", userToken.getRole())
                 .build();
 
         JwsHeader jwsHeader = JwsHeader.with(JWT_ALGORITHM).build();
@@ -76,8 +69,9 @@ public class JwtUtil {
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .issuedAt(now)
                 .expiresAt(validity)
-                .subject(email)
-                .claim("user", userToken)
+                .subject(String.valueOf(dto.getUser().getId()))
+                .claim("email", userToken.getEmail())
+                .claim("role", userToken.getRole())
                 .build();
 
         JwsHeader jwsHeader = JwsHeader.with(JWT_ALGORITHM).build();

@@ -1,5 +1,6 @@
     package com.example.util;
 
+    import org.springframework.beans.factory.annotation.Value;
     import org.springframework.security.core.Authentication;
     import org.springframework.security.core.context.SecurityContext;
     import org.springframework.security.core.context.SecurityContextHolder;
@@ -9,6 +10,9 @@
     import java.util.Optional;
 
     public class SecurityUtil {
+
+        @Value("${minhnb.jwt.base64-secret}")
+        private String jwtKey;
 
         public static Optional<String> getCurrentUserLogin() {
             SecurityContext securityContext = SecurityContextHolder.getContext();

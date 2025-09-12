@@ -1,6 +1,7 @@
 package com.example.util.error;
 
 import com.example.domain.response.RestResponse;
+import io.jsonwebtoken.JwtException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -85,5 +86,24 @@ public class GlobalException {
         res.setError("Forbidden");
         res.setMessage(ex.getMessage());
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(res);
+    }
+
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<RestResponse<Object>> handleUnauthorized(Exception ex) {
+        RestResponse<Object> res = new RestResponse<>();
+        res.setStatusCode(HttpStatus.UNAUTHORIZED.value());
+        res.setError("Unauthorized");
+        res.setMessage(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(res);
+    }
+
+    @ExceptionHandler({
+            JwtException.class})
+    public ResponseEntity<RestResponse<Object>> handleJwtException(Exception ex) {
+        RestResponse<Object> res = new RestResponse<>();
+        res.setStatusCode(HttpStatus.UNAUTHORIZED.value());
+        res.setError("Invalid JWT");
+        res.setMessage("Token không hợp lệ (hết hạn, không đúng định dạng, hoặc không truyền JWT ở header)...");
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(res);
     }
 }
