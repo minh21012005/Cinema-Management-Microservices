@@ -28,7 +28,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         String[] whiteList = {
-                "api/v1/users/check-phone"
+                "/api/v1/users/check-phone"
         };
 
         http
