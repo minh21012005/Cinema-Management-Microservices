@@ -16,6 +16,7 @@ import com.example.util.JwtUtil;
 import com.example.util.SecurityUtil;
 import com.example.util.annotation.ApiMessage;
 import com.example.util.error.IdInvalidException;
+import com.example.util.error.UnauthorizedException;
 import jakarta.validation.Valid;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -162,10 +163,11 @@ public class AuthController extends BaseController<AuthUser, Long> {
         res.setAccessToken(access_token);
 
         // create refresh token
-        String refresh_token = this.jwtUtil.createRefreshToken(loginDto.getUsername(), res);
+        String refresh_token = this.jwtUtil.createRefreshToken(res);
 
-        // update user
-        this.authUserService.updateRefreshToken(refresh_token, loginDto.getUsername());
+        // Hash refresh token bằng PasswordEncoder
+        String hashedRefreshToken = passwordEncoder.encode(refresh_token);
+        this.authUserService.updateRefreshToken(hashedRefreshToken, loginDto.getUsername());
 
         // set cookies
         ResponseCookie resCookies = ResponseCookie
@@ -216,64 +218,64 @@ public class AuthController extends BaseController<AuthUser, Long> {
     @PostMapping("/refresh")
     @ApiMessage("Get User by refresh token")
     public ResponseEntity<ResLoginDTO> getRefreshToken(
-            @CookieValue(name = "refresh_token", required = false) String refresh_token) throws IdInvalidException {
-        if (refresh_token == null || refresh_token.isEmpty()) {
+            @CookieValue(name = "refresh_token", required = false) String refreshTokenRaw)
+            throws IdInvalidException, UnauthorizedException {
+        if (refreshTokenRaw == null || refreshTokenRaw.isEmpty()) {
             throw new IdInvalidException("Bạn không có refresh token ở cookie");
         }
-        // check valid
-        Jwt decodedToken = this.jwtUtil.checkValidRefreshToken(refresh_token);
-        String email = decodedToken.getSubject();
+        // 1. Check valid JWT format + expiration
+        Jwt decodedToken = this.jwtUtil.checkValidRefreshToken(refreshTokenRaw);
+        String email = decodedToken.getClaim("email");
 
-        // check user by token + email
-        AuthUser currentUser = this.authUserService
-                .findByRefreshTokenAndEmail(refresh_token, email).orElse(null);
-        if (currentUser == null) {
+        // 2. Lấy user trong DB
+        AuthUser currentUser = this.authUserService.findByEmail(email)
+                .orElseThrow(() -> new IdInvalidException("Không tìm thấy user"));
+
+        // 3. So sánh token client gửi với token hash trong DB
+        String hashedTokenInDb = currentUser.getRefreshToken();
+        if (hashedTokenInDb == null || !passwordEncoder.matches(refreshTokenRaw, hashedTokenInDb)) {
             throw new IdInvalidException("Refresh Token không hợp lệ");
         }
 
         // issue new token/set refresh token as cookies
         ResLoginDTO res = new ResLoginDTO();
-        AuthUser currentUserDB = this.authUserService.findByEmail(email).orElse(null);
-        if (currentUserDB != null) {
-            RoleDTO roleDTO = new RoleDTO();
-            roleDTO.setId(currentUserDB.getRole().getId());
-            roleDTO.setName(currentUserDB.getRole().getName());
+        RoleDTO roleDTO = new RoleDTO();
+        roleDTO.setId(currentUser.getRole().getId());
+        roleDTO.setName(currentUser.getRole().getName());
 
-            String redisKey = "user:permissions:" + currentUserDB.getId();
+        ResLoginDTO.UserLogin userLogin = new ResLoginDTO.UserLogin(
+                currentUser.getId(),
+                currentUser.getEmail(),
+                roleDTO);
+        res.setUser(userLogin);
 
-            // Xóa cache cũ
-            redisTemplate.delete(redisKey);
-
-            // Thiết lập lại cache mới
-            List<String> permissions = currentUserDB.getRole().getPermissions().stream()
-                    .map(Permission::getCode)
-                    .toList();
-
-            Map<String, String> permissionMap = new HashMap<>();
-            permissions.forEach(perm -> permissionMap.put(perm, "1"));
-            redisTemplate.opsForHash().putAll(redisKey, permissionMap);
-            redisTemplate.expire(redisKey, 1, TimeUnit.HOURS);
-
-            ResLoginDTO.UserLogin userLogin = new ResLoginDTO.UserLogin(
-                    currentUserDB.getId(),
-                    currentUserDB.getEmail(),
-                    roleDTO);
-            res.setUser(userLogin);
-        }
-
-        // create access token
+        // 4. Issue access token mới
         String access_token = this.jwtUtil.createAccessToken(email, res);
         res.setAccessToken(access_token);
 
-        // create refresh token
-        String new_refresh_token = this.jwtUtil.createRefreshToken(email, res);
+        // 5. Issue refresh token mới + hash lại
+        String newRefreshToken = this.jwtUtil.createRefreshToken(res);
+        String hashedNewRefreshToken = passwordEncoder.encode(newRefreshToken);
+        this.authUserService.updateRefreshToken(hashedNewRefreshToken, email);
 
-        // update user
-        this.authUserService.updateUserToken(new_refresh_token, email);
+        String redisKey = "user:permissions:" + currentUser.getId();
+
+        // Xóa cache cũ
+        redisTemplate.delete(redisKey);
+
+        // Thiết lập lại cache mới
+        List<String> permissions = currentUser.getRole().getPermissions().stream()
+                .map(Permission::getCode)
+                .toList();
+
+        Map<String, String> permissionMap = new HashMap<>();
+        permissions.forEach(perm -> permissionMap.put(perm, "1"));
+        redisTemplate.opsForHash().putAll(redisKey, permissionMap);
+        redisTemplate.expire(redisKey, 1, TimeUnit.HOURS);
 
         // set cookies
         ResponseCookie resCookies = ResponseCookie
-                .from("refresh_token", new_refresh_token)
+                .from("refresh_token", newRefreshToken)
                 .httpOnly(true)
                 .secure(true)
                 .path("/")

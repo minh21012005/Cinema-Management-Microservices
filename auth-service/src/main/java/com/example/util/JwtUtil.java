@@ -1,6 +1,7 @@
 package com.example.util;
 
 import com.example.domain.response.ResLoginDTO;
+import com.example.util.error.UnauthorizedException;
 import com.nimbusds.jose.util.Base64;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
@@ -11,8 +12,6 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.List;
 
 @Component
 public class JwtUtil {
@@ -57,7 +56,7 @@ public class JwtUtil {
 
     }
 
-    public String createRefreshToken(String email, ResLoginDTO dto) {
+    public String createRefreshToken(ResLoginDTO dto) {
         Instant now = Instant.now();
         Instant validity = now.plus(this.refreshTokenExpiration, ChronoUnit.SECONDS);
 
@@ -85,14 +84,13 @@ public class JwtUtil {
                 JWT_ALGORITHM.getName());
     }
 
-    public Jwt checkValidRefreshToken(String token){
+    public Jwt checkValidRefreshToken(String token) throws UnauthorizedException{
         NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withSecretKey(
                 getSecretKey()).macAlgorithm(JwtUtil.JWT_ALGORITHM).build();
         try {
             return jwtDecoder.decode(token);
         } catch (Exception e) {
-            System.out.println(">>> Refresh Token error: " + e.getMessage());
-            throw e;
+            throw new UnauthorizedException("Refresh Token không hợp lệ hoặc đã hết hạn");
         }
     }
 }
