@@ -186,11 +186,10 @@ public class AuthController extends BaseController<AuthUser, Long> {
     @GetMapping("/account")
     @ApiMessage("fetch account")
     public ResponseEntity<ResLoginDTO.UserGetAccount> getAccount(
-            @RequestHeader(value = "X-User-Email", required = false) String email) {
+            @RequestHeader(value = "X-User-Email", required = false) String email) throws UnauthorizedException {
+
         if (email == null || email.isEmpty()) {
-            email = SecurityUtil.getCurrentUserLogin().isPresent()
-                    ? SecurityUtil.getCurrentUserLogin().get()
-                    : "";
+            throw new UnauthorizedException("Token không hợp lệ");
         }
 
         AuthUser currentUserDB = this.authUserService.findByEmail(email).orElse(null);
@@ -289,16 +288,16 @@ public class AuthController extends BaseController<AuthUser, Long> {
 
     @PostMapping("/logout")
     @ApiMessage("Logout User")
-    public ResponseEntity<Void> logout() throws IdInvalidException {
-        String email = SecurityUtil.getCurrentUserLogin().isPresent() ? SecurityUtil.getCurrentUserLogin().get() : "";
+    public ResponseEntity<Void> logout(
+            @RequestHeader(value = "X-User-Email", required = false) String email) throws UnauthorizedException {
 
-        if (email.isEmpty()) {
-            throw new IdInvalidException("Access Token không hợp lệ");
+        if (email == null || email.isEmpty()) {
+            throw new UnauthorizedException("Token không hợp lệ");
         }
 
         AuthUser user = this.authUserService.findByEmail(email).orElse(null);
         if (user == null) {
-            throw new IdInvalidException("User không tồn tại trong hệ thống");
+            throw new UnauthorizedException("User không tồn tại trong hệ thống");
         }
 
         // update refresh token = null

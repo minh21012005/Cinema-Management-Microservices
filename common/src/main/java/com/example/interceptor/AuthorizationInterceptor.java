@@ -1,6 +1,6 @@
     package com.example.interceptor;
 
-    import com.example.util.JwtUtil;
+    import com.example.util.JwtTokenProvider;
     import com.example.util.error.PermissionException;
     import com.example.util.error.UnauthorizedException;
     import io.jsonwebtoken.Claims;
@@ -24,7 +24,7 @@
         private RedisTemplate<String, String> redisTemplate;
 
         @Autowired
-        private JwtUtil jwtUtil;
+        private JwtTokenProvider jwtTokenProvider;
 
         @Override
         public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
@@ -49,7 +49,7 @@
             try {
                 // Decode JWT
                 String jwt = token.replace("Bearer ", "");
-                Jws<Claims> claims = jwtUtil.validateAndParseToken(jwt);
+                Jws<Claims> claims = jwtTokenProvider.validateAndParseToken(jwt);
                 String userId = claims.getBody().getSubject(); // Lấy userId từ claim "sub"
 
                 // Check permission trong Redis

@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 
 @Component
-public class JwtUtil {
+public class JwtTokenProvider {
 
     @Value("${minhnb.jwt.base64-secret}")
     private String jwtKey;

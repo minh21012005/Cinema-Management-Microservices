@@ -1,6 +1,6 @@
 package com.example.config;
 
-import com.example.util.JwtUtil;
+import com.example.util.JwtTokenProvider;
 import com.nimbusds.jose.util.Base64;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -52,7 +52,7 @@ public class SecurityConfig {
     @Bean
     public JwtDecoder jwtDecoder() {
         NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withSecretKey(
-                getSecretKey()).macAlgorithm(JwtUtil.JWT_ALGORITHM).build();
+                getSecretKey()).macAlgorithm(JwtTokenProvider.JWT_ALGORITHM).build();
         return token -> {
             try {
                 return jwtDecoder.decode(token);
@@ -66,6 +66,6 @@ public class SecurityConfig {
     private SecretKey getSecretKey() {
         byte[] keyBytes = Base64.from(jwtKey).decode();
         return new SecretKeySpec(keyBytes, 0, keyBytes.length,
-                JwtUtil.JWT_ALGORITHM.getName());
+                JwtTokenProvider.JWT_ALGORITHM.getName());
     }
 }
