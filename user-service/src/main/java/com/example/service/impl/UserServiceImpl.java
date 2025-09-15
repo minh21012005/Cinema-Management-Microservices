@@ -21,5 +21,10 @@ public class UserServiceImpl
     public boolean isPhoneExist(String phone) {
         return userRepository.existsByPhone(phone);
     }
+
+    @Override
+    public boolean existsById(Long id) {
+        return userRepository.existsById(id);
+    }
 }
 

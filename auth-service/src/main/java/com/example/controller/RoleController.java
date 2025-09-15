@@ -1,10 +1,12 @@
 package com.example.controller;
 
 import com.example.domain.entity.Role;
-import com.example.domain.request.RoleRequestDTO;
+import com.example.domain.request.RoleCreateDTO;
+import com.example.domain.request.RoleUpdateDTO;
 import com.example.domain.response.RoleResponseDTO;
 import com.example.service.BaseService;
 import com.example.service.RoleService;
+import com.example.util.error.IdInvalidException;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -24,7 +26,7 @@ public class RoleController extends BaseController<Role, Long> {
 
     @PostMapping("/create")
     @PreAuthorize("hasPermission(null, 'ROLE_CREATE')")
-    public ResponseEntity<RoleResponseDTO> create(@Valid @RequestBody RoleRequestDTO role) {
+    public ResponseEntity<RoleResponseDTO> create(@Valid @RequestBody RoleCreateDTO role) {
         return ResponseEntity.ok(roleService.createRole(role));
     }
 
@@ -39,4 +41,12 @@ public class RoleController extends BaseController<Role, Long> {
     public ResponseEntity<Role> getById(@PathVariable("id") Long id) {
         return super.getById(id);
     }
+
+    @PutMapping()
+    @PreAuthorize("hasPermission(null, 'ROLE_UPDATE')")
+    public ResponseEntity<RoleResponseDTO> update(
+            @Valid @RequestBody RoleUpdateDTO dto) throws IdInvalidException {
+        return ResponseEntity.ok(roleService.updateRole(dto));
+    }
+
 }

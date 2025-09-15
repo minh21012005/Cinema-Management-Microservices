@@ -2,7 +2,7 @@ package com.example.mapper;
 
 import com.example.domain.entity.Permission;
 import com.example.domain.entity.Role;
-import com.example.domain.request.RoleRequestDTO;
+import com.example.domain.request.RoleCreateDTO;
 import com.example.domain.response.RoleResponseDTO;
 import org.mapstruct.Mapper;
 
@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 @Mapper(componentModel = "spring")
 public interface RoleMapper {
 
-    default Role toEntity(RoleRequestDTO dto) {
+    default Role toEntity(RoleCreateDTO dto) {
         if (dto == null) return null;
         Role role = new Role();
         role.setName(dto.getName());

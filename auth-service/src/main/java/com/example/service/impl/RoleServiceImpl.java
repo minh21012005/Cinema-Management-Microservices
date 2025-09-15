@@ -2,12 +2,14 @@ package com.example.service.impl;
 
 import com.example.domain.entity.Permission;
 import com.example.domain.entity.Role;
-import com.example.domain.request.RoleRequestDTO;
+import com.example.domain.request.RoleCreateDTO;
+import com.example.domain.request.RoleUpdateDTO;
 import com.example.domain.response.RoleResponseDTO;
 import com.example.mapper.RoleMapper;
 import com.example.repository.PermissionRepository;
 import com.example.repository.RoleRepository;
 import com.example.service.RoleService;
+import com.example.util.error.IdInvalidException;
 import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,7 +37,7 @@ public class RoleServiceImpl extends BaseServiceImpl<Role, Long> implements Role
     }
 
     @Override
-    public RoleResponseDTO createRole(RoleRequestDTO role) {
+    public RoleResponseDTO createRole(RoleCreateDTO role) {
         Role entity = roleMapper.toEntity(role);
 
         // Lấy thực Permission từ DB theo permissionIds
@@ -46,9 +48,7 @@ public class RoleServiceImpl extends BaseServiceImpl<Role, Long> implements Role
         else {
             entity.setPermissions(new ArrayList<>());
         }
-        System.out.println(entity); // trước save
         Role saved = roleRepository.save(entity);
-        System.out.println(saved);
 
         // Tạo DTO trả về và convert permission sang name thủ công
         RoleResponseDTO dto = roleMapper.toDTO(saved);
@@ -62,6 +62,45 @@ public class RoleServiceImpl extends BaseServiceImpl<Role, Long> implements Role
         }
 
         return dto;
+    }
+
+    @Override
+    public RoleResponseDTO updateRole(RoleUpdateDTO dto) throws IdInvalidException {
+        Role entity = roleRepository.findById(dto.getId())
+                .orElseThrow(() -> new IdInvalidException("Role not found"));
+
+        // Check trùng tên nếu đổi
+        if (!entity.getName().equals(dto.getName()) &&
+                roleRepository.existsByName(dto.getName())) {
+            throw new IdInvalidException("Role name already exists");
+        }
+
+        // Update các trường cơ bản
+        entity.setName(dto.getName());
+        entity.setDescription(dto.getDescription());
+        entity.setActive(dto.isActive());
+
+        // Update permissions nếu có
+        if (dto.getPermissionIds() != null && !dto.getPermissionIds().isEmpty()) {
+            List<Permission> permissions = permissionRepository.findAllById(dto.getPermissionIds());
+            entity.setPermissions(permissions);
+        } else {
+            entity.setPermissions(new ArrayList<>());
+        }
+
+        Role saved = roleRepository.save(entity);
+
+        RoleResponseDTO response = roleMapper.toDTO(saved);
+        if (saved.getPermissions() != null) {
+            response.setPermissions(saved.getPermissions()
+                    .stream()
+                    .map(Permission::getName)
+                    .collect(Collectors.toList()));
+        } else {
+            response.setPermissions(new ArrayList<>());
+        }
+
+        return response;
     }
 
     @Override
