@@ -13,7 +13,6 @@ import com.example.service.AuthUserService;
 import com.example.service.RoleService;
 import com.example.client.UserClient;
 import com.example.util.JwtUtil;
-import com.example.util.SecurityUtil;
 import com.example.util.annotation.ApiMessage;
 import com.example.util.error.IdInvalidException;
 import com.example.util.error.UnauthorizedException;
