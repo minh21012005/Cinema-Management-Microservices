@@ -17,28 +17,42 @@ public abstract class BaseController<T, ID> {
 
     @GetMapping
     public ResponseEntity<List<T>> getAll() {
-        return ResponseEntity.ok(service.findAll());
+        List<T> list = service.findAll();
+        if (list.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(list);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<T> getById(@PathVariable ID id) {
-        return ResponseEntity.ok(service.findById(id).orElse(null));
+        return service.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
     public ResponseEntity<T> create(@Valid @RequestBody T entity) {
-        return ResponseEntity.ok(service.save(entity));
+        T saved = service.save(entity);
+        return ResponseEntity.ok(saved);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<T> update(@PathVariable ID id, @Valid @RequestBody T entity) {
-        return ResponseEntity.ok(service.save(entity));
+        if (!service.existsById(id)) {
+            return ResponseEntity.notFound().build();
+        }
+        T updated = service.save(entity);
+        return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable ID id) {
+        if (!service.existsById(id)) {
+            return ResponseEntity.notFound().build();
+        }
         service.deleteById(id);
-        return ResponseEntity.ok(null);
+        return ResponseEntity.noContent().build();
     }
 }
 

@@ -8,10 +8,9 @@ import com.example.service.RoleService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/roles")
@@ -27,5 +26,17 @@ public class RoleController extends BaseController<Role, Long> {
     @PreAuthorize("hasPermission(null, 'ROLE_CREATE')")
     public ResponseEntity<RoleResponseDTO> create(@Valid @RequestBody RoleRequestDTO role) {
         return ResponseEntity.ok(roleService.createRole(role));
+    }
+
+    @Override
+    @PreAuthorize("hasPermission(null, 'ROLE_VIEW_ALL')")
+    public ResponseEntity<List<Role>> getAll() {
+        return super.getAll();
+    }
+
+    @Override
+    @PreAuthorize("hasPermission(null, 'ROLE_VIEW')")
+    public ResponseEntity<Role> getById(@PathVariable("id") Long id) {
+        return super.getById(id);
     }
 }

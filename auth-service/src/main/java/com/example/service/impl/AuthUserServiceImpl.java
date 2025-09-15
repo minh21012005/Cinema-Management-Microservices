@@ -48,4 +48,9 @@ public class AuthUserServiceImpl extends BaseServiceImpl<AuthUser, Long> impleme
             this.authUserRepository.save(currentUser);
         }
     }
+
+    @Override
+    public boolean existsById(Long id) {
+        return authUserRepository.existsById(id);
+    }
 }

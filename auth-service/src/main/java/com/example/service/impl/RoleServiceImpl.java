@@ -63,4 +63,9 @@ public class RoleServiceImpl extends BaseServiceImpl<Role, Long> implements Role
 
         return dto;
     }
+
+    @Override
+    public boolean existsById(Long id) {
+        return roleRepository.existsById(id);
+    }
 }
