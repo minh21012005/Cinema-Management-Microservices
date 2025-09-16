@@ -11,6 +11,7 @@ import com.example.service.UserService;
 import com.example.service.specification.UserSpecification;
 import com.example.util.constant.GenderEnum;
 import com.example.util.error.IdInvalidException;
+import feign.FeignException;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -85,15 +86,12 @@ public class UserServiceImpl
             throw new IdInvalidException("Phone " + dto.getPhone() + " đã tồn tại.");
         }
 
-        User user = new User();
-        user.setName(dto.getName());
-        user.setEmail(dto.getEmail());
-        user.setPhone(dto.getPhone());
-        user.setAddress(dto.getAddress());
-        user.setGender(GenderEnum.valueOf(dto.getGender()));
-        user.setDateOfBirth(dto.getDateOfBirth());
-
-        User saved = userRepository.save(user);
+        String codeRole;
+        try {
+            codeRole = roleClient.getRoleCode(dto.getRoleId());
+        } catch (FeignException.BadRequest e) {
+            throw new IdInvalidException("Role ID không hợp lệ: " + dto.getRoleId());
+        }
 
         UserAuthDTO userAuthDTO = new UserAuthDTO();
         userAuthDTO.setEmail(dto.getEmail());
@@ -105,13 +103,23 @@ public class UserServiceImpl
                 exchangeName, sendRoutingKey, userAuthDTO
         );
 
-        String codeRole = roleClient.getRoleCode(dto.getRoleId());
+        User user = new User();
+        user.setName(dto.getName());
+        user.setEmail(dto.getEmail());
+        user.setPhone(dto.getPhone());
+        user.setAddress(dto.getAddress());
+        user.setGender(GenderEnum.valueOf(dto.getGender()));
+        user.setDateOfBirth(dto.getDateOfBirth());
+        user.setRole(codeRole);
 
-                ResUserDTO res = new ResUserDTO();
+        User saved = userRepository.save(user);
+
+        ResUserDTO res = new ResUserDTO();
         res.setId(saved.getId());
         res.setName(saved.getName());
         res.setEmail(saved.getEmail());
         res.setRole(codeRole);
+
         return res;
     }
 

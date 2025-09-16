@@ -51,8 +51,9 @@ public class RoleController extends BaseController<Role, Long> {
     }
 
     @GetMapping("/code")
-    public String getRoleCode(@RequestParam("id") Long id){
-        return Objects.requireNonNull(roleService.findById(id).orElse(null)).getCode();
+    public String getRoleCode(@RequestParam("id") Long id) throws IdInvalidException {
+        return roleService.findById(id).orElseThrow(
+                () -> new IdInvalidException("Id role is Invalid!")).getCode();
     }
 
     @Override
