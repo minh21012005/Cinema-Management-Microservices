@@ -88,7 +88,7 @@ public class AuthController extends BaseController<AuthUser, Long> {
 
         String hashedPassword = passwordEncoder.encode(userRequest.getPassword());
 
-        Role role = this.roleService.findByName("CUSTOMER").orElse(null);
+        Role role = this.roleService.findByCode("CUSTOMER").orElse(null);
 
         AuthUser authUser = new AuthUser();
         authUser.setEmail(userRequest.getEmail());
@@ -103,7 +103,8 @@ public class AuthController extends BaseController<AuthUser, Long> {
                 userRequest.getDateOfBirth(),
                 userRequest.getGender(),
                 userRequest.getEmail(),
-                userRequest.getAddress()
+                userRequest.getAddress(),
+                role.getCode() != null ? role.getCode() : "CUSTOMER"
         );
 
         // Publish event sang auth-service
@@ -115,6 +116,7 @@ public class AuthController extends BaseController<AuthUser, Long> {
         res.setId(savedUser.getId());
         res.setName(userRequest.getName());
         res.setEmail(userRequest.getEmail());
+        res.setRole(role.getCode());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(res);
     }
@@ -138,7 +140,7 @@ public class AuthController extends BaseController<AuthUser, Long> {
         if (currentUserDB != null) {
             RoleDTO roleDTO = new RoleDTO();
             roleDTO.setId(currentUserDB.getRole().getId());
-            roleDTO.setName(currentUserDB.getRole().getName());
+            roleDTO.setName(currentUserDB.getRole().getCode());
 
             List<String> permissions = currentUserDB.getRole().getPermissions().stream()
                     .map(Permission::getCode)
@@ -198,7 +200,7 @@ public class AuthController extends BaseController<AuthUser, Long> {
         if (currentUserDB != null) {
             RoleDTO roleDTO = new RoleDTO();
             roleDTO.setId(currentUserDB.getRole().getId());
-            roleDTO.setName(currentUserDB.getRole().getName());
+            roleDTO.setName(currentUserDB.getRole().getCode());
 
             List<String> permissions = currentUserDB.getRole().getPermissions().stream()
                     .map(Permission::getCode)
@@ -239,7 +241,7 @@ public class AuthController extends BaseController<AuthUser, Long> {
         ResLoginDTO res = new ResLoginDTO();
         RoleDTO roleDTO = new RoleDTO();
         roleDTO.setId(currentUser.getRole().getId());
-        roleDTO.setName(currentUser.getRole().getName());
+        roleDTO.setName(currentUser.getRole().getCode());
 
         ResLoginDTO.UserLogin userLogin = new ResLoginDTO.UserLogin(
                 currentUser.getId(),

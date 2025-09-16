@@ -9,7 +9,7 @@ import com.example.util.error.IdInvalidException;
 import java.util.Optional;
 
 public interface RoleService extends BaseService<Role, Long>  {
-    Optional<Role> findByName(String name);
+    Optional<Role> findByCode(String code);
     RoleResponseDTO createRole(RoleCreateDTO role);
     RoleResponseDTO updateRole(RoleUpdateDTO role) throws IdInvalidException;
 }

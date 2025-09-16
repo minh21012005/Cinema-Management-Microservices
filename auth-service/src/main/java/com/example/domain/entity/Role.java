@@ -15,6 +15,10 @@ import java.util.List;
 public class Role extends BaseEntity<Long> {
     @Column(unique = true, nullable = false)
     private String name;
+
+    @Column(unique = true, nullable = false)
+    private String code;
+
     private String description;
     private boolean active = true;
 

@@ -16,6 +16,7 @@ public class UserProfileDTO {
     private String gender;
     private String email;
     private String address;
+    private String role;
 }
 
 

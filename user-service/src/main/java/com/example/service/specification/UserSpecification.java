@@ -15,7 +15,7 @@ public class UserSpecification {
 
         if (role != null && !role.isEmpty()) {
             spec = spec.and(
-                    (root, query, cb) -> cb.equal(root.get("role").get("name"), role));
+                    (root, query, cb) -> cb.equal(root.get("role"), role));
         }
 
         return spec;

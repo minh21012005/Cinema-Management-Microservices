@@ -7,6 +7,6 @@ import java.util.Optional;
 
 @Repository
 public interface RoleRepository extends BaseRepository<Role, Long> {
-    Optional<Role> findByName(String name);
+    Optional<Role> findByCode(String code);
     boolean existsByName(String name);
 }
