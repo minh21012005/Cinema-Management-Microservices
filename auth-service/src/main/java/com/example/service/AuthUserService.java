@@ -1,7 +1,6 @@
 package com.example.service;
 
 import com.example.domain.entity.AuthUser;
-
 import java.util.Optional;
 
 public interface AuthUserService extends BaseService<AuthUser, Long>{

@@ -31,7 +31,11 @@ spring:
 
 app:
   rabbitmq:
-    queue: user.created.queue
+    exchange: user.exchange
+    send-queue: user.admin.created.queue
+    listen-queue: user.created.queue
+    send-routing-key: user.admin.created
+    listen-routing-key: user.created
 
 eureka:
   client:

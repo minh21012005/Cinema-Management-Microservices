@@ -13,6 +13,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/v1/roles")
@@ -49,4 +50,23 @@ public class RoleController extends BaseController<Role, Long> {
         return ResponseEntity.ok(roleService.updateRole(dto));
     }
 
+    @GetMapping("/code")
+    public String getRoleCode(@RequestParam("id") Long id){
+        return Objects.requireNonNull(roleService.findById(id).orElse(null)).getCode();
+    }
+
+    @Override
+    public ResponseEntity<Role> create(Role entity) {
+        throw new UnsupportedOperationException("Use POST /roles/create with DTO instead");
+    }
+
+    @Override
+    public ResponseEntity<Role> update(@PathVariable("id") Long id, Role entity) {
+        throw new UnsupportedOperationException("Use PUT with DTO instead");
+    }
+
+    @Override
+    public ResponseEntity<Void> delete(@PathVariable("id") Long id) {
+        throw new UnsupportedOperationException("Delete role not supported");
+    }
 }

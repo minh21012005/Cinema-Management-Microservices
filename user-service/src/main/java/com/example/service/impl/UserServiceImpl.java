@@ -1,11 +1,18 @@
 package com.example.service.impl;
 
+import com.example.client.RoleClient;
 import com.example.domain.User;
+import com.example.domain.entity.UserAuthDTO;
+import com.example.domain.request.CreateUserRequest;
 import com.example.domain.response.ResUserDTO;
 import com.example.domain.response.ResultPaginationDTO;
 import com.example.repository.UserRepository;
 import com.example.service.UserService;
 import com.example.service.specification.UserSpecification;
+import com.example.util.constant.GenderEnum;
+import com.example.util.error.IdInvalidException;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -18,11 +25,22 @@ public class UserServiceImpl
         extends BaseServiceImpl<User, Long>
         implements UserService {
 
-    private final UserRepository userRepository;
+    @Value("${app.rabbitmq.send-routing-key}")
+    private String sendRoutingKey;
 
-    public UserServiceImpl(UserRepository userRepository) {
+    @Value("${app.rabbitmq.exchange}")
+    private String exchangeName;
+
+    private final UserRepository userRepository;
+    private final RabbitTemplate rabbitTemplate;
+    private final RoleClient roleClient;
+
+    public UserServiceImpl(UserRepository userRepository, RabbitTemplate rabbitTemplate,
+                           RoleClient roleClient) {
         super(userRepository);
         this.userRepository = userRepository;
+        this.rabbitTemplate = rabbitTemplate;
+        this.roleClient = roleClient;
     }
 
     @Override
@@ -53,6 +71,48 @@ public class UserServiceImpl
         rs.setResult(listUser);
 
         return rs;
+    }
+
+    @Override
+    public ResUserDTO createUser(CreateUserRequest dto) throws IdInvalidException {
+        boolean isEmailExist = this.userRepository.existsByEmail(dto.getEmail());
+        if (isEmailExist) {
+            throw new IdInvalidException(
+                    "Email " + dto.getEmail() + " đã tồn tại, vui lòng sử dụng email khác.");
+        }
+
+        if (userRepository.existsByPhone(dto.getPhone())) {
+            throw new IdInvalidException("Phone " + dto.getPhone() + " đã tồn tại.");
+        }
+
+        User user = new User();
+        user.setName(dto.getName());
+        user.setEmail(dto.getEmail());
+        user.setPhone(dto.getPhone());
+        user.setAddress(dto.getAddress());
+        user.setGender(GenderEnum.valueOf(dto.getGender()));
+        user.setDateOfBirth(dto.getDateOfBirth());
+
+        User saved = userRepository.save(user);
+
+        UserAuthDTO userAuthDTO = new UserAuthDTO();
+        userAuthDTO.setEmail(dto.getEmail());
+        userAuthDTO.setPassword(dto.getPassword());
+        userAuthDTO.setRoleId(dto.getRoleId());
+
+        // Publish event sang auth-service
+        this.rabbitTemplate.convertAndSend(
+                exchangeName, sendRoutingKey, userAuthDTO
+        );
+
+        String codeRole = roleClient.getRoleCode(dto.getRoleId());
+
+                ResUserDTO res = new ResUserDTO();
+        res.setId(saved.getId());
+        res.setName(saved.getName());
+        res.setEmail(saved.getEmail());
+        res.setRole(codeRole);
+        return res;
     }
 
     public ResUserDTO convertToResUserDTO(User user) {

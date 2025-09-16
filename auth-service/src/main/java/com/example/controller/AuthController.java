@@ -40,7 +40,13 @@ import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("/api/v1/auth")
-public class AuthController extends BaseController<AuthUser, Long> {
+public class AuthController {
+
+    @Value("${app.rabbitmq.send-routing-key}")
+    private String sendRoutingKey;
+
+    @Value("${app.rabbitmq.exchange}")
+    private String exchangeName;
 
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final JwtUtil jwtUtil;
@@ -63,7 +69,6 @@ public class AuthController extends BaseController<AuthUser, Long> {
             RoleService roleService,
             RabbitTemplate rabbitTemplate,
             UserClient userClient) {
-        super(authUserService);
         this.authenticationManagerBuilder = authenticationManagerBuilder;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
@@ -109,7 +114,7 @@ public class AuthController extends BaseController<AuthUser, Long> {
 
         // Publish event sang auth-service
         this.rabbitTemplate.convertAndSend(
-                "user.exchange", "user.created", profileEvent
+                exchangeName, sendRoutingKey, profileEvent
         );
 
         ResUserDTO res = new ResUserDTO();

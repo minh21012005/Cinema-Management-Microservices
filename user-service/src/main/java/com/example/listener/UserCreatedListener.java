@@ -17,7 +17,7 @@ public class UserCreatedListener {
         this.userService = userService;
     }
 
-    @RabbitListener(queues = "${app.rabbitmq.queue}")
+    @RabbitListener(queues = "${app.rabbitmq.listen-queue}")
     public void handleUserCreated(UserProfileDTO profileDTO) {
         // Check phone trùng
         if (userService.isPhoneExist(profileDTO.getPhone())) {
