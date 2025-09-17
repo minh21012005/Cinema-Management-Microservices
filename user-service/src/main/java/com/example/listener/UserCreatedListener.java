@@ -2,7 +2,7 @@ package com.example.listener;
 
 import com.example.domain.entity.UserProfileDTO;
 
-import com.example.domain.User;
+import com.example.domain.entity.User;
 import com.example.service.UserService;
 import com.example.util.constant.GenderEnum;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;

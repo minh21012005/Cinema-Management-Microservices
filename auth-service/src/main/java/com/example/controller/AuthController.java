@@ -295,13 +295,16 @@ public class AuthController {
     @PostMapping("/logout")
     @ApiMessage("Logout User")
     public ResponseEntity<Void> logout(
-            @RequestHeader(value = "X-User-Email", required = false) String email) throws UnauthorizedException {
+            @RequestHeader(value = "X-User-Email", required = false) String email,
+            Authentication authentication) throws UnauthorizedException {
 
         if (email == null || email.isEmpty()) {
             throw new UnauthorizedException("Token không hợp lệ");
         }
 
-        AuthUser user = this.authUserService.findByEmail(email).orElse(null);
+        AuthUser user = this.authUserService.findByEmail(email).orElse(
+                authUserService.findById(
+                        Long.valueOf(authentication.getName())).orElse(null));
         if (user == null) {
             throw new UnauthorizedException("User không tồn tại trong hệ thống");
         }

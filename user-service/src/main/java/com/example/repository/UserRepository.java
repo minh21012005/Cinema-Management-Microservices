@@ -1,12 +1,14 @@
 package com.example.repository;
 
-import com.example.domain.User;
+import com.example.domain.entity.User;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 public interface UserRepository extends BaseRepository<User, Long>, JpaSpecificationExecutor<User> {
-    User findByEmail(String email);
+    Optional<User> findByEmail(String email);
 
     boolean existsByEmail(String email);
 

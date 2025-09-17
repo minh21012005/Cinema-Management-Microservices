@@ -1,6 +1,5 @@
-package com.example.domain;
+package com.example.domain.entity;
 
-import com.example.domain.entity.BaseEntity;
 import com.example.util.constant.GenderEnum;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -26,6 +25,7 @@ public class User extends BaseEntity<Long> {
     @Enumerated(EnumType.STRING)
     private GenderEnum gender;
 
+    @Column(nullable = false, unique = true)
     private String phone;
 
     private String address;

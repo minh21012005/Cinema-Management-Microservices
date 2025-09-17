@@ -1,9 +1,10 @@
 package com.example.service.impl;
 
 import com.example.client.RoleClient;
-import com.example.domain.User;
+import com.example.domain.entity.User;
 import com.example.domain.entity.UserAuthDTO;
 import com.example.domain.request.CreateUserRequest;
+import com.example.domain.request.UserUpdateDTO;
 import com.example.domain.response.ResUserDTO;
 import com.example.domain.response.ResultPaginationDTO;
 import com.example.repository.UserRepository;
@@ -19,6 +20,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -121,6 +123,25 @@ public class UserServiceImpl
         res.setRole(codeRole);
 
         return res;
+    }
+
+    @Override
+    public ResUserDTO updateUser(User userDb, UserUpdateDTO dto) {
+            userDb.setName(dto.getName());
+            userDb.setPhone(dto.getPhone());
+            userDb.setGender(GenderEnum.valueOf(dto.getGender()));
+            userDb.setDateOfBirth(dto.getDateOfBirth());
+            userDb.setAddress(dto.getAddress());
+
+            User saved = userRepository.save(userDb);
+
+            ResUserDTO res = new ResUserDTO();
+            res.setId(saved.getId());
+            res.setName(saved.getName());
+            res.setEmail(saved.getEmail());
+            res.setRole(saved.getRole());
+
+            return res;
     }
 
     public ResUserDTO convertToResUserDTO(User user) {

@@ -1,7 +1,8 @@
 package com.example.controller;
 
-import com.example.domain.User;
+import com.example.domain.entity.User;
 import com.example.domain.request.CreateUserRequest;
+import com.example.domain.request.UserUpdateDTO;
 import com.example.domain.response.ResUserDTO;
 import com.example.domain.response.ResultPaginationDTO;
 import com.example.service.UserService;
@@ -12,6 +13,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -55,5 +57,21 @@ public class UserController {
     @GetMapping("/check-phone")
     public Boolean checkPhone(@RequestParam("phone") String phone) {
         return userService.isPhoneExist(phone);
+    }
+
+    @PutMapping()
+    @ApiMessage("Updated my profile")
+    @PreAuthorize("hasPermission(null, 'USER_UPDATE')")
+    public ResponseEntity<ResUserDTO> update(
+            @Valid @RequestBody UserUpdateDTO dto,
+            Authentication authentication
+            ) throws IdInvalidException {
+        Long id = Long.valueOf(authentication.getName());
+        User user = userService.findById(id).orElseThrow(
+                () -> new IdInvalidException("Không thấy user trong hệ thống!"));
+        if(!dto.getPhone().equals(user.getPhone()) && userService.isPhoneExist(dto.getPhone())){
+            throw new IdInvalidException("Phone " + dto.getPhone() +" đã tồn tại!");
+        }
+        return ResponseEntity.ok(this.userService.updateUser(user, dto));
     }
 }
