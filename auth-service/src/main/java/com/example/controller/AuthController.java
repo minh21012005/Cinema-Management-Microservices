@@ -112,7 +112,7 @@ public class AuthController {
                 role.getCode() != null ? role.getCode() : "CUSTOMER"
         );
 
-        // Publish event sang auth-service
+        // Publish event sang user-service
         this.rabbitTemplate.convertAndSend(
                 exchangeName, sendRoutingKey, profileEvent
         );

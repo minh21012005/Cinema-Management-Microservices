@@ -144,6 +144,11 @@ public class UserServiceImpl
             return res;
     }
 
+    @Override
+    public Optional<User> findByEmail(String email) {
+        return userRepository.findByEmail(email);
+    }
+
     public ResUserDTO convertToResUserDTO(User user) {
         ResUserDTO res = new ResUserDTO();
         res.setId(user.getId());

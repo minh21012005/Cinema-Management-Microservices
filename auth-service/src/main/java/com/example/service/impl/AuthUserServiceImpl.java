@@ -1,19 +1,36 @@
 package com.example.service.impl;
 
 import com.example.domain.entity.AuthUser;
+import com.example.domain.entity.Role;
+import com.example.domain.entity.UserProfileDTO;
+import com.example.domain.request.UserUpdateDTO;
+import com.example.domain.request.UserUpdateProfileDTO;
+import com.example.domain.response.ResUserDTO;
 import com.example.repository.AuthUserRepository;
 import com.example.service.AuthUserService;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
 @Service
 public class AuthUserServiceImpl extends BaseServiceImpl<AuthUser, Long> implements AuthUserService {
-    private final AuthUserRepository authUserRepository;
 
-    public AuthUserServiceImpl(AuthUserRepository authUserRepository) {
+    @Value("${app.rabbitmq.send-routing-key-update}")
+    private String sendRoutingKey;
+
+    @Value("${app.rabbitmq.exchange}")
+    private String exchangeName;
+
+    private final AuthUserRepository authUserRepository;
+    private final RabbitTemplate rabbitTemplate;
+
+    public AuthUserServiceImpl(AuthUserRepository authUserRepository,
+                               RabbitTemplate rabbitTemplate) {
         super(authUserRepository);
         this.authUserRepository = authUserRepository;
+        this.rabbitTemplate = rabbitTemplate;
     }
 
     @Override
@@ -47,6 +64,39 @@ public class AuthUserServiceImpl extends BaseServiceImpl<AuthUser, Long> impleme
             currentUser.setRefreshToken(token);
             this.authUserRepository.save(currentUser);
         }
+    }
+
+    @Override
+    public ResUserDTO updateUser(AuthUser user, Role role, UserUpdateDTO dto) {
+        String oldEmail = user.getEmail();
+
+        user.setEmail(dto.getEmail());
+        user.setRole(role);
+        user.setEnabled(dto.isEnabled());
+
+        AuthUser saved = authUserRepository.save(user);
+
+        UserUpdateProfileDTO profileDTO = new UserUpdateProfileDTO();
+        profileDTO.setName(dto.getName());
+        profileDTO.setEmail(dto.getEmail());
+        profileDTO.setPhone(dto.getPhone());
+        profileDTO.setDateOfBirth(dto.getDateOfBirth());
+        profileDTO.setGender(dto.getGender());
+        profileDTO.setAddress(dto.getAddress());
+        profileDTO.setRole(role.getCode());
+        profileDTO.setOldEmail(oldEmail);
+
+        this.rabbitTemplate.convertAndSend(
+                exchangeName, sendRoutingKey, profileDTO
+        );
+
+        ResUserDTO res = new ResUserDTO();
+        res.setId(saved.getId());
+        res.setName(dto.getName());
+        res.setEmail(dto.getEmail());
+        res.setRole(role.getCode());
+
+        return res;
     }
 
     @Override

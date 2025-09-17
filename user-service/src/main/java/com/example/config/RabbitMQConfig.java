@@ -29,6 +29,12 @@ public class RabbitMQConfig {
     @Value("${app.rabbitmq.listen-routing-key}")
     private String listenRoutingKey;
 
+    @Value("${app.rabbitmq.listen-queue-update}")
+    private String listenQueueUpdate;
+
+    @Value("${app.rabbitmq.listen-routing-key-update}")
+    private String listenRoutingKeyUpdate;
+
     @Bean
     public Queue sendQueue() {
         return new Queue(sendQueue, true);
@@ -40,6 +46,11 @@ public class RabbitMQConfig {
     }
 
     @Bean
+    public Queue listenQueueUpdate() {
+        return new Queue(listenQueueUpdate, true);
+    }
+
+    @Bean
     public Binding bindingSendQueue(@Qualifier("sendQueue") Queue sendQueue, DirectExchange exchange) {
         return BindingBuilder.bind(sendQueue).to(exchange).with(sendRoutingKey);
     }
@@ -47,6 +58,12 @@ public class RabbitMQConfig {
     @Bean
     public Binding bindingListenQueue(@Qualifier("listenQueue") Queue listenQueue, DirectExchange exchange) {
         return BindingBuilder.bind(listenQueue).to(exchange).with(listenRoutingKey);
+    }
+
+    @Bean
+    public Binding bindingListenQueueUpdate(
+            @Qualifier("listenQueueUpdate") Queue listenQueueUpdate, DirectExchange exchange) {
+        return BindingBuilder.bind(listenQueueUpdate).to(exchange).with(listenRoutingKeyUpdate);
     }
 
     @Bean

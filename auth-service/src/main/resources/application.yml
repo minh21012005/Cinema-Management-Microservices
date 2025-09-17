@@ -33,7 +33,9 @@ app:
     exchange: user.exchange
     send-queue: user.created.queue
     listen-queue: user.admin.created.queue
+    send-queue-update: user.admin.updated.queue
     send-routing-key: user.created
+    send-routing-key-update: user.updated
     listen-routing-key: user.admin.created
 
 eureka:

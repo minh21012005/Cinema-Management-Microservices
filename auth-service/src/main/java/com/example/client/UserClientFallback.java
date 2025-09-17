@@ -9,4 +9,9 @@ class UserClientFallback implements UserClient {
         // fallback strategy: báo lỗi hoặc trả false
         throw new RuntimeException("Không thể kết nối User service, vui lòng thử lại sau");
     }
+
+    @Override
+    public Boolean isPhoneExist(String email, String newPhone) {
+        throw new RuntimeException("Không thể kết nối User service, vui lòng thử lại sau");
+    }
 }

@@ -15,4 +15,5 @@ public interface UserService extends BaseService<User,Long> {
     ResultPaginationDTO fetchAllUser(String emailFilter, String roleFilter, Pageable pageable);
     ResUserDTO createUser(CreateUserRequest dto) throws IdInvalidException;
     ResUserDTO updateUser(User user, UserUpdateDTO dto);
+    Optional<User> findByEmail(String email);
 }

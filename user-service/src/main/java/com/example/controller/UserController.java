@@ -59,18 +59,32 @@ public class UserController {
         return userService.isPhoneExist(phone);
     }
 
+    @GetMapping("/check-phone-update")
+    public Boolean checkPhone(
+            @RequestParam("email") String email,
+            @RequestParam("newPhone") String newPhone) throws IdInvalidException {
+        User user = userService.findByEmail(email).orElseThrow(
+                () -> new IdInvalidException("Không tìm thấy user trong hệ thống!")
+        );
+        if(!user.getPhone().equals(newPhone)){
+            return userService.isPhoneExist(newPhone);
+        }else {
+            return false;
+        }
+    }
+
     @PutMapping()
     @ApiMessage("Updated my profile")
     @PreAuthorize("hasPermission(null, 'USER_UPDATE')")
     public ResponseEntity<ResUserDTO> update(
             @Valid @RequestBody UserUpdateDTO dto,
             Authentication authentication
-            ) throws IdInvalidException {
+    ) throws IdInvalidException {
         Long id = Long.valueOf(authentication.getName());
         User user = userService.findById(id).orElseThrow(
                 () -> new IdInvalidException("Không thấy user trong hệ thống!"));
-        if(!dto.getPhone().equals(user.getPhone()) && userService.isPhoneExist(dto.getPhone())){
-            throw new IdInvalidException("Phone " + dto.getPhone() +" đã tồn tại!");
+        if (!dto.getPhone().equals(user.getPhone()) && userService.isPhoneExist(dto.getPhone())) {
+            throw new IdInvalidException("Phone " + dto.getPhone() + " đã tồn tại!");
         }
         return ResponseEntity.ok(this.userService.updateUser(user, dto));
     }
