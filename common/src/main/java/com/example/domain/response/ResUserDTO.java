@@ -1,7 +1,6 @@
 package com.example.domain.response;
 
-import com.example.domain.entity.RoleDTO;
-import com.example.util.constant.GenderEnum;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

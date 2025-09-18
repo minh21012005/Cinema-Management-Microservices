@@ -83,7 +83,7 @@ public class AuthUserServiceImpl extends BaseServiceImpl<AuthUser, Long, CreateU
         profileDTO.setDateOfBirth(dto.getDateOfBirth());
         profileDTO.setGender(dto.getGender());
         profileDTO.setAddress(dto.getAddress());
-        profileDTO.setRole(role.getCode());
+        profileDTO.setRoleId(role.getId());
         profileDTO.setOldEmail(oldEmail);
 
         this.rabbitTemplate.convertAndSend(

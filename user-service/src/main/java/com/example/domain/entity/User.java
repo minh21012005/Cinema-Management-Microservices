@@ -30,5 +30,5 @@ public class User extends BaseEntity<Long> {
 
     private String address;
 
-    private String role;
+    private Long roleId;
 }

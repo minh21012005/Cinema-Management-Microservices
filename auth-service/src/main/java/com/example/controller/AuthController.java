@@ -102,6 +102,7 @@ public class AuthController {
 
         AuthUser savedUser = this.authUserService.save(authUser);
 
+        assert role != null;
         UserProfileDTO profileEvent = new UserProfileDTO(
                 userRequest.getName(),
                 userRequest.getPhone(),
@@ -109,7 +110,7 @@ public class AuthController {
                 userRequest.getGender(),
                 userRequest.getEmail(),
                 userRequest.getAddress(),
-                role.getCode() != null ? role.getCode() : "CUSTOMER"
+                role.getId()
         );
 
         // Publish event sang user-service

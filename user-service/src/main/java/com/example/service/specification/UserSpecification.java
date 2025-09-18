@@ -5,7 +5,7 @@ import org.springframework.data.jpa.domain.Specification;
 
 public class UserSpecification {
 
-    public static Specification<User> findUsersWithFilters(String email, String role) {
+    public static Specification<User> findUsersWithFilters(String email, Long roleId) {
         Specification<User> spec = (root, query, cb) -> cb.conjunction(); // mặc định luôn true
 
         if (email != null && !email.isEmpty()) {
@@ -13,9 +13,9 @@ public class UserSpecification {
                     (root, query, cb) -> cb.like(cb.lower(root.get("email")), "%" + email.toLowerCase() + "%"));
         }
 
-        if (role != null && !role.isEmpty()) {
+        if (roleId != null) {
             spec = spec.and(
-                    (root, query, cb) -> cb.equal(root.get("role"), role));
+                    (root, query, cb) -> cb.equal(root.get("roleId"), roleId));
         }
 
         return spec;

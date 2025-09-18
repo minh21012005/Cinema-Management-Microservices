@@ -52,7 +52,7 @@ public class UserServiceImpl
     }
 
     @Override
-    public ResultPaginationDTO fetchAllUser(String emailFilter, String roleFilter, Pageable pageable) {
+    public ResultPaginationDTO fetchAllUser(String emailFilter, Long roleFilter, Pageable pageable) {
         Page<User> pageUser = this.userRepository.findAll(
                 UserSpecification.findUsersWithFilters(emailFilter, roleFilter), pageable);
         ResultPaginationDTO rs = new ResultPaginationDTO();
@@ -68,7 +68,13 @@ public class UserServiceImpl
 
         // remove sensitive data
         List<ResUserDTO> listUser = pageUser.getContent()
-                .stream().map(item -> this.convertToResUserDTO(item))
+                .stream().map(item -> {
+                    try {
+                        return this.convertToResUserDTO(item);
+                    } catch (IdInvalidException e) {
+                        throw new RuntimeException(e);
+                    }
+                })
                 .collect(Collectors.toList());
 
         rs.setResult(listUser);
@@ -112,7 +118,7 @@ public class UserServiceImpl
         user.setAddress(dto.getAddress());
         user.setGender(GenderEnum.valueOf(dto.getGender()));
         user.setDateOfBirth(dto.getDateOfBirth());
-        user.setRole(codeRole);
+        user.setRoleId(dto.getRoleId());
 
         User saved = userRepository.save(user);
 
@@ -126,22 +132,29 @@ public class UserServiceImpl
     }
 
     @Override
-    public ResUserDTO updateUser(User userDb, UserUpdateDTO dto) {
-            userDb.setName(dto.getName());
-            userDb.setPhone(dto.getPhone());
-            userDb.setGender(GenderEnum.valueOf(dto.getGender()));
-            userDb.setDateOfBirth(dto.getDateOfBirth());
-            userDb.setAddress(dto.getAddress());
+    public ResUserDTO updateUser(User userDb, UserUpdateDTO dto) throws IdInvalidException {
+        userDb.setName(dto.getName());
+        userDb.setPhone(dto.getPhone());
+        userDb.setGender(GenderEnum.valueOf(dto.getGender()));
+        userDb.setDateOfBirth(dto.getDateOfBirth());
+        userDb.setAddress(dto.getAddress());
 
-            User saved = userRepository.save(userDb);
+        User saved = userRepository.save(userDb);
 
-            ResUserDTO res = new ResUserDTO();
-            res.setId(saved.getId());
-            res.setName(saved.getName());
-            res.setEmail(saved.getEmail());
-            res.setRole(saved.getRole());
+        String codeRole;
+        try {
+            codeRole = authClient.getRoleCode(saved.getRoleId());
+        } catch (FeignException.BadRequest e) {
+            throw new IdInvalidException("Role ID không hợp lệ: " + saved.getRoleId());
+        }
 
-            return res;
+        ResUserDTO res = new ResUserDTO();
+        res.setId(saved.getId());
+        res.setName(saved.getName());
+        res.setEmail(saved.getEmail());
+        res.setRole(codeRole);
+
+        return res;
     }
 
     @Override
@@ -149,14 +162,21 @@ public class UserServiceImpl
         return userRepository.findByEmail(email);
     }
 
-    public ResUserDTO convertToResUserDTO(User user) {
+    public ResUserDTO convertToResUserDTO(User user) throws IdInvalidException {
         ResUserDTO res = new ResUserDTO();
         boolean isUserEnabled = authClient.isUserEnabled(user.getEmail());
+
+        String codeRole;
+        try {
+            codeRole = authClient.getRoleCode(user.getRoleId());
+        } catch (FeignException.BadRequest e) {
+            throw new IdInvalidException("Role ID không hợp lệ: " + user.getRoleId());
+        }
 
         res.setId(user.getId());
         res.setEmail(user.getEmail());
         res.setName(user.getName());
-        res.setRole(user.getRole());
+        res.setRole(codeRole);
         res.setEnabled(isUserEnabled);
 
         return res;

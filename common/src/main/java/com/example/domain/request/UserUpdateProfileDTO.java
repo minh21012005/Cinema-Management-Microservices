@@ -12,6 +12,6 @@ public class UserUpdateProfileDTO {
     private String gender;
     private String email;
     private String address;
-    private String role;
+    private Long roleId;
     private String oldEmail;
 }

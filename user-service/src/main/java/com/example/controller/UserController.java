@@ -31,11 +31,11 @@ public class UserController {
     @PreAuthorize("hasPermission(null, 'USER_VIEW_ALL')")
     public ResponseEntity<ResultPaginationDTO> getAll(
             @RequestParam(name = "email", required = false) String email,
-            @RequestParam(name = "role", required = false) String role,
+            @RequestParam(name = "roleId", required = false) Long roleId,
             Pageable pageable) {
 
         return ResponseEntity.status(HttpStatus.OK).body(
-                this.userService.fetchAllUser(email, role, pageable));
+                this.userService.fetchAllUser(email, roleId, pageable));
     }
 
     @GetMapping("/{id}")

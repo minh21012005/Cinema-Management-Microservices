@@ -35,7 +35,7 @@ public class UserCreatedListener {
         user.setAddress(profileDTO.getAddress());
         user.setDateOfBirth(profileDTO.getDateOfBirth());
         user.setGender(GenderEnum.valueOf(profileDTO.getGender()));
-        user.setRole(profileDTO.getRole());
+        user.setRoleId(profileDTO.getRoleId());
         userService.save(user);
     }
 
@@ -51,7 +51,7 @@ public class UserCreatedListener {
         user.setAddress(profileDTO.getAddress());
         user.setDateOfBirth(profileDTO.getDateOfBirth());
         user.setGender(GenderEnum.valueOf(profileDTO.getGender()));
-        user.setRole(profileDTO.getRole());
+        user.setRoleId(profileDTO.getRoleId());
 
         userService.save(user);
     }
