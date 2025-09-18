@@ -112,9 +112,4 @@ public class AuthUserServiceImpl extends BaseServiceImpl<AuthUser, Long, CreateU
 
         return res;
     }
-
-    @Override
-    public boolean existsById(Long id) {
-        return authUserRepository.existsById(id);
-    }
 }

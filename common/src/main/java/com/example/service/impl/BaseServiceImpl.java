@@ -33,5 +33,10 @@ public abstract class BaseServiceImpl<T, ID, Req, Res> implements BaseService<T,
     public void deleteById(ID id) {
         repository.deleteById(id);
     }
+
+    @Override
+    public boolean existsById(ID id) {
+        return repository.existsById(id);
+    }
 }
 

@@ -111,9 +111,4 @@ public class RoleServiceImpl extends BaseServiceImpl<Role, Long, RoleReqDTO, Rol
     public boolean existsByCode(String code) {
         return roleRepository.existsByCode(code);
     }
-
-    @Override
-    public boolean existsById(Long id) {
-        return roleRepository.existsById(id);
-    }
 }

@@ -16,6 +16,7 @@
         <module>user-service</module>
         <module>common</module>
         <module>auth-service</module>
+        <module>cinema-service</module>
     </modules>
 
     <properties>

@@ -181,10 +181,5 @@ public class UserServiceImpl
 
         return res;
     }
-
-    @Override
-    public boolean existsById(Long id) {
-        return userRepository.existsById(id);
-    }
 }
 
