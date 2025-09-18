@@ -302,12 +302,9 @@ public class AuthController {
             throw new UnauthorizedException("Token không hợp lệ");
         }
 
-        AuthUser user = this.authUserService.findByEmail(email).orElse(
-                authUserService.findById(
-                        Long.valueOf(authentication.getName())).orElse(null));
-        if (user == null) {
-            throw new UnauthorizedException("User không tồn tại trong hệ thống");
-        }
+        AuthUser user = authUserService.findByEmail(email)
+                .or(() -> authUserService.findById(Long.valueOf(authentication.getName())))
+                .orElseThrow(() -> new UnauthorizedException("User không tồn tại trong hệ thống"));
 
         // update refresh token = null
         this.authUserService.updateUserToken(null, email);

@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class UserServiceImpl
-        extends BaseServiceImpl<User, Long>
+        extends BaseServiceImpl<User, Long, CreateUserRequest, ResUserDTO>
         implements UserService {
 
     @Value("${app.rabbitmq.send-routing-key}")

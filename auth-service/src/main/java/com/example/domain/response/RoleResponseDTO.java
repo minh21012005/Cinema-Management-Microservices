@@ -14,6 +14,7 @@ public class RoleResponseDTO {
     private String name;
     private String description;
     private boolean active;
+    private String code;
     private List<String> permissions; // trả về danh sách tên permission
 }
 

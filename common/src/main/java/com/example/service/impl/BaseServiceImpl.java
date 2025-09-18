@@ -6,7 +6,7 @@ import com.example.service.BaseService;
 import java.util.List;
 import java.util.Optional;
 
-public abstract class BaseServiceImpl<T, ID> implements BaseService<T, ID> {
+public abstract class BaseServiceImpl<T, ID, Req, Res> implements BaseService<T, ID, Req, Res> {
 
     protected final BaseRepository<T, ID> repository;
 

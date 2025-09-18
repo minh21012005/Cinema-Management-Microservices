@@ -10,7 +10,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.Optional;
 
-public interface UserService extends BaseService<User,Long> {
+public interface UserService extends BaseService<User,Long, CreateUserRequest, ResUserDTO> {
     boolean isPhoneExist(String phone);
     ResultPaginationDTO fetchAllUser(String emailFilter, String roleFilter, Pageable pageable);
     ResUserDTO createUser(CreateUserRequest dto) throws IdInvalidException;

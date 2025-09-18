@@ -2,7 +2,7 @@ package com.example.mapper;
 
 import com.example.domain.entity.Permission;
 import com.example.domain.entity.Role;
-import com.example.domain.request.RoleCreateDTO;
+import com.example.domain.request.RoleReqDTO;
 import com.example.domain.response.RoleResponseDTO;
 import org.mapstruct.Mapper;
 
@@ -10,14 +10,15 @@ import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 @Mapper(componentModel = "spring")
-public interface RoleMapper {
+public interface RoleMapper extends BaseMapper<Role, RoleReqDTO, RoleResponseDTO> {
 
-    default Role toEntity(RoleCreateDTO dto) {
+    default Role toEntity(RoleReqDTO dto) {
         if (dto == null) return null;
         Role role = new Role();
         role.setName(dto.getName());
         role.setDescription(dto.getDescription());
         role.setActive(dto.isActive());
+        role.setCode(dto.getCode());
         // permissions sẽ set sau trong service
         return role;
     }
@@ -29,6 +30,7 @@ public interface RoleMapper {
         dto.setName(entity.getName());
         dto.setDescription(entity.getDescription());
         dto.setActive(entity.isActive());
+        dto.setCode(entity.getCode());
         // map permissions sang tên
         if (entity.getPermissions() != null) {
             dto.setPermissions(entity.getPermissions()

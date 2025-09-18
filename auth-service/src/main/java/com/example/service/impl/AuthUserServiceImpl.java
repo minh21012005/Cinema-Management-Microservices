@@ -2,7 +2,7 @@ package com.example.service.impl;
 
 import com.example.domain.entity.AuthUser;
 import com.example.domain.entity.Role;
-import com.example.domain.entity.UserProfileDTO;
+import com.example.domain.request.CreateUserRequest;
 import com.example.domain.request.UserUpdateDTO;
 import com.example.domain.request.UserUpdateProfileDTO;
 import com.example.domain.response.ResUserDTO;
@@ -15,7 +15,7 @@ import org.springframework.stereotype.Service;
 import java.util.Optional;
 
 @Service
-public class AuthUserServiceImpl extends BaseServiceImpl<AuthUser, Long> implements AuthUserService {
+public class AuthUserServiceImpl extends BaseServiceImpl<AuthUser, Long, CreateUserRequest, ResUserDTO> implements AuthUserService {
 
     @Value("${app.rabbitmq.send-routing-key-update}")
     private String sendRoutingKey;
