@@ -10,7 +10,6 @@ import com.example.service.AuthUserService;
 import com.example.service.RoleService;
 import com.example.util.error.IdInvalidException;
 import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -79,6 +78,23 @@ public class UserController {
         }
 
         return ResponseEntity.ok(authUserService.updateUser(user, role, dto));
+    }
+
+    @PutMapping("/change-status/{id}")
+    @PreAuthorize("hasPermission(null, 'USER_ADMIN_UPDATE')")
+    public ResponseEntity<ResUserDTO> updateUserStatus(@PathVariable("id") Long id) throws IdInvalidException {
+        AuthUser user = authUserService.findById(id).orElseThrow(
+                () -> new IdInvalidException("Không tìm thấy user trong hệ thống!")
+        );
+        return ResponseEntity.ok(authUserService.updateUserStatus(user));
+    }
+
+    @GetMapping("/enabled")
+    public boolean isUserEnabled(@RequestParam("email") String email) throws IdInvalidException {
+        AuthUser user = authUserService.findByEmail(email).orElseThrow(
+                () -> new IdInvalidException("Không tìm thấy user trong hệ thống!")
+        );
+        return user.isEnabled();
     }
 
 }

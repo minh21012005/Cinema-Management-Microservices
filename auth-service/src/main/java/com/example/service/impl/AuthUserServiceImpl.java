@@ -100,6 +100,20 @@ public class AuthUserServiceImpl extends BaseServiceImpl<AuthUser, Long> impleme
     }
 
     @Override
+    public ResUserDTO updateUserStatus(AuthUser user) {
+        user.setEnabled(!user.isEnabled());
+        AuthUser saved = authUserRepository.save(user);
+
+        ResUserDTO res = new ResUserDTO();
+        res.setId(saved.getId());
+        res.setEmail(saved.getEmail());
+        res.setRole(saved.getRole().getCode());
+        res.setEnabled(saved.isEnabled());
+
+        return res;
+    }
+
+    @Override
     public boolean existsById(Long id) {
         return authUserRepository.existsById(id);
     }

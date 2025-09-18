@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
@@ -51,7 +52,10 @@ public class SecurityConfig {
                                                                 CustomReactiveAuthenticationEntryPoint entryPoint) {
         return http
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
-                .authorizeExchange(ex -> ex.anyExchange().authenticated())
+                .authorizeExchange(ex -> ex
+                        // ✅ Cho phép tất cả OPTIONS request (preflight)
+                        .pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .anyExchange().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt.jwtDecoder(jwtDecoder()))
                         .authenticationEntryPoint(entryPoint) // đảm bảo token sai cũng gọi đây

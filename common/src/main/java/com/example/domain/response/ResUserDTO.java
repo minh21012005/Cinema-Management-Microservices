@@ -18,4 +18,5 @@ public class ResUserDTO {
     private String email;
     private String name;
     private String role;
+    private boolean enabled;
 }

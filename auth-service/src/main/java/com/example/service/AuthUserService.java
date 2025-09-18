@@ -14,4 +14,5 @@ public interface AuthUserService extends BaseService<AuthUser, Long>{
     Optional<AuthUser> findByRefreshTokenAndEmail(String refreshToken, String email);
     void updateUserToken(String token, String email);
     ResUserDTO updateUser(AuthUser user, Role role, UserUpdateDTO dto);
+    ResUserDTO updateUserStatus(AuthUser user);
 }
