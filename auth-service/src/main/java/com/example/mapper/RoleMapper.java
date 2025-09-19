@@ -7,6 +7,7 @@ import com.example.domain.response.RoleResponseDTO;
 import org.mapstruct.Mapper;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Mapper(componentModel = "spring")
@@ -41,6 +42,18 @@ public interface RoleMapper extends BaseMapper<Role, RoleReqDTO, RoleResponseDTO
             dto.setPermissions(new ArrayList<>());
         }
         return dto;
+    }
+
+    default String map(Permission permission) {
+        return permission.getCode();
+    }
+
+    // Map List<Permission> -> List<String>
+    default List<String> map(List<Permission> permissions) {
+        if (permissions == null) return null;
+        return permissions.stream()
+                .map(Permission::getCode) // hoặc getCode()
+                .collect(Collectors.toList());
     }
 }
 

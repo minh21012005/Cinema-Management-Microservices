@@ -26,6 +26,7 @@ public class Cinema extends BaseEntity<Long>{
 
     private String phone; // Số điện thoại liên hệ
 
+    @Builder.Default
     @Column(nullable = false)
     private boolean active = true; // true = đang hoạt động, false = ngừng hoạt động
 

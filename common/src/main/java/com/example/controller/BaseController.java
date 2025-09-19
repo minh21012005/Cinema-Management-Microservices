@@ -43,12 +43,12 @@ public abstract class BaseController<T, ID, Req, Res> {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Res> update(@PathVariable ID id, @Valid @RequestBody Req dto) throws IdInvalidException {
-        if (!service.existsById(id)) {
-            throw new IdInvalidException("Id không tồn tại trong hệ thống!");
-        }
-        T entity = mapper.toEntity(dto);
-        Res res = mapper.toDto(service.save(entity));
+    public ResponseEntity<Res> update(
+            @PathVariable ID id, @Valid @RequestBody Req dto) throws IdInvalidException {
+        T existingEntity = service.findById(id)
+                .orElseThrow(() -> new IdInvalidException("Id không tồn tại trong hệ thống!"));
+        mapper.updateEntityFromDto(dto, existingEntity); // merge dữ liệu
+        Res res = mapper.toDto(service.save(existingEntity));
         return ResponseEntity.ok(res);
     }
 
