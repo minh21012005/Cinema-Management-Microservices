@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -97,6 +98,37 @@ public class RoomServiceImpl
         room.setSeats(seats);
 
         // 5. Save room (cascade -> save seats)
+        return roomMapper.toDto(roomRepository.save(room));
+    }
+
+    @Override
+    public RoomResDTO updateRoom(Long id, RoomReqDTO dto) throws IdInvalidException {
+        Optional<Room> roomOptional = this.roomRepository.findById(id);
+        Room room = roomOptional.orElseThrow(
+                () -> new IdInvalidException("Room không tồn tại trong hệ thống!")
+        );
+
+        boolean isNameExist = false;
+        if (!dto.getName().equals(room.getName())) {
+            Cinema cinema = room.getCinema();
+            isNameExist = cinema.getRooms().stream().anyMatch(r -> r.getName().equals(dto.getName()));
+        }
+        if (isNameExist) {
+            throw new IdInvalidException("Tên phòng đã tồn tại!");
+        }
+        room.setName(dto.getName());
+        room.setRoomType(this.roomTypeRepository.findById(dto.getTypeId()).get());
+        Room saved = this.roomRepository.save(room);
+        return roomMapper.toDto(saved);
+
+    }
+
+    @Override
+    public RoomResDTO changeStatus(Long id) throws IdInvalidException {
+        Room room = roomRepository.findById(id).orElseThrow(
+                ()-> new IdInvalidException("Room không tồn tại trong hệ thống!")
+        );
+        room.setActive(!room.isActive());
         return roomMapper.toDto(roomRepository.save(room));
     }
 }

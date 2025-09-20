@@ -13,4 +13,6 @@ public interface RoomService extends BaseService<Room, Long, RoomReqDTO, RoomRes
     List<RoomResDTO> fetchAllRoom(Long cinemaId);
     List<RoomType> fetchAllRoomType();
     RoomResDTO createRoom(RoomReqCreateDTO dto) throws IdInvalidException;
+    RoomResDTO updateRoom(Long id, RoomReqDTO dto) throws IdInvalidException;
+    RoomResDTO changeStatus(Long id) throws IdInvalidException;
 }

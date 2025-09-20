@@ -4,7 +4,6 @@ import lombok.Data;
 
 @Data
 public class RoomReqDTO {
-    private long id;
     private String name;
     private long typeId;
 }

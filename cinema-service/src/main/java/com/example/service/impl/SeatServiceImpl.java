@@ -54,8 +54,9 @@ public class SeatServiceImpl
         if (nextSeat != null && nextSeat.isActive() && seatType.getName().equals("Đôi")) {
             throw new IdInvalidException("Vị trí này đã có ghế, không thể tạo!");
         }
-        assert nextSeat != null;
-        if (nextSeat.getSeatType().getName().equals("Đôi") && seatType.getName().equals("Đôi")) {
+        if (nextSeat != null &&
+                nextSeat.getSeatType().getName().equals("Đôi") &&
+                seatType.getName().equals("Đôi")) {
             throw new IdInvalidException("Ghế bên cạnh đang là ghế đôi, hãy chuyển sang loại khác trước!");
         }
         Room room = this.roomRepository.findById(dto.getRoomId()).
@@ -85,6 +86,53 @@ public class SeatServiceImpl
             dto.setSeatType(seat.getSeatType());
             return dto;
         }).collect(Collectors.toList());
+    }
+
+    @Override
+    public ResSeatDTO changeSeatStatus(Long id) throws IdInvalidException {
+        Seat seat = seatRepository.findById(id).orElseThrow(
+                () -> new IdInvalidException("Seat không tồn tại trong hệ thống!")
+        );
+        seat.setActive(!seat.isActive());
+        return seatMapper.toDto(seatRepository.save(seat));
+    }
+
+    @Override
+    public ResSeatDTO changeSeatType(Long id, Long typeId) throws IdInvalidException {
+        Seat seat = seatRepository.findById(id).orElseThrow(
+                () -> new IdInvalidException("Seat không tồn tại trong hệ thống!")
+        );
+        SeatType seatType = seatTypeRepository.findById(typeId).orElseThrow(
+                () -> new IdInvalidException("Seat Type không tồn tại trong hệ thống!")
+        );
+
+        if (!seat.getSeatType().getName().equals("Đôi")) {
+            if (!seatType.getName().equals("Đôi")) {
+                seat.setSeatType(seatType);
+            } else {
+                int row = seat.getRowIndex();
+                int col = seat.getColIndex();
+                Long roomId = seat.getRoom().getId();
+                Seat nextSeat = seatRepository.findByRowIndexAndColIndexAndRoomId
+                        (row, col + 1, roomId).orElse(null);
+                if (nextSeat != null && nextSeat.getSeatType().getName().equals("Đôi")) {
+                    throw new IdInvalidException("Ghế bên cạnh đang là ghế đôi, hãy chuyển sang loại khác trước!");
+                }
+                if (nextSeat == null || !nextSeat.isActive()) {
+                    seat.setName(seat.getName() + "-" + (col + 2));
+                    seat.setSeatType(seatType);
+                } else {
+                    throw new IdInvalidException("Ghế bên cạnh đang hoạt động, không thể đổi sang loại ghế đôi!");
+                }
+            }
+        } else {
+            if (!seatType.getName().equals("Đôi")) {
+                int index = seat.getName().indexOf("-");
+                seat.setName(seat.getName().substring(0, index));
+            }
+            seat.setSeatType(seatType);
+        }
+        return seatMapper.toDto(seatRepository.save(seat));
     }
 
     public Optional<SeatType> findSeatTypeById(Long id) {

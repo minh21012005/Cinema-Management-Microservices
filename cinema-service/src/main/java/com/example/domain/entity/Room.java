@@ -1,5 +1,6 @@
 package com.example.domain.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -32,9 +33,11 @@ public class Room extends BaseEntity<Long> {
     @JoinColumn(name = "cinema_id", nullable = false)
     private Cinema cinema;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "room", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Seat> seats;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "room", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Showtime> showtimes;
 }
