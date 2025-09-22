@@ -18,6 +18,9 @@ public class Showtime extends BaseEntity<Long>{
     private LocalDateTime startTime; // Thời gian bắt đầu chiếu
 
     @Column(nullable = false)
+    private LocalDateTime endTime;   // Thời gian kết thúc chiếu
+
+    @Column(nullable = false)
     private boolean active = true; // Trạng thái suất chiếu
 
     @Column(name = "movie_id")
