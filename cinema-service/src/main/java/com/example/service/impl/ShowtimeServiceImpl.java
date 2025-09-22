@@ -6,14 +6,19 @@ import com.example.domain.entity.Room;
 import com.example.domain.entity.Showtime;
 import com.example.domain.request.ShowtimeReqDTO;
 import com.example.domain.response.MovieResDTO;
+import com.example.domain.response.ResultPaginationDTO;
 import com.example.domain.response.ShowtimeResDTO;
 import com.example.mapper.ShowtimeMapper;
 import com.example.repository.CinemaRepository;
 import com.example.repository.RoomRepository;
 import com.example.repository.ShowtimeRepository;
 import com.example.service.ShowtimeService;
+import com.example.service.specification.ShowtimeSpecification;
 import com.example.util.error.IdInvalidException;
 import feign.FeignException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -78,40 +83,64 @@ public class ShowtimeServiceImpl
     }
 
     @Override
-    public List<ShowtimeResDTO> fetchAllByCinema(Long id) throws IdInvalidException {
-        Cinema cinema = cinemaRepository.findById(id).
-                orElseThrow(() -> new IdInvalidException("Cinema không tồn tại trong hệ thống"));
+    public ResultPaginationDTO fetchAllByCinema(Long cinemaId, String title, Long roomId, Pageable pageable)
+            throws IdInvalidException {
+        List<Long> movieIds = null;
+        if (title != null && !title.isBlank()) {
+            // gọi movie-service để tìm movieIds theo title
+            movieIds = movieClient.findByTitle(title)
+                    .getData()
+                    .stream()
+                    .map(MovieResDTO::getId)
+                    .toList();
 
-        // Lấy toàn bộ showtimes của tất cả room trong cinema
-        List<Showtime> showtimes = cinema.getRooms().stream()
-                .flatMap(room -> room.getShowtimes().stream())
-                .toList();
-
-        if (showtimes.isEmpty()) {
-            throw new IdInvalidException("Cinema chưa có suất chiếu nào!");
+            // nếu không có phim nào match -> trả luôn empty page
+            if (movieIds.isEmpty()) {
+                throw new IdInvalidException("Không có suất chiếu tương ứng!");
+            }
         }
 
-        // Lấy tất cả movieId duy nhất
-        List<Long> movieIds = showtimes.stream()
+        Specification<Showtime> spec = ShowtimeSpecification.findShowtimesWithFilters(cinemaId, roomId, movieIds);
+        Page<Showtime> pageShowtimes = showtimeRepository.findAll(spec, pageable);
+
+        if (pageShowtimes.isEmpty()) {
+            throw new IdInvalidException("Không có suất chiếu tương ứng!");
+        }
+
+        // Lấy tất cả movieId duy nhất trong page
+        List<Long> idsInPage  = pageShowtimes.getContent().stream()
                 .map(Showtime::getMovieId)
                 .distinct()
                 .toList();
 
         // Gọi 1 lần API để lấy danh sách phim
-        List<MovieResDTO> movies = movieClient.findByIds(movieIds).getData();
+        List<MovieResDTO> movies = movieClient.findByIds(idsInPage).getData();
 
         // Tạo map cho nhanh lookup
         Map<Long, String> movieMap = movies.stream()
                 .collect(Collectors.toMap(MovieResDTO::getId, MovieResDTO::getTitle));
 
         // Map sang ShowtimeResDTO
-        return showtimes.stream()
+        List<ShowtimeResDTO> result = pageShowtimes.getContent().stream()
                 .map(showtime -> {
                     ShowtimeResDTO resDTO = showtimeMapper.toDto(showtime);
                     resDTO.setMovieTitle(movieMap.get(showtime.getMovieId())); // lấy title từ map
                     return resDTO;
                 })
                 .collect(Collectors.toList());
+
+        ResultPaginationDTO.Meta meta = new ResultPaginationDTO.Meta();
+        meta.setPage(pageable.getPageNumber());
+        meta.setPageSize(pageable.getPageSize());
+        meta.setPages(pageShowtimes.getTotalPages());
+        meta.setTotal(pageShowtimes.getTotalElements());
+
+        // Trả về kết quả
+        ResultPaginationDTO rs = new ResultPaginationDTO();
+        rs.setMeta(meta);
+        rs.setResult(result);
+
+        return rs;
     }
 
 

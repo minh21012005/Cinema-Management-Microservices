@@ -18,4 +18,7 @@ public interface MovieClient {
 
     @GetMapping("/api/v1/movies/ids")
     ApiResponse<List<MovieResDTO>> findByIds(@RequestParam("ids") List<Long> id);
+
+    @GetMapping("/api/v1/movies/search")
+    ApiResponse<List<MovieResDTO>> findByTitle(@RequestParam("title") String title);
 }

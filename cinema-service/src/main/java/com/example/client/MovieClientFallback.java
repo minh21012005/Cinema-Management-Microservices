@@ -18,4 +18,9 @@ class MovieClientFallback implements MovieClient {
     public ApiResponse<List<MovieResDTO>> findByIds(List<Long> id) {
         throw new RuntimeException("Không thể kết nối Movie service, vui lòng thử lại sau");
     }
+
+    @Override
+    public ApiResponse<List<MovieResDTO>> findByTitle(String title) {
+        throw new RuntimeException("Không thể kết nối Movie service, vui lòng thử lại sau");
+    }
 }

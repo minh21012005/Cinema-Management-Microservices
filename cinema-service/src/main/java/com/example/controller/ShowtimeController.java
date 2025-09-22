@@ -2,10 +2,12 @@ package com.example.controller;
 
 import com.example.domain.entity.Showtime;
 import com.example.domain.request.ShowtimeReqDTO;
+import com.example.domain.response.ResultPaginationDTO;
 import com.example.domain.response.ShowtimeResDTO;
 import com.example.mapper.ShowtimeMapper;
 import com.example.service.ShowtimeService;
 import com.example.util.error.IdInvalidException;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -32,9 +34,12 @@ public class ShowtimeController extends BaseController<Showtime, Long, ShowtimeR
 
     @GetMapping("/cinemas/{id}")
     @PreAuthorize("hasPermission(null, 'SHOWTIME_VIEW')")
-    public ResponseEntity<List<ShowtimeResDTO>> fetchShowtimeByCinema(
-            @PathVariable("id") Long roomId) throws IdInvalidException {
-        return ResponseEntity.ok(showtimeService.fetchAllByCinema(roomId));
+    public ResponseEntity<ResultPaginationDTO> fetchShowtimeByCinema(
+            @PathVariable("id") Long cinemaId,
+            @RequestParam(name = "title", required = false) String title,
+            @RequestParam(name = "roomId", required = false) Long roomId,
+            Pageable pageable) throws IdInvalidException {
+        return ResponseEntity.ok(showtimeService.fetchAllByCinema(cinemaId, title, roomId, pageable));
     }
 
 }

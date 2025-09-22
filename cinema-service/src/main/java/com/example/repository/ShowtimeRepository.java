@@ -1,6 +1,9 @@
 package com.example.repository;
 
 import com.example.domain.entity.Showtime;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -9,7 +12,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
-public interface ShowtimeRepository extends BaseRepository<Showtime, Long> {
+public interface ShowtimeRepository extends BaseRepository<Showtime, Long>, JpaSpecificationExecutor<Showtime> {
     @Query("SELECT s FROM Showtime s " +
                   "WHERE s.room.id = :roomId " +
                   "AND s.active = true " +

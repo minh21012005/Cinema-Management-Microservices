@@ -35,7 +35,7 @@ public class RoomController extends BaseController<Room, Long, RoomReqDTO, RoomR
 
     @GetMapping("/cinemas/{id}")
     @PreAuthorize("hasPermission(null, 'ROOM_VIEW')")
-    public ResponseEntity<?> getRoomsByCinema(@PathVariable("id") Long id) throws IdInvalidException {
+    public ResponseEntity<List<RoomResDTO>> getRoomsByCinema(@PathVariable("id") Long id) throws IdInvalidException {
         Optional<Cinema> cinema = this.cinemaService.findById(id);
         if (cinema.isEmpty()) {
             throw new IdInvalidException("Cinema với id " + id + " không tồn tại!");

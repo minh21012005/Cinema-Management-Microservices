@@ -42,4 +42,12 @@ public class MovieServiceImpl
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public List<MovieResDTO> searchByTitle(String title) {
+        return movieRepository.findByTitleContainingIgnoreCase(title)
+                .stream()
+                .map(movieMapper::toDto)
+                .toList();
+    }
+
 }
