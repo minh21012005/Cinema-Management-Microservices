@@ -13,5 +13,5 @@ public interface CinemaService extends BaseService<Cinema, Long, CinemaReqDTO, C
     boolean existsByName(String name);
     boolean existsByPhone(String phone);
     boolean existsByAddress(String address);
-    Cinema changeStatusOfCinema(Long id);
+    Cinema changeStatusOfCinema(Long id) throws IdInvalidException;
 }

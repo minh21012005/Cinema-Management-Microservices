@@ -29,6 +29,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
@@ -142,28 +143,33 @@ public class AuthController {
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         ResLoginDTO res = new ResLoginDTO();
-        AuthUser currentUserDB = this.authUserService.findByEmail(loginDto.getUsername()).orElse(null);
-        if (currentUserDB != null) {
-            RoleDTO roleDTO = new RoleDTO();
-            roleDTO.setId(currentUserDB.getRole().getId());
-            roleDTO.setName(currentUserDB.getRole().getCode());
+        AuthUser currentUserDB = this.authUserService.findByEmail(loginDto.getUsername())
+                .orElseThrow(() -> new UsernameNotFoundException("Email không tồn tại"));
 
-            List<String> permissions = currentUserDB.getRole().getPermissions().stream()
-                    .map(Permission::getCode)
-                    .toList();
-
-            String redisKey = "user:permissions:" + currentUserDB.getId();
-            Map<String, String> permissionMap = new HashMap<>();
-            permissions.forEach(perm -> permissionMap.put(perm, "1"));
-            redisTemplate.opsForHash().putAll(redisKey, permissionMap);
-            redisTemplate.expire(redisKey, 1, TimeUnit.HOURS);
-
-            ResLoginDTO.UserLogin userLogin = new ResLoginDTO.UserLogin(
-                    currentUserDB.getId(),
-                    currentUserDB.getEmail(),
-                    roleDTO);
-            res.setUser(userLogin);
+        if (!currentUserDB.isEnabled()) {
+            throw new IllegalArgumentException("Tài khoản đang bị khóa, không thể đăng nhập!");
         }
+
+        RoleDTO roleDTO = new RoleDTO();
+        roleDTO.setId(currentUserDB.getRole().getId());
+        roleDTO.setName(currentUserDB.getRole().getCode());
+
+        List<String> permissions = currentUserDB.getRole().getPermissions().stream()
+                .map(Permission::getCode)
+                .toList();
+
+        String redisKey = "user:permissions:" + currentUserDB.getId();
+        Map<String, String> permissionMap = new HashMap<>();
+        permissions.forEach(perm -> permissionMap.put(perm, "1"));
+        redisTemplate.opsForHash().putAll(redisKey, permissionMap);
+        redisTemplate.expire(redisKey, 1, TimeUnit.HOURS);
+
+        ResLoginDTO.UserLogin userLogin = new ResLoginDTO.UserLogin(
+                currentUserDB.getId(),
+                currentUserDB.getEmail(),
+                roleDTO);
+        res.setUser(userLogin);
+
 
         // create access token
         String access_token = this.jwtUtil.createAccessToken(authentication.getName(), res);

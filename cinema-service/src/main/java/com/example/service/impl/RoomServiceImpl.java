@@ -11,6 +11,7 @@ import com.example.repository.SeatTypeRepository;
 import com.example.service.CinemaService;
 import com.example.service.RoomService;
 import com.example.util.error.IdInvalidException;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
@@ -63,6 +64,10 @@ public class RoomServiceImpl
         Cinema cinema = cinemaService.findById(dto.getCinemaId())
                 .orElseThrow(() -> new IdInvalidException("Cinema not found with id = " + dto.getCinemaId()));
 
+        if (!cinema.isActive()) {
+            throw new IllegalArgumentException("Cinema đang không hoạt động!");
+        }
+
         boolean exists = roomRepository.existsByNameAndCinema(dto.getName(), cinema);
         if (exists) {
             throw new IdInvalidException("Room name '" + dto.getName() + "' already exists in this cinema");
@@ -108,6 +113,12 @@ public class RoomServiceImpl
                 () -> new IdInvalidException("Room không tồn tại trong hệ thống!")
         );
 
+        Cinema cinemaDb = room.getCinema();
+
+        if (!cinemaDb.isActive()) {
+            throw new IllegalArgumentException("Cinema đang không hoạt động!");
+        }
+
         boolean isNameExist = false;
         if (!dto.getName().equals(room.getName())) {
             Cinema cinema = room.getCinema();
@@ -124,11 +135,29 @@ public class RoomServiceImpl
     }
 
     @Override
+    @Transactional
     public RoomResDTO changeStatus(Long id) throws IdInvalidException {
         Room room = roomRepository.findById(id).orElseThrow(
-                ()-> new IdInvalidException("Room không tồn tại trong hệ thống!")
+                () -> new IdInvalidException("Room không tồn tại trong hệ thống!")
         );
-        room.setActive(!room.isActive());
+
+        Cinema cinemaDb = room.getCinema();
+        if (!cinemaDb.isActive()) {
+            throw new IllegalArgumentException("Cinema đang không hoạt động!");
+        }
+
+        boolean newStatus = !room.isActive();
+        room.setActive(newStatus);
+
+        // Nếu tắt room
+        if (!newStatus) {
+            // Tắt tất cả seat
+            room.getSeats().forEach(seat -> seat.setActive(false));
+
+            // Tắt tất cả showtime
+            room.getShowtimes().forEach(showtime -> showtime.setActive(false));
+        }
         return roomMapper.toDto(roomRepository.save(room));
     }
+
 }

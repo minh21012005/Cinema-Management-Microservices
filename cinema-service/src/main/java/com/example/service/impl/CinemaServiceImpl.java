@@ -1,18 +1,24 @@
 package com.example.service.impl;
 
 import com.example.domain.entity.Cinema;
+import com.example.domain.entity.Room;
+import com.example.domain.entity.Seat;
+import com.example.domain.entity.Showtime;
 import com.example.domain.request.CinemaReqDTO;
 import com.example.domain.response.CinemaResDTO;
 import com.example.domain.response.ResultPaginationDTO;
 import com.example.mapper.CinemaMapper;
 import com.example.repository.CinemaRepository;
+import com.example.repository.ShowtimeRepository;
 import com.example.service.CinemaService;
 import com.example.service.specification.CinemaSpecification;
 import com.example.util.error.IdInvalidException;
+import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -22,12 +28,15 @@ public class CinemaServiceImpl
         implements CinemaService {
     private final CinemaRepository cinemaRepository;
     private final CinemaMapper cinemaMapper;
+    private final ShowtimeRepository showtimeRepository;
 
     protected CinemaServiceImpl(CinemaRepository cinemaRepository,
-                                CinemaMapper cinemaMapper) {
+                                CinemaMapper cinemaMapper,
+                                ShowtimeRepository showtimeRepository) {
         super(cinemaRepository);
         this.cinemaRepository = cinemaRepository;
         this.cinemaMapper = cinemaMapper;
+        this.showtimeRepository = showtimeRepository;
     }
 
     @Override
@@ -94,13 +103,31 @@ public class CinemaServiceImpl
     }
 
     @Override
-    public Cinema changeStatusOfCinema(Long id) {
-        Cinema cinema = this.cinemaRepository.findById(id).orElse(null);
-        if (cinema != null) {
-            cinema.setActive(!cinema.isActive());
-            this.cinemaRepository.save(cinema);
-        }
-        return cinema;
-    }
+    @Transactional
+    public Cinema changeStatusOfCinema(Long id) throws IdInvalidException {
+        Cinema cinema = cinemaRepository.findById(id)
+                .orElseThrow(() -> new IdInvalidException("Cinema không tồn tại trong hệ thống!"));
 
+        boolean newStatus = !cinema.isActive();
+        cinema.setActive(newStatus);
+
+        if (!newStatus) {
+            // Nếu tắt cinema thì cascade xuống
+            for (Room room : cinema.getRooms()) {
+                room.setActive(false);
+                for (Seat seat : room.getSeats()) {
+                    seat.setActive(false);
+                }
+            }
+
+            // Tắt các suất chiếu trong tương lai
+            List<Showtime> showtimes = showtimeRepository.findAllByCinemaId(cinema.getId());
+            LocalDateTime now = LocalDateTime.now();
+            showtimes.stream()
+                    .filter(s -> s.getStartTime().isAfter(now))
+                    .forEach(s -> s.setActive(false));
+        }
+
+        return cinemaRepository.save(cinema);
+    }
 }

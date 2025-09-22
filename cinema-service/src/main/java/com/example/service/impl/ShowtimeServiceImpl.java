@@ -6,7 +6,6 @@ import com.example.domain.entity.Showtime;
 import com.example.domain.request.ShowtimeReqDTO;
 import com.example.domain.response.MovieResDTO;
 import com.example.domain.response.ResultPaginationDTO;
-import com.example.domain.response.RoomResDTO;
 import com.example.domain.response.ShowtimeResDTO;
 import com.example.mapper.ShowtimeMapper;
 import com.example.repository.CinemaRepository;
@@ -56,6 +55,14 @@ public class ShowtimeServiceImpl
                 () -> new IdInvalidException("Room không tồn tại trong hệ thống!")
         );
 
+        if (!room.getCinema().isActive()) {
+            throw new IllegalArgumentException("Cinema của phòng chiếu không hoạt động!");
+        }
+
+        if (!room.isActive()) {
+            throw new IllegalArgumentException("Room đang không hoạt động!");
+        }
+
         MovieResDTO movie;
         try {
             movie = movieClient.findById(dto.getMovieId()).getData();
@@ -63,7 +70,23 @@ public class ShowtimeServiceImpl
             throw new IdInvalidException("Movie ID không hợp lệ: " + dto.getMovieId());
         }
 
+        if (movie == null) throw new IdInvalidException("Movie không tồn tại: " + dto.getMovieId());
+        if (!movie.isActive()) {
+            throw new IllegalArgumentException("Movie đang không active, không thể tạo suất chiếu cho phim này!");
+        }
+        if (movie.getDurationInMinutes() <= 0) {
+            throw new IllegalArgumentException("Duration của movie không hợp lệ!");
+        }
+
         LocalDateTime start = dto.getStartTime();
+
+        if (movie.getReleaseDate() != null && start.toLocalDate().isBefore(movie.getReleaseDate())) {
+            throw new IllegalArgumentException("Không thể tạo suất trước ngày phát hành phim!");
+        }
+        if (movie.getEndDate() != null && start.toLocalDate().isAfter(movie.getEndDate())) {
+            throw new IllegalArgumentException("Không thể tạo suất sau ngày kết thúc chiếu của phim!");
+        }
+
         // ✅ Validate startTime không được ở quá khứ
         if (start.isBefore(LocalDateTime.now())) {
             throw new IllegalArgumentException("Thời gian bắt đầu không được ở quá khứ!");
@@ -153,9 +176,43 @@ public class ShowtimeServiceImpl
         Showtime showtime = showtimeRepository.findById(id).orElseThrow(
                 () -> new IdInvalidException("Showtime không tồn tại trong hệ thống!")
         );
+
+        if (showtime.isActive()) {
+            // ACTIVE -> INACTIVE
+            if (showtime.getStartTime().isBefore(LocalDateTime.now())) {
+                throw new IdInvalidException("Không thể hủy suất chiếu đã bắt đầu hoặc đã chiếu xong!");
+            }
+//            if (ticketRepository.existsByShowtimeId(showtime.getId())) {
+//                throw new IdInvalidException("Suất chiếu đã bán vé, không thể hủy!");
+//            }
+        } else {
+            // INACTIVE -> ACTIVE
+            MovieResDTO movie;
+            try {
+                movie = movieClient.findById(showtime.getMovieId()).getData();
+            } catch (FeignException.BadRequest e) {
+                throw new IdInvalidException("Movie ID không hợp lệ: " + showtime.getMovieId());
+            }
+
+            if (!showtime.getRoom().isActive() || !showtime.getRoom().getCinema().isActive()) {
+                throw new IdInvalidException("Cinema hoặc Room không hoạt động!");
+            }
+            if (!movie.isActive()) {
+                throw new IdInvalidException("Phim không hoạt động!");
+            }
+            if (showtime.getStartTime().isBefore(LocalDateTime.now())) {
+                throw new IdInvalidException("Thời gian chiếu phải nằm trong tương lai!");
+            }
+
+            LocalDateTime endTime = showtime.getStartTime()
+                    .plusMinutes(movie.getDurationInMinutes());
+            validateShowtime(showtime.getRoom().getId(), id,showtime.getStartTime(), endTime);
+        }
+
         showtime.setActive(!showtime.isActive());
         return showtimeMapper.toDto(showtimeRepository.save(showtime));
     }
+
 
     public void validateShowtime(Long roomId, LocalDateTime startTime, LocalDateTime endTime) {
         List<Showtime> overlaps = showtimeRepository.findOverlappingShowtimes(roomId, startTime, endTime);
@@ -163,4 +220,12 @@ public class ShowtimeServiceImpl
             throw new IllegalArgumentException("Giờ chiếu bị trùng với suất chiếu khác trong cùng phòng!");
         }
     }
+
+    public void validateShowtime(Long roomId, Long showtimeId, LocalDateTime startTime, LocalDateTime endTime) {
+        List<Showtime> overlaps = showtimeRepository.findOverlappingShowtimesExcept(roomId, showtimeId, startTime, endTime);
+        if (!overlaps.isEmpty()) {
+            throw new IllegalArgumentException("Giờ chiếu bị trùng với suất chiếu khác trong cùng phòng!");
+        }
+    }
+
 }

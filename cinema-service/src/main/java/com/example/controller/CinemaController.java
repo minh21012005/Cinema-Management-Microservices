@@ -72,7 +72,7 @@ public class CinemaController extends BaseController<Cinema, Long, CinemaReqDTO,
     @PutMapping("/change-status/{id}")
     @ApiMessage("Changed status of cinema")
     @PreAuthorize("hasPermission(null, 'CINEMA_UPDATE')")
-    public ResponseEntity<Object> changeStatus(@PathVariable("id") Long id) {
+    public ResponseEntity<Object> changeStatus(@PathVariable("id") Long id) throws IdInvalidException {
         Cinema cinema = this.cinemaService.changeStatusOfCinema(id);
         return ResponseEntity.status(HttpStatus.OK).body(cinema);
     }

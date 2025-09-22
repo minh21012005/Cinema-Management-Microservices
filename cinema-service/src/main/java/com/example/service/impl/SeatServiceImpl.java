@@ -45,6 +45,7 @@ public class SeatServiceImpl
                 dto.getRow(), dto.getCol() + 1, dto.getRoomId()).orElse(null);
         SeatType seatType = this.findSeatTypeById(dto.getTypeId())
                 .orElseThrow(() -> new IdInvalidException("Loại ghế không tồn tại!"));
+
         if (rightSeat != null) {
             throw new IdInvalidException("Vị trí này đã có ghế, không thể tạo!");
         }
@@ -59,8 +60,13 @@ public class SeatServiceImpl
                 seatType.getName().equals("Đôi")) {
             throw new IdInvalidException("Ghế bên cạnh đang là ghế đôi, hãy chuyển sang loại khác trước!");
         }
+
         Room room = this.roomRepository.findById(dto.getRoomId()).
                 orElseThrow(() -> new IdInvalidException("Room không tồn tại!"));
+
+        if (!room.isActive()) {
+            throw new IllegalArgumentException("Room đang không hoạt động!");
+        }
 
         Seat seat = getSeat(dto, seatType, room);
         return seatMapper.toDto(seatRepository.save(seat));
@@ -93,6 +99,10 @@ public class SeatServiceImpl
         Seat seat = seatRepository.findById(id).orElseThrow(
                 () -> new IdInvalidException("Seat không tồn tại trong hệ thống!")
         );
+        Room room = seat.getRoom();
+        if (!room.isActive()) {
+            throw new IllegalArgumentException("Room đang không hoạt động!");
+        }
         seat.setActive(!seat.isActive());
         return seatMapper.toDto(seatRepository.save(seat));
     }
@@ -105,6 +115,11 @@ public class SeatServiceImpl
         SeatType seatType = seatTypeRepository.findById(typeId).orElseThrow(
                 () -> new IdInvalidException("Seat Type không tồn tại trong hệ thống!")
         );
+
+        Room room = seat.getRoom();
+        if (!room.isActive()) {
+            throw new IllegalArgumentException("Room đang không hoạt động!");
+        }
 
         if (!seat.getSeatType().getName().equals("Đôi")) {
             if (!seatType.getName().equals("Đôi")) {
