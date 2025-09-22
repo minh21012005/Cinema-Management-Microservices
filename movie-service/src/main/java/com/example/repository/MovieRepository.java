@@ -11,4 +11,6 @@ import java.util.List;
 public interface MovieRepository extends BaseRepository<Movie, Long> {
     @Query("SELECT m FROM Movie m WHERE LOWER(m.title) LIKE LOWER(CONCAT('%', :title, '%'))")
     List<Movie> findByTitleContainingIgnoreCase(@Param("title") String title);
+
+    List<Movie> findByActiveTrue();
 }

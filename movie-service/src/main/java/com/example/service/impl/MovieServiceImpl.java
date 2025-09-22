@@ -50,4 +50,13 @@ public class MovieServiceImpl
                 .toList();
     }
 
+    @Override
+    public List<MovieResDTO> getAllActive() {
+        List<Movie> movies = movieRepository.findByActiveTrue();
+        return movies.stream()
+                .map(movieMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+
 }

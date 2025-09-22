@@ -1,12 +1,12 @@
 package com.example.service.impl;
 
 import com.example.client.MovieClient;
-import com.example.domain.entity.Cinema;
 import com.example.domain.entity.Room;
 import com.example.domain.entity.Showtime;
 import com.example.domain.request.ShowtimeReqDTO;
 import com.example.domain.response.MovieResDTO;
 import com.example.domain.response.ResultPaginationDTO;
+import com.example.domain.response.RoomResDTO;
 import com.example.domain.response.ShowtimeResDTO;
 import com.example.mapper.ShowtimeMapper;
 import com.example.repository.CinemaRepository;
@@ -64,6 +64,11 @@ public class ShowtimeServiceImpl
         }
 
         LocalDateTime start = dto.getStartTime();
+        // ✅ Validate startTime không được ở quá khứ
+        if (start.isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("Thời gian bắt đầu không được ở quá khứ!");
+        }
+
         LocalDateTime end = start.plusMinutes(movie.getDurationInMinutes());
 
         validateShowtime(dto.getRoomId(), dto.getStartTime(), end);
@@ -108,7 +113,7 @@ public class ShowtimeServiceImpl
         }
 
         // Lấy tất cả movieId duy nhất trong page
-        List<Long> idsInPage  = pageShowtimes.getContent().stream()
+        List<Long> idsInPage = pageShowtimes.getContent().stream()
                 .map(Showtime::getMovieId)
                 .distinct()
                 .toList();
@@ -143,6 +148,14 @@ public class ShowtimeServiceImpl
         return rs;
     }
 
+    @Override
+    public ShowtimeResDTO changeStatus(Long id) throws IdInvalidException {
+        Showtime showtime = showtimeRepository.findById(id).orElseThrow(
+                () -> new IdInvalidException("Showtime không tồn tại trong hệ thống!")
+        );
+        showtime.setActive(!showtime.isActive());
+        return showtimeMapper.toDto(showtimeRepository.save(showtime));
+    }
 
     public void validateShowtime(Long roomId, LocalDateTime startTime, LocalDateTime endTime) {
         List<Showtime> overlaps = showtimeRepository.findOverlappingShowtimes(roomId, startTime, endTime);

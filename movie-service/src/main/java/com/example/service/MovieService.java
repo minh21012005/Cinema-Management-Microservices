@@ -11,4 +11,5 @@ public interface MovieService extends BaseService<Movie, Long, MovieReqDTO, Movi
     MovieResDTO getById(Long id) throws IdInvalidException;
     List<MovieResDTO> getByIds(List<Long> ids) throws IdInvalidException;
     List<MovieResDTO> searchByTitle(String title);
+    List<MovieResDTO> getAllActive();
 }

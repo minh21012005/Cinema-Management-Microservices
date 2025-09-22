@@ -11,4 +11,5 @@ public interface ShowtimeService extends BaseService<Showtime, Long, ShowtimeReq
     ShowtimeResDTO create(ShowtimeReqDTO dto) throws IdInvalidException;
     ResultPaginationDTO fetchAllByCinema(Long cinemaId, String title, Long roomId, Pageable pageable)
             throws IdInvalidException;
+    ShowtimeResDTO changeStatus(Long id) throws IdInvalidException;
 }

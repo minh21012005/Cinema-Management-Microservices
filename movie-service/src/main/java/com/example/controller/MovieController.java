@@ -31,6 +31,13 @@ public class MovieController extends BaseController<Movie, Long, MovieReqDTO, Mo
         return ResponseEntity.ok(movieService.getById(id));
     }
 
+    @GetMapping("/active")
+    @ApiMessage("Fetched all active movies")
+    @PreAuthorize("hasPermission(null, 'MOVIE_VIEW')")
+    public ResponseEntity<List<MovieResDTO>> findAllActive() {
+        return ResponseEntity.ok(movieService.getAllActive());
+    }
+
     @GetMapping("/ids")
     @ApiMessage("Fetched movies by ids")
     @PreAuthorize("hasPermission(null, 'MOVIE_VIEW')")

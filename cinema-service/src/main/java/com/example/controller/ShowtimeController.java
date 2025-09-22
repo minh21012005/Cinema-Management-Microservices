@@ -13,8 +13,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/api/v1/showtime")
 public class ShowtimeController extends BaseController<Showtime, Long, ShowtimeReqDTO, ShowtimeResDTO> {
@@ -42,4 +40,10 @@ public class ShowtimeController extends BaseController<Showtime, Long, ShowtimeR
         return ResponseEntity.ok(showtimeService.fetchAllByCinema(cinemaId, title, roomId, pageable));
     }
 
+    @PutMapping("/change-status/{id}")
+    @PreAuthorize("hasPermission(null, 'SHOWTIME_UPDATE')")
+    public ResponseEntity<ShowtimeResDTO> changeShowtimeStatus(
+            @PathVariable("id") Long id) throws IdInvalidException {
+        return ResponseEntity.ok(showtimeService.changeStatus(id));
+    }
 }
