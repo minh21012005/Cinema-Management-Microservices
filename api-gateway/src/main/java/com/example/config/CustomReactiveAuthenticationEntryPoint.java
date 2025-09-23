@@ -28,6 +28,10 @@ public class CustomReactiveAuthenticationEntryPoint implements ServerAuthenticat
         exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
         exchange.getResponse().getHeaders().setContentType(MediaType.APPLICATION_JSON);
 
+        // Thêm header CORS
+        exchange.getResponse().getHeaders().add("Access-Control-Allow-Origin", "http://localhost:5173");
+        exchange.getResponse().getHeaders().add("Access-Control-Allow-Credentials", "true");
+
         RestResponse<Object> res = new RestResponse<>();
         res.setStatusCode(HttpStatus.UNAUTHORIZED.value());
         res.setError(errorMsg);
