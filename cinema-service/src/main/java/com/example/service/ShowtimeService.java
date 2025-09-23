@@ -7,9 +7,12 @@ import com.example.domain.response.ShowtimeResDTO;
 import com.example.util.error.IdInvalidException;
 import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDate;
+
 public interface ShowtimeService extends BaseService<Showtime, Long, ShowtimeReqDTO, ShowtimeResDTO> {
     ShowtimeResDTO create(ShowtimeReqDTO dto) throws IdInvalidException;
-    ResultPaginationDTO fetchAllByCinema(Long cinemaId, String title, Long roomId, Pageable pageable)
-            throws IdInvalidException;
+    ResultPaginationDTO fetchAllByCinema(Long cinemaId, String title, Long roomId, LocalDate fromDate,
+                                         LocalDate toDate, Pageable pageable) throws IdInvalidException;
     ShowtimeResDTO changeStatus(Long id) throws IdInvalidException;
+    ShowtimeResDTO updateShowtime(Long id, ShowtimeReqDTO dto) throws IdInvalidException;
 }

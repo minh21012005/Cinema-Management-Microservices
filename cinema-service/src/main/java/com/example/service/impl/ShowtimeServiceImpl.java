@@ -20,6 +20,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -111,8 +112,8 @@ public class ShowtimeServiceImpl
     }
 
     @Override
-    public ResultPaginationDTO fetchAllByCinema(Long cinemaId, String title, Long roomId, Pageable pageable)
-            throws IdInvalidException {
+    public ResultPaginationDTO fetchAllByCinema(Long cinemaId, String title, Long roomId, LocalDate fromDate,
+                                                LocalDate toDate, Pageable pageable) throws IdInvalidException {
         List<Long> movieIds = null;
         if (title != null && !title.isBlank()) {
             // gọi movie-service để tìm movieIds theo title
@@ -121,19 +122,11 @@ public class ShowtimeServiceImpl
                     .stream()
                     .map(MovieResDTO::getId)
                     .toList();
-
-            // nếu không có phim nào match -> trả luôn empty page
-            if (movieIds.isEmpty()) {
-                throw new IdInvalidException("Không có suất chiếu tương ứng!");
-            }
         }
 
-        Specification<Showtime> spec = ShowtimeSpecification.findShowtimesWithFilters(cinemaId, roomId, movieIds);
+        Specification<Showtime> spec = ShowtimeSpecification.findShowtimesWithFilters(
+                cinemaId, roomId, movieIds, fromDate, toDate);
         Page<Showtime> pageShowtimes = showtimeRepository.findAll(spec, pageable);
-
-        if (pageShowtimes.isEmpty()) {
-            throw new IdInvalidException("Không có suất chiếu tương ứng!");
-        }
 
         // Lấy tất cả movieId duy nhất trong page
         List<Long> idsInPage = pageShowtimes.getContent().stream()
@@ -206,13 +199,56 @@ public class ShowtimeServiceImpl
 
             LocalDateTime endTime = showtime.getStartTime()
                     .plusMinutes(movie.getDurationInMinutes());
-            validateShowtime(showtime.getRoom().getId(), id,showtime.getStartTime(), endTime);
+            validateShowtime(showtime.getRoom().getId(), id, showtime.getStartTime(), endTime);
         }
 
         showtime.setActive(!showtime.isActive());
         return showtimeMapper.toDto(showtimeRepository.save(showtime));
     }
 
+    @Override
+    public ShowtimeResDTO updateShowtime(Long id, ShowtimeReqDTO dto) throws IdInvalidException {
+        Showtime showtime = showtimeRepository.findById(id)
+                .orElseThrow(() -> new IdInvalidException("Showtime không tồn tại!"));
+
+        if (showtime.getStartTime().isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("Không thể update suất chiếu đã bắt đầu!");
+        }
+
+        Room room = roomRepository.findById(dto.getRoomId())
+                .orElseThrow(() -> new IdInvalidException("Room không tồn tại!"));
+
+        if (!room.isActive() || !room.getCinema().isActive()) {
+            throw new IllegalArgumentException("Room hoặc Cinema không hoạt động!");
+        }
+
+        MovieResDTO movie = movieClient.findById(dto.getMovieId()).getData();
+        if (movie == null || !movie.isActive()) {
+            throw new IllegalArgumentException("Movie không hợp lệ hoặc không active!");
+        }
+
+        LocalDateTime newStartTime = dto.getStartTime();
+        LocalDateTime newEndTime = newStartTime.plusMinutes(movie.getDurationInMinutes());
+
+        if ((movie.getReleaseDate() != null && newStartTime.toLocalDate().isBefore(movie.getReleaseDate())) ||
+                (movie.getEndDate() != null && newStartTime.toLocalDate().isAfter(movie.getEndDate()))) {
+            throw new IllegalArgumentException("Thời gian chiếu không nằm trong releaseDate và endDate của movie!");
+        }
+
+        // Check trùng giờ chiếu trong phòng
+        validateShowtime(room.getId(), id, newStartTime, newEndTime);
+
+        // Update
+        showtime.setStartTime(newStartTime);
+        showtime.setEndTime(newEndTime);
+        showtime.setRoom(room);
+        showtime.setMovieId(movie.getId());
+
+        Showtime saved = showtimeRepository.save(showtime);
+        ShowtimeResDTO resDTO = showtimeMapper.toDto(saved);
+        resDTO.setMovieTitle(movie.getTitle());
+        return resDTO;
+    }
 
     public void validateShowtime(Long roomId, LocalDateTime startTime, LocalDateTime endTime) {
         List<Showtime> overlaps = showtimeRepository.findOverlappingShowtimes(roomId, startTime, endTime);
