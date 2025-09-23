@@ -16,7 +16,9 @@ import com.example.service.specification.ShowtimeSpecification;
 import com.example.util.error.IdInvalidException;
 import feign.FeignException;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
@@ -122,6 +124,14 @@ public class ShowtimeServiceImpl
                     .stream()
                     .map(MovieResDTO::getId)
                     .toList();
+        }
+
+        if (pageable.getSort().isUnsorted()) {
+            pageable = PageRequest.of(
+                    pageable.getPageNumber(),
+                    pageable.getPageSize(),
+                    Sort.by(Sort.Direction.DESC, "startTime")
+            );
         }
 
         Specification<Showtime> spec = ShowtimeSpecification.findShowtimesWithFilters(
