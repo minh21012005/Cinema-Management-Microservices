@@ -18,6 +18,7 @@
         <module>auth-service</module>
         <module>cinema-service</module>
         <module>movie-service</module>
+        <module>media-service</module>
     </modules>
 
     <properties>
