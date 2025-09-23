@@ -3,10 +3,13 @@ package com.example.controller;
 import com.example.domain.entity.Movie;
 import com.example.domain.request.MovieReqDTO;
 import com.example.domain.response.MovieResDTO;
+import com.example.domain.response.ResultPaginationDTO;
 import com.example.mapper.MovieMapper;
 import com.example.service.MovieService;
 import com.example.util.annotation.ApiMessage;
 import com.example.util.error.IdInvalidException;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -22,6 +25,21 @@ public class MovieController extends BaseController<Movie, Long, MovieReqDTO, Mo
     protected MovieController(MovieService movieService, MovieMapper movieMapper) {
         super(movieService, movieMapper);
         this.movieService = movieService;
+    }
+
+    @GetMapping("/all")
+    @PreAuthorize("hasPermission(null, 'MOVIE_VIEW')")
+    public ResponseEntity<ResultPaginationDTO> fetchAllMovies(
+            @RequestParam(name = "title", required = false) String title,
+            @RequestParam(name = "categoryId", required = false) Long categoryId,
+            Pageable pageable) throws IdInvalidException {
+        return ResponseEntity.ok(movieService.fetchAllMovies(title, categoryId, pageable));
+    }
+
+    @Override
+    @PreAuthorize("hasPermission(null, 'MOVIE_CREATE')")
+    public ResponseEntity<MovieResDTO> create(@RequestBody MovieReqDTO dto) throws IdInvalidException {
+        return ResponseEntity.status(HttpStatus.CREATED).body(movieService.createMovie(dto));
     }
 
     @GetMapping("/fetch/{id}")

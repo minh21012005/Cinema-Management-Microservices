@@ -8,7 +8,12 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Entity
-@Table(name = "movies")
+@Table(
+        name = "movies",
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = {"title", "release_date"})
+        }
+)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -25,9 +30,10 @@ public class Movie extends BaseEntity<Long> {
     @Column(nullable = false)
     private int durationInMinutes; // Thời lượng (phút)
 
-    @Column(nullable = false)
+    @Column(name = "release_date", nullable = false)
     private LocalDate releaseDate; // Ngày phát hành
 
+    @Column(name = "end_date")
     private LocalDate endDate; // Ngày kết thúc chiếu (có thể null nếu chưa xác định)
 
     @Column(nullable = false)
