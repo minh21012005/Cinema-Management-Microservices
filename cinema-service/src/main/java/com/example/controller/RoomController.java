@@ -35,7 +35,8 @@ public class RoomController extends BaseController<Room, Long, RoomReqDTO, RoomR
 
     @GetMapping("/cinemas/{id}")
     @PreAuthorize("hasPermission(null, 'ROOM_VIEW')")
-    public ResponseEntity<List<RoomResDTO>> getRoomsByCinema(@PathVariable("id") Long id) throws IdInvalidException {
+    public ResponseEntity<List<RoomResDTO>> getRoomsByCinema(@PathVariable("id") Long id)
+            throws IdInvalidException {
         Optional<Cinema> cinema = this.cinemaService.findById(id);
         if (cinema.isEmpty()) {
             throw new IdInvalidException("Cinema với id " + id + " không tồn tại!");
@@ -52,14 +53,14 @@ public class RoomController extends BaseController<Room, Long, RoomReqDTO, RoomR
 
     @PostMapping("/create")
     @PreAuthorize("hasPermission(null, 'ROOM_CREATE')")
-    public ResponseEntity<RoomResDTO> createRoom(@RequestBody RoomReqCreateDTO dto) throws IdInvalidException{
+    public ResponseEntity<RoomResDTO> createRoom(@RequestBody RoomReqCreateDTO dto) throws IdInvalidException {
         return ResponseEntity.status(HttpStatus.CREATED).body(this.roomService.createRoom(dto));
     }
 
     @Override
     @PreAuthorize("hasPermission(null, 'ROOM_UPDATE')")
     public ResponseEntity<RoomResDTO> update(
-            @PathVariable("id") Long id, RoomReqDTO dto) throws IdInvalidException {
+            @PathVariable("id") Long id, @RequestBody RoomReqDTO dto) throws IdInvalidException {
         return ResponseEntity.ok(roomService.updateRoom(id, dto));
     }
 
@@ -76,7 +77,7 @@ public class RoomController extends BaseController<Room, Long, RoomReqDTO, RoomR
     }
 
     @Override
-    public ResponseEntity<RoomResDTO> create(RoomReqDTO dto) {
+    public ResponseEntity<RoomResDTO> create(@RequestBody RoomReqDTO dto) {
         throw new UnsupportedOperationException("Post /create is supported!");
     }
 

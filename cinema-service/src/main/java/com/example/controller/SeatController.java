@@ -29,7 +29,7 @@ public class SeatController extends BaseController<Seat, Long, ReqSeatDTO, ResSe
 
     @Override
     @PreAuthorize("hasPermission(null, 'SEAT_CREATE')")
-    public ResponseEntity<ResSeatDTO> create(ReqSeatDTO dto) throws IdInvalidException {
+    public ResponseEntity<ResSeatDTO> create(@RequestBody ReqSeatDTO dto) throws IdInvalidException {
         return ResponseEntity.ok(seatService.createSeat(dto));
     }
 

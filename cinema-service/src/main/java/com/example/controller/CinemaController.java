@@ -31,7 +31,7 @@ public class CinemaController extends BaseController<Cinema, Long, CinemaReqDTO,
 
     @Override
     @PreAuthorize("hasPermission(null, 'CINEMA_CREATE')")
-    public ResponseEntity<CinemaResDTO> create(CinemaReqDTO dto) throws IdInvalidException {
+    public ResponseEntity<CinemaResDTO> create(@RequestBody CinemaReqDTO dto) throws IdInvalidException {
         return ResponseEntity.ok(cinemaService.createCinema(dto));
     }
 
@@ -53,7 +53,7 @@ public class CinemaController extends BaseController<Cinema, Long, CinemaReqDTO,
     @Override
     @PreAuthorize("hasPermission(null, 'CINEMA_UPDATE')")
     public ResponseEntity<CinemaResDTO> update(
-            @PathVariable("id") Long id, CinemaReqDTO dto) throws IdInvalidException {
+            @PathVariable("id") Long id, @RequestBody CinemaReqDTO dto) throws IdInvalidException {
         Cinema cinema = cinemaService.findById(id).orElse(null);
         if (cinema != null) {
             if(!cinema.getName().equals(dto.getName()) && cinemaService.existsByName(dto.getName())){

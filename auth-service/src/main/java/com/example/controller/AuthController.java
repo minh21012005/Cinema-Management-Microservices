@@ -186,7 +186,7 @@ public class AuthController {
         ResponseCookie resCookies = ResponseCookie
                 .from("refresh_token", refresh_token)
                 .httpOnly(true)
-                .secure(true)
+                .secure(false) // local dev không HTTPS
                 .path("/")
                 .maxAge(refreshTokenExpiration)
                 .build();

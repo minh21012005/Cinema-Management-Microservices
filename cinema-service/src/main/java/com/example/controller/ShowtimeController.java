@@ -26,7 +26,7 @@ public class ShowtimeController extends BaseController<Showtime, Long, ShowtimeR
 
     @Override
     @PreAuthorize("hasPermission(null, 'SHOWTIME_CREATE')")
-    public ResponseEntity<ShowtimeResDTO> create(ShowtimeReqDTO dto) throws IdInvalidException {
+    public ResponseEntity<ShowtimeResDTO> create(@RequestBody ShowtimeReqDTO dto) throws IdInvalidException {
         return ResponseEntity.status(HttpStatus.CREATED).body(showtimeService.create(dto));
     }
 
@@ -45,5 +45,12 @@ public class ShowtimeController extends BaseController<Showtime, Long, ShowtimeR
     public ResponseEntity<ShowtimeResDTO> changeShowtimeStatus(
             @PathVariable("id") Long id) throws IdInvalidException {
         return ResponseEntity.ok(showtimeService.changeStatus(id));
+    }
+
+    @Override
+    @PreAuthorize("hasPermission(null, 'SHOWTIME_UPDATE')")
+    public ResponseEntity<ShowtimeResDTO> update(@PathVariable("id") Long id, ShowtimeReqDTO dto)
+            throws IdInvalidException {
+        return super.update(id, dto);
     }
 }
