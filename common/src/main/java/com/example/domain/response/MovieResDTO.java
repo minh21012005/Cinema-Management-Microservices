@@ -14,7 +14,7 @@ public class MovieResDTO {
     private LocalDate releaseDate;
     private LocalDate endDate;
     private boolean active;
-    private String poster;
+    private String posterKey;
 
     // Chỉ lấy code của Category
     private List<String> categoryCodes;

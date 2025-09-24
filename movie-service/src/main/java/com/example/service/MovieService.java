@@ -7,6 +7,7 @@ import com.example.domain.response.ResultPaginationDTO;
 import com.example.util.error.IdInvalidException;
 import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public interface MovieService extends BaseService<Movie, Long, MovieReqDTO, MovieResDTO> {
@@ -14,6 +15,7 @@ public interface MovieService extends BaseService<Movie, Long, MovieReqDTO, Movi
     List<MovieResDTO> getByIds(List<Long> ids) throws IdInvalidException;
     List<MovieResDTO> searchByTitle(String title);
     List<MovieResDTO> getAllActive();
-    ResultPaginationDTO fetchAllMovies(String title, Long categoryId, Pageable pageable);
+    ResultPaginationDTO fetchAllMovies(
+            String title, Long categoryId, LocalDate fromDate, LocalDate toDate,Pageable pageable);
     MovieResDTO createMovie(MovieReqDTO dto) throws IdInvalidException;
 }

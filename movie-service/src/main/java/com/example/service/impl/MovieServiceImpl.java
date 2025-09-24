@@ -12,9 +12,12 @@ import com.example.service.MovieService;
 import com.example.service.specification.MovieSpecification;
 import com.example.util.error.IdInvalidException;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -68,9 +71,17 @@ public class MovieServiceImpl
     }
 
     @Override
-    public ResultPaginationDTO fetchAllMovies(String title, Long categoryId, Pageable pageable) {
+    public ResultPaginationDTO fetchAllMovies(String title, Long categoryId, LocalDate fromDate, LocalDate toDate, Pageable pageable) {
+        if (pageable.getSort().isUnsorted()) {
+            pageable = PageRequest.of(
+                    pageable.getPageNumber(),
+                    pageable.getPageSize(),
+                    Sort.by(Sort.Direction.DESC, "createdAt")
+            );
+        }
+
         Page<Movie> pageMovie = this.movieRepository.findAll(
-                MovieSpecification.findMovieWithFilters(title, categoryId), pageable);
+                MovieSpecification.findMovieWithFilters(title, categoryId, fromDate, toDate), pageable);
         ResultPaginationDTO rs = new ResultPaginationDTO();
         ResultPaginationDTO.Meta mt = new ResultPaginationDTO.Meta();
 
