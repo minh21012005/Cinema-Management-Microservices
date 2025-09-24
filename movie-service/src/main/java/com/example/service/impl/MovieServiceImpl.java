@@ -120,7 +120,7 @@ public class MovieServiceImpl
         }
 
         // Validate poster
-        if (dto.getPoster() == null || dto.getPoster().trim().isEmpty()) {
+        if (dto.getPosterKey() == null || dto.getPosterKey().trim().isEmpty()) {
             throw new IdInvalidException("Poster không được để trống");
         }
 

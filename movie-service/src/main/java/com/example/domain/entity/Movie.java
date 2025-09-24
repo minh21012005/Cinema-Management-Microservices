@@ -39,8 +39,9 @@ public class Movie extends BaseEntity<Long> {
     @Column(nullable = false)
     private boolean active = true; // Trạng thái phim
 
+    // Thay poster thành posterKey (objectKey trong Media Service)
     @Column(nullable = false)
-    private String poster;
+    private String posterKey;
 
     @ManyToMany
     @JoinTable(

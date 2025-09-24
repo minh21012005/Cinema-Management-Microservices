@@ -16,6 +16,6 @@ public class MovieReqDTO {
     private int durationInMinutes; // Thời lượng
     private LocalDate releaseDate; // Ngày phát hành
     private LocalDate endDate; // Ngày kết thúc chiếu
-    private String poster; // Link poster
+    private String posterKey; // Poster key
     private List<Long> categoryIds; // danh sách category id (hoặc có thể dùng List<String> categoryCodes)
 }
