@@ -3,6 +3,7 @@ package com.example.controller;
 import com.example.service.MediaService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -15,6 +16,7 @@ public class MediaController {
 
     // Upload file
     @PostMapping("/upload")
+    @PreAuthorize("hasPermission(null, 'FILE_UPLOAD')")
     public ResponseEntity<String> upload(@RequestParam("file") MultipartFile file,
                                          @RequestParam("type") String type) throws Exception {
         String objectKey = mediaService.uploadFile(file, type);
@@ -23,6 +25,7 @@ public class MediaController {
 
     // Get presigned URL
     @GetMapping("/url")
+    @PreAuthorize("hasPermission(null, 'FILE_VIEW')")
     public ResponseEntity<String> getUrl(@RequestParam("objectKey") String objectKey,
                                          @RequestParam(defaultValue = "3600", name = "expireSeconds")
                                          long expireSeconds) throws Exception {
