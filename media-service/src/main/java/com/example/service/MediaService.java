@@ -11,6 +11,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
 @Service
@@ -25,57 +27,6 @@ public class MediaService {
     public MediaService(MediaFileRepository repository, MinioClient minioClient) {
         this.repository = repository;
         this.minioClient = minioClient;
-    }
-
-    // Upload file
-    public String uploadFile(MultipartFile file, String type) throws Exception {
-        if (file.isEmpty()) {
-            throw new IdInvalidException("File rỗng");
-        }
-
-        long maxSize = 5 * 1024 * 1024; // 5MB
-        if (file.getSize() > maxSize) {
-            throw new IdInvalidException("File quá lớn, tối đa 5MB");
-        }
-
-        String contentType = file.getContentType();
-        if (!("image/png".equals(contentType) || "image/jpeg".equals(contentType))) {
-            throw new IdInvalidException("Chỉ hỗ trợ PNG hoặc JPEG");
-        }
-
-        String originalFileName = file.getOriginalFilename();
-        if (originalFileName == null) {
-            originalFileName = "file";
-        }
-        // Xử lý tên file để objectKey không có khoảng trắng hoặc ký tự đặc biệt
-        originalFileName = originalFileName.trim()
-                .replaceAll("[\\s]+", "_")
-                .replaceAll("[^a-zA-Z0-9_\\.-]", "");
-
-        String objectKey = type + "/" + UUID.randomUUID() + "-" + originalFileName;
-
-        // Upload lên MinIO
-        minioClient.putObject(
-                PutObjectArgs.builder()
-                        .bucket(bucketName)
-                        .object(objectKey)
-                        .stream(file.getInputStream(), file.getSize(), -1)
-                        .contentType(contentType)
-                        .build()
-        );
-
-        // Lưu metadata vào DB
-        MediaFile media = MediaFile.builder()
-                .type(type)
-                .originalFileName(file.getOriginalFilename())
-                .objectKey(objectKey)
-                .contentType(contentType)
-                .size(file.getSize())
-                .build();
-
-        repository.save(media);
-
-        return objectKey;
     }
 
     // Tạo presigned URL
@@ -192,11 +143,17 @@ public class MediaService {
 
         for (Result<Item> result : items) {
             Item item = result.get();
-            // ở đây có thể check thời gian (item.lastModified())
-            minioClient.removeObject(
-                    RemoveObjectArgs.builder().bucket(bucketName).object(item.objectName()).build()
-            );
+            // Nếu file cũ hơn 24h thì xóa
+            if (item.lastModified().toInstant().isBefore(Instant.now().minus(24, ChronoUnit.HOURS))) {
+                minioClient.removeObject(
+                        RemoveObjectArgs.builder()
+                                .bucket(bucketName)
+                                .object(item.objectName())
+                                .build()
+                );
+            }
         }
+
     }
 
     private void validateFile(MultipartFile file) throws IdInvalidException {
