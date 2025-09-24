@@ -14,13 +14,21 @@ public class MediaController {
 
     private final MediaService mediaService;
 
-    // Upload file
-    @PostMapping("/upload")
+    // Upload tạm thời
+    @PostMapping("/upload/temp")
     @PreAuthorize("hasPermission(null, 'FILE_UPLOAD')")
-    public ResponseEntity<String> upload(@RequestParam("file") MultipartFile file,
-                                         @RequestParam("type") String type) throws Exception {
-        String objectKey = mediaService.uploadFile(file, type);
+    public ResponseEntity<String> uploadTemp(@RequestParam("file") MultipartFile file) throws Exception {
+        String objectKey = mediaService.uploadTempFile(file);
         return ResponseEntity.ok(objectKey);
+    }
+
+    // Commit file khi tạo object
+    @PostMapping("/commit")
+    @PreAuthorize("hasPermission(null, 'FILE_UPLOAD')")
+    public ResponseEntity<String> commitFile(@RequestParam("objectKey") String objectKey,
+                                             @RequestParam("type") String type) throws Exception {
+        String newKey = mediaService.commitFile(objectKey, type);
+        return ResponseEntity.ok(newKey);
     }
 
     // Get presigned URL

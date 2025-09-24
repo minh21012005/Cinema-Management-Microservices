@@ -3,11 +3,11 @@ package com.example.service;
 import com.example.domain.entity.MediaFile;
 import com.example.repository.MediaFileRepository;
 import com.example.util.error.IdInvalidException;
-import io.minio.MinioClient;
-import io.minio.PutObjectArgs;
-import io.minio.GetPresignedObjectUrlArgs;
+import io.minio.*;
 import io.minio.http.Method;
+import io.minio.messages.Item;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -105,4 +105,114 @@ public class MediaService {
         );
     }
 
+
+    // Upload file tạm -> chỉ lưu MinIO
+    public String uploadTempFile(MultipartFile file) throws Exception {
+        validateFile(file);
+
+        String objectKey = "temp/" + UUID.randomUUID() + "-" + cleanFileName(file.getOriginalFilename());
+
+        minioClient.putObject(
+                PutObjectArgs.builder()
+                        .bucket(bucketName)
+                        .object(objectKey)
+                        .stream(file.getInputStream(), file.getSize(), -1)
+                        .contentType(file.getContentType())
+                        .build()
+        );
+
+        return objectKey; // không lưu DB
+    }
+
+    // Commit file -> move sang thư mục chính + ghi DB
+    public String commitFile(String objectKey, String targetType) throws Exception {
+        if (objectKey == null || !objectKey.startsWith("temp/")) {
+            throw new IdInvalidException("objectKey không hợp lệ hoặc không phải file tạm");
+        }
+
+        // Lấy metadata từ MinIO
+        var stat = minioClient.statObject(
+                io.minio.StatObjectArgs.builder()
+                        .bucket(bucketName)
+                        .object(objectKey)
+                        .build()
+        );
+
+        String fileName = objectKey.substring(objectKey.lastIndexOf("/") + 1);
+        String contentType = stat.contentType();
+        long size = stat.size();
+
+        // Tạo key mới trong thư mục chính
+        String newKey = targetType + "/" + UUID.randomUUID() + "-" + fileName;
+
+        // Copy từ temp sang thư mục chính
+        minioClient.copyObject(
+                io.minio.CopyObjectArgs.builder()
+                        .bucket(bucketName)
+                        .object(newKey)
+                        .source(
+                                io.minio.CopySource.builder()
+                                        .bucket(bucketName)
+                                        .object(objectKey)
+                                        .build()
+                        )
+                        .build()
+        );
+
+        // Xoá file temp
+        minioClient.removeObject(
+                io.minio.RemoveObjectArgs.builder()
+                        .bucket(bucketName)
+                        .object(objectKey)
+                        .build()
+        );
+
+        // Ghi DB
+        MediaFile media = MediaFile.builder()
+                .type(targetType)
+                .originalFileName(fileName)
+                .objectKey(newKey)
+                .contentType(contentType)
+                .size(size)
+                .build();
+        repository.save(media);
+
+        return newKey;
+    }
+
+    // Cronjob dọn temp
+    @Scheduled(fixedRate = 6 * 60 * 60 * 1000) // mỗi 6h
+    public void cleanTempFiles() throws Exception {
+        Iterable<Result<Item>> items = minioClient.listObjects(
+                ListObjectsArgs.builder()
+                        .bucket(bucketName)
+                        .prefix("temp/")
+                        .build()
+        );
+
+        for (Result<Item> result : items) {
+            Item item = result.get();
+            // ở đây có thể check thời gian (item.lastModified())
+            minioClient.removeObject(
+                    RemoveObjectArgs.builder().bucket(bucketName).object(item.objectName()).build()
+            );
+        }
+    }
+
+    private void validateFile(MultipartFile file) throws IdInvalidException {
+        if (file.isEmpty()) throw new IdInvalidException("File rỗng");
+        if (file.getSize() > 5 * 1024 * 1024) throw new IdInvalidException("File quá lớn, tối đa 5MB");
+
+        String contentType = file.getContentType();
+        if (!("image/png".equals(contentType) || "image/jpeg".equals(contentType))) {
+            throw new IdInvalidException("Chỉ hỗ trợ PNG hoặc JPEG");
+        }
+    }
+
+    private String cleanFileName(String fileName) {
+        if (fileName == null) return "file";
+        return fileName.trim()
+                .replaceAll("[\\s]+", "_")
+                .replaceAll("[^a-zA-Z0-9_\\.-]", "");
+    }
 }
