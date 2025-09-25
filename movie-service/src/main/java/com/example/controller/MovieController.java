@@ -48,6 +48,12 @@ public class MovieController extends BaseController<Movie, Long, MovieReqDTO, Mo
         return ResponseEntity.status(HttpStatus.CREATED).body(movieService.createMovie(dto));
     }
 
+    @PutMapping("/change-status/{id}")
+    @PreAuthorize("hasPermission(null, 'MOVIE_UPDATE')")
+    public ResponseEntity<MovieResDTO> changeStatus(@PathVariable("id") Long id) throws IdInvalidException {
+        return ResponseEntity.ok(movieService.changeStatus(id));
+    }
+
     @GetMapping("/fetch/{id}")
     @ApiMessage("Fetched movie")
     @PreAuthorize("hasPermission(null, 'MOVIE_VIEW')")

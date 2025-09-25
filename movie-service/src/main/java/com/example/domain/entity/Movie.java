@@ -37,7 +37,7 @@ public class Movie extends BaseEntity<Long> {
     private LocalDate endDate; // Ngày kết thúc chiếu (có thể null nếu chưa xác định)
 
     @Column(nullable = false)
-    private boolean active = true; // Trạng thái phim
+    private boolean active = false; // Trạng thái phim
 
     // Thay poster thành posterKey (objectKey trong Media Service)
     @Column(nullable = false)

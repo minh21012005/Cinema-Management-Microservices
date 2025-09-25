@@ -18,4 +18,5 @@ public interface MovieService extends BaseService<Movie, Long, MovieReqDTO, Movi
     ResultPaginationDTO fetchAllMovies(
             String title, Long categoryId, LocalDate fromDate, LocalDate toDate,Pageable pageable);
     MovieResDTO createMovie(MovieReqDTO dto) throws IdInvalidException;
+    MovieResDTO changeStatus(Long id) throws IdInvalidException;
 }

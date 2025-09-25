@@ -1,5 +1,6 @@
 package com.example.service.impl;
 
+import com.example.client.ShowtimeClient;
 import com.example.domain.entity.Category;
 import com.example.domain.entity.Movie;
 import com.example.domain.request.MovieReqDTO;
@@ -30,13 +31,15 @@ public class MovieServiceImpl
     private final MovieRepository movieRepository;
     private final CategoryRepository categoryRepository;
     private final MovieMapper movieMapper;
+    private final ShowtimeClient showtimeClient;
 
     protected MovieServiceImpl(MovieRepository movieRepository, MovieMapper movieMapper,
-                               CategoryRepository categoryRepository) {
+                               CategoryRepository categoryRepository, ShowtimeClient showtimeClient) {
         super(movieRepository);
         this.movieRepository = movieRepository;
         this.categoryRepository = categoryRepository;
         this.movieMapper = movieMapper;
+        this.showtimeClient = showtimeClient;
     }
 
     @Override
@@ -158,7 +161,7 @@ public class MovieServiceImpl
         // Map DTO -> Entity
         Movie movie = movieMapper.toEntity(dto);
         movie.setCategories(categories);
-        movie.setActive(true); // mặc định khi tạo là active
+        movie.setActive(false); // mặc định khi tạo là active
 
         // Save
         Movie saved = movieRepository.save(movie);
@@ -166,5 +169,30 @@ public class MovieServiceImpl
         // Map Entity -> ResDTO
         return movieMapper.toDto(saved);
     }
+
+    @Override
+    public MovieResDTO changeStatus(Long id) throws IdInvalidException {
+        Movie movie = movieRepository.findById(id).orElseThrow(
+                () -> new IdInvalidException("Phim không tồn tại trong hệ thống!")
+        );
+
+        boolean currentStatus = movie.isActive();
+        boolean newStatus = !currentStatus;
+
+        if (newStatus) { // chỉ check khi muốn enable
+            if (movie.getEndDate() != null && movie.getEndDate().isBefore(LocalDate.now())) {
+                throw new IdInvalidException("Không thể bật phim: đã hết hạn (endDate).");
+            }
+            if (movie.getReleaseDate() != null && movie.getReleaseDate().isAfter(LocalDate.now())) {
+                throw new IdInvalidException("Không thể bật phim: ngày phát hành chưa tới (releaseDate).");
+            }
+        }else{
+            showtimeClient.disableShowtimesByMovie(id);
+        }
+
+        movie.setActive(newStatus);
+        return movieMapper.toDto(movieRepository.save(movie));
+    }
+
 
 }

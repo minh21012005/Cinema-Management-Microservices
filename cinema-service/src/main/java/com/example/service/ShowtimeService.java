@@ -15,4 +15,5 @@ public interface ShowtimeService extends BaseService<Showtime, Long, ShowtimeReq
                                          LocalDate toDate, Pageable pageable) throws IdInvalidException;
     ShowtimeResDTO changeStatus(Long id) throws IdInvalidException;
     ShowtimeResDTO updateShowtime(Long id, ShowtimeReqDTO dto) throws IdInvalidException;
+    void disableShowtimesByMovie(Long movieId);
 }

@@ -260,6 +260,26 @@ public class ShowtimeServiceImpl
         return resDTO;
     }
 
+    @Override
+    public void disableShowtimesByMovie(Long movieId) {
+        List<Showtime> futureShowtimes = showtimeRepository
+                .findByMovieIdAndActiveTrueAndStartTimeAfter(movieId, LocalDateTime.now());
+
+        if (!futureShowtimes.isEmpty()) {
+            // Disable tất cả
+            futureShowtimes.forEach(showtime -> showtime.setActive(false));
+
+            // Lưu tất cả cùng lúc
+            showtimeRepository.saveAll(futureShowtimes);
+        }
+
+        // Trả về DTO
+        futureShowtimes.stream()
+                .map(showtimeMapper::toDto)
+                .toList();
+    }
+
+
     public void validateShowtime(Long roomId, LocalDateTime startTime, LocalDateTime endTime) {
         List<Showtime> overlaps = showtimeRepository.findOverlappingShowtimes(roomId, startTime, endTime);
         if (!overlaps.isEmpty()) {

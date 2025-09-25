@@ -62,6 +62,13 @@ public class ShowtimeController extends BaseController<Showtime, Long, ShowtimeR
         return ResponseEntity.ok(showtimeService.updateShowtime(id, dto));
     }
 
+    @PutMapping("/disable-by-movie/{id}")
+    @PreAuthorize("hasPermission(null, 'SHOWTIME_UPDATE')")
+    public ResponseEntity<Void> disableShowtimesByMovie(@PathVariable("id") Long id) {
+        showtimeService.disableShowtimesByMovie(id);
+        return ResponseEntity.noContent().build();
+    }
+
     @Override
     @PreAuthorize("hasPermission(null, 'SHOWTIME_VIEW')")
     public ResponseEntity<Showtime> getById(@PathVariable("id") Long id) throws IdInvalidException {

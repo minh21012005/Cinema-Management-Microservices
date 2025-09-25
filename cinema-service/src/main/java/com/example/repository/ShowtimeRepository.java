@@ -1,8 +1,7 @@
 package com.example.repository;
 
 import com.example.domain.entity.Showtime;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import com.example.domain.response.ShowtimeResDTO;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -37,4 +36,6 @@ public interface ShowtimeRepository extends BaseRepository<Showtime, Long>, JpaS
 
     @Query("SELECT s FROM Showtime s WHERE s.room.cinema.id = :cinemaId")
     List<Showtime> findAllByCinemaId(@Param("cinemaId") Long cinemaId);
+
+    List<Showtime> findByMovieIdAndActiveTrueAndStartTimeAfter(Long movieId, LocalDateTime now);
 }
