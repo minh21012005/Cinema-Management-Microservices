@@ -22,13 +22,15 @@ import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
 @Configuration
 @EnableMethodSecurity(prePostEnabled = true, securedEnabled = true)
-public class SecurityConfiguration {
+public class SecurityConfiguration implements WebMvcConfigurer {
 
     @Value("${minhnb.jwt.base64-secret}")
     private String jwtKey;
@@ -111,5 +113,15 @@ public class SecurityConfiguration {
         byte[] keyBytes = Base64.from(jwtKey).decode();
         return new SecretKeySpec(keyBytes, 0, keyBytes.length,
                 JwtUtil.JWT_ALGORITHM.getName());
+    }
+
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**") // áp dụng cho tất cả endpoint
+                .allowedOrigins("http://localhost:8080") // URL của gateway
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedHeaders("Authorization", "Content-Type", "Accept", "x-no-retry")
+                .allowCredentials(true)
+                .maxAge(3600);
     }
 }

@@ -27,6 +27,20 @@ eureka:
     ip-address: 127.0.0.1
     hostname: localhost
 
+springdoc:
+  swagger-ui:
+    urls:
+      - name: auth-service
+        url: http://localhost:8081/v3/api-docs
+      - name: user-service
+        url: http://localhost:8082/v3/api-docs
+      - name: cinema-service
+        url: http://localhost:8083/v3/api-docs
+      - name: movie-service
+        url: http://localhost:8084/v3/api-docs
+      - name: media-service
+        url: http://localhost:8085/v3/api-docs
+
 minhnb:
   jwt:
     base64-secret: Muw9kQMoEFTnfKm5sHbvqus3GvSYF4mSCL3ay11sjkRGLpMnvBTpsRF/bDHZmuI5ROhJ23QuZhOb1Cx3OZxy0w==

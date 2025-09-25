@@ -39,7 +39,9 @@ public class SecurityConfig {
                 .securityMatcher(ServerWebExchangeMatchers.pathMatchers(
                         "/auth-service/api/v1/auth/login",
                         "/auth-service/api/v1/auth/register",
-                        "/auth-service/api/v1/auth/refresh"
+                        "/auth-service/api/v1/auth/refresh",
+                        "/swagger-ui/**", "/swagger-ui.html",
+                        "/v3/api-docs", "/v3/api-docs/**"
                 ))
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .authorizeExchange(ex -> ex.anyExchange().permitAll())
@@ -84,7 +86,7 @@ public class SecurityConfig {
                 "http://localhost:3000",
                 "http://localhost:4173",
                 "http://localhost:5173"
-        ));
+                ));
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept", "x-no-retry"));
         config.setAllowCredentials(true);
