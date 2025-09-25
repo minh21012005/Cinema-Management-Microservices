@@ -19,4 +19,5 @@ public interface MovieService extends BaseService<Movie, Long, MovieReqDTO, Movi
             String title, Long categoryId, LocalDate fromDate, LocalDate toDate,Pageable pageable);
     MovieResDTO createMovie(MovieReqDTO dto) throws IdInvalidException;
     MovieResDTO changeStatus(Long id) throws IdInvalidException;
+    MovieResDTO updateMovie(Long id, MovieReqDTO dto) throws IdInvalidException;
 }

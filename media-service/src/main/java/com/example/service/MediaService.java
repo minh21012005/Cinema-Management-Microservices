@@ -131,6 +131,21 @@ public class MediaService {
         return newKey;
     }
 
+    public void deleteFile(String key) {
+        try {
+            if (key != null && !key.isEmpty()) {
+                minioClient.removeObject(
+                        RemoveObjectArgs.builder()
+                                .bucket(bucketName)
+                                .object(key)
+                                .build()
+                );
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Lỗi xóa file: " + e.getMessage(), e);
+        }
+    }
+
     // Cronjob dọn temp
     @Scheduled(fixedRate = 6 * 60 * 60 * 1000) // mỗi 6h
     public void cleanTempFiles() throws Exception {

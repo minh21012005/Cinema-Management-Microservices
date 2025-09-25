@@ -194,5 +194,52 @@ public class MovieServiceImpl
         return movieMapper.toDto(movieRepository.save(movie));
     }
 
+    @Override
+    public MovieResDTO updateMovie(Long id, MovieReqDTO dto) throws IdInvalidException {
+        Movie movie = movieRepository.findById(id)
+                .orElseThrow(() -> new IdInvalidException("Movie không tồn tại!"));
+
+        // Unique constraint: title + releaseDate
+        if (movieRepository.existsByTitleAndReleaseDate(dto.getTitle(), dto.getReleaseDate())
+                && (!dto.getTitle().equals(movie.getTitle()) || !dto.getReleaseDate().equals(movie.getReleaseDate()))) {
+            throw new IdInvalidException("Phim với tiêu đề và ngày phát hành này đã tồn tại!");
+        }
+
+        // Validate duration
+        if (dto.getDurationInMinutes() <= 0 || dto.getDurationInMinutes() > 600) {
+            throw new IdInvalidException("Thời lượng phim không hợp lệ!");
+        }
+
+        // Validate release/end date
+        if (dto.getEndDate() != null && dto.getReleaseDate().isAfter(dto.getEndDate())) {
+            throw new IdInvalidException("Release Date không được sau End Date!");
+        }
+
+        // Nếu movie đang active
+        if (movie.isActive()) {
+            LocalDate today = LocalDate.now();
+            if (dto.getReleaseDate().isAfter(today)) {
+                throw new IdInvalidException("Không thể đặt Release Date trong tương lai cho phim đang active!");
+            }
+            if (dto.getEndDate() != null && dto.getEndDate().isBefore(today)) {
+                throw new IdInvalidException("End Date không được trước hôm nay cho phim đang active!");
+            }
+        }
+
+        // Update các field
+        movie.setTitle(dto.getTitle());
+        movie.setDescription(dto.getDescription());
+        movie.setDurationInMinutes(dto.getDurationInMinutes());
+        movie.setReleaseDate(dto.getReleaseDate());
+        movie.setEndDate(dto.getEndDate());
+        movie.setPosterKey(dto.getPosterKey());
+
+        // Update categories
+        List<Category> categories = categoryRepository.findAllById(dto.getCategoryIds());
+        movie.setCategories(categories);
+
+        Movie updated = movieRepository.save(movie);
+        return movieMapper.toDto(updated);
+    }
 
 }

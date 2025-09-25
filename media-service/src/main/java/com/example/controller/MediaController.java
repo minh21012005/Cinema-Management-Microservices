@@ -40,4 +40,11 @@ public class MediaController {
         String url = mediaService.getPresignedUrl(objectKey, expireSeconds);
         return ResponseEntity.ok(url);
     }
+
+    @DeleteMapping
+    @PreAuthorize("hasPermission(null, 'FILE_DELETE')")
+    public ResponseEntity<Void> deleteFile(@RequestParam("key") String key) {
+        mediaService.deleteFile(key);
+        return ResponseEntity.noContent().build();
+    }
 }

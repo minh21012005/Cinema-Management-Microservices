@@ -82,6 +82,11 @@ public class MovieController extends BaseController<Movie, Long, MovieReqDTO, Mo
         return ResponseEntity.ok(movieService.searchByTitle(title));
     }
 
+    @Override
+    @PreAuthorize("hasPermission(null, 'MOVIE_UPDATE')")
+    public ResponseEntity<MovieResDTO> update(@PathVariable("id") Long id, MovieReqDTO dto) throws IdInvalidException {
+        return ResponseEntity.ok(movieService.updateMovie(id, dto));
+    }
 
     @Override
     public ResponseEntity<Movie> getById(@PathVariable("id") Long id) {
