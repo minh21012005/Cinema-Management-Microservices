@@ -15,6 +15,7 @@ public class MovieResDTO {
     private LocalDate endDate;
     private boolean active;
     private String posterKey;
+    private String trailerUrl; // Link trailer YouTube
     private List<String> categoryCodes;
     private List<String> categoryNames;
 }

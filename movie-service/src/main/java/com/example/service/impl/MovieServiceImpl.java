@@ -28,6 +28,9 @@ public class MovieServiceImpl
         extends BaseServiceImpl<Movie, Long, MovieReqDTO, MovieResDTO>
         implements MovieService {
 
+    private static final String YOUTUBE_REGEX =
+            "^(https?://)?(www\\.)?(youtube\\.com/watch\\?v=|youtu\\.be/)[\\w-]{11}.*$";
+
     private final MovieRepository movieRepository;
     private final CategoryRepository categoryRepository;
     private final MovieMapper movieMapper;
@@ -158,6 +161,12 @@ public class MovieServiceImpl
             throw new IdInvalidException("Phim với cùng tên và ngày phát hành đã tồn tại.");
         }
 
+        if (dto.getTrailerUrl() != null && !dto.getTrailerUrl().trim().isEmpty()) {
+            if (!dto.getTrailerUrl().matches(YOUTUBE_REGEX)) {
+                throw new IdInvalidException("Trailer URL phải là link YouTube hợp lệ");
+            }
+        }
+
         // Map DTO -> Entity
         Movie movie = movieMapper.toEntity(dto);
         movie.setCategories(categories);
@@ -226,6 +235,12 @@ public class MovieServiceImpl
             }
         }
 
+        if (dto.getTrailerUrl() != null && !dto.getTrailerUrl().trim().isEmpty()) {
+            if (!dto.getTrailerUrl().matches(YOUTUBE_REGEX)) {
+                throw new IdInvalidException("Trailer URL phải là link YouTube hợp lệ");
+            }
+        }
+
         // Update các field
         movie.setTitle(dto.getTitle());
         movie.setDescription(dto.getDescription());
@@ -233,6 +248,7 @@ public class MovieServiceImpl
         movie.setReleaseDate(dto.getReleaseDate());
         movie.setEndDate(dto.getEndDate());
         movie.setPosterKey(dto.getPosterKey());
+        movie.setTrailerUrl(dto.getTrailerUrl());
 
         // Update categories
         List<Category> categories = categoryRepository.findAllById(dto.getCategoryIds());

@@ -43,6 +43,9 @@ public class Movie extends BaseEntity<Long> {
     @Column(nullable = false)
     private String posterKey;
 
+    @Column(name = "trailer_url")
+    private String trailerUrl;
+
     @ManyToMany
     @JoinTable(
             name = "movie_category",
