@@ -13,6 +13,8 @@ import java.util.List;
 public class MovieReqDTO {
     private String title; // Tên phim
     private String description; // Mô tả
+    private String director;
+    private String cast;
     private int durationInMinutes; // Thời lượng
     private LocalDate releaseDate; // Ngày phát hành
     private LocalDate endDate; // Ngày kết thúc chiếu

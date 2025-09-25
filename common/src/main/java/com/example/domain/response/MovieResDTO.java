@@ -10,6 +10,8 @@ public class MovieResDTO {
     private Long id;
     private String title;
     private String description;
+    private String director;
+    private String cast;
     private int durationInMinutes;
     private LocalDate releaseDate;
     private LocalDate endDate;

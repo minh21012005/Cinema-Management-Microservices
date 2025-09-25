@@ -28,6 +28,12 @@ public class Movie extends BaseEntity<Long> {
     private String description; // Mô tả phim
 
     @Column(nullable = false)
+    private String director; // Đạo diễn
+
+    @Column(columnDefinition = "TEXT")
+    private String cast; // Danh sách diễn viên, ví dụ: "Tom Cruise, Emily Blunt"
+
+    @Column(nullable = false)
     private int durationInMinutes; // Thời lượng (phút)
 
     @Column(name = "release_date", nullable = false)

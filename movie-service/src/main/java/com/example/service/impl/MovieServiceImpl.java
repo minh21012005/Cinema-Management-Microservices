@@ -116,6 +116,14 @@ public class MovieServiceImpl
             throw new IdInvalidException("Title không được để trống");
         }
 
+        if (dto.getDirector() == null || dto.getDirector().trim().isEmpty()) {
+            throw new IdInvalidException("Director không được để trống");
+        }
+
+        if (dto.getCast() != null && dto.getCast().trim().isEmpty()) {
+            throw new IdInvalidException("Cast không được chỉ chứa khoảng trắng");
+        }
+
         // Validate description
         if (dto.getDescription() == null || dto.getDescription().trim().isEmpty()) {
             throw new IdInvalidException("Description không được để trống");
@@ -208,6 +216,18 @@ public class MovieServiceImpl
         Movie movie = movieRepository.findById(id)
                 .orElseThrow(() -> new IdInvalidException("Movie không tồn tại!"));
 
+        if (dto.getTitle() == null || dto.getTitle().trim().isEmpty()) {
+            throw new IdInvalidException("Title không được để trống");
+        }
+
+        if (dto.getDirector() == null || dto.getDirector().trim().isEmpty()) {
+            throw new IdInvalidException("Director không được để trống");
+        }
+
+        if (dto.getCast() != null && dto.getCast().trim().isEmpty()) {
+            throw new IdInvalidException("Cast không được chỉ chứa khoảng trắng");
+        }
+
         // Unique constraint: title + releaseDate
         if (movieRepository.existsByTitleAndReleaseDate(dto.getTitle(), dto.getReleaseDate())
                 && (!dto.getTitle().equals(movie.getTitle()) || !dto.getReleaseDate().equals(movie.getReleaseDate()))) {
@@ -247,6 +267,8 @@ public class MovieServiceImpl
         movie.setDurationInMinutes(dto.getDurationInMinutes());
         movie.setReleaseDate(dto.getReleaseDate());
         movie.setEndDate(dto.getEndDate());
+        movie.setDirector(dto.getDirector());
+        movie.setCast(dto.getCast());
         movie.setPosterKey(dto.getPosterKey());
         movie.setTrailerUrl(dto.getTrailerUrl());
 
