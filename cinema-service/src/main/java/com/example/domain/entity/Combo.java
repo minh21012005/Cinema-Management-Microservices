@@ -14,6 +14,9 @@ import java.util.List;
 @Builder
 public class Combo extends BaseEntity<Long>{
 
+    @Column(nullable = false, unique = true, length = 20)
+    private String code; // Mã định danh combo (VD: CB001)
+
     @Column(nullable = false)
     private String name; // Tên combo
 
@@ -25,11 +28,6 @@ public class Combo extends BaseEntity<Long>{
     @Column(nullable = false)
     private boolean available = true; // Còn bán hay không
 
-    @ManyToMany(cascade = {CascadeType.MERGE, CascadeType.PERSIST})
-    @JoinTable(
-            name = "combo_food",
-            joinColumns = @JoinColumn(name = "combo_id"),
-            inverseJoinColumns = @JoinColumn(name = "food_id")
-    )
-    private List<Food> foods; // Danh sách món ăn trong combo
+    @OneToMany(mappedBy = "combo", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ComboFood> comboFoods;
 }

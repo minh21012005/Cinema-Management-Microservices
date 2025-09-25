@@ -12,9 +12,8 @@ import lombok.*;
 @Builder
 public class Food extends BaseEntity<Long> {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(nullable = false, unique = true, length = 20)
+    private String code; // Mã định danh món ăn (VD: FD001)
 
     @Column(nullable = false)
     private String name; // Tên món ăn
@@ -26,4 +25,12 @@ public class Food extends BaseEntity<Long> {
 
     @Column(nullable = false)
     private boolean available = true; // Trạng thái: còn bán hay hết hàng
+
+    @Column(nullable = false)
+    private String imageKey;
+
+    // Liên kết với loại món ăn
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "food_type_id", nullable = false)
+    private FoodType foodType;
 }
