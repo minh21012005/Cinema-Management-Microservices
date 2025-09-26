@@ -31,15 +31,15 @@ springdoc:
   swagger-ui:
     urls:
       - name: auth-service
-        url: http://localhost:8081/v3/api-docs
+        url: /auth-service/v3/api-docs
       - name: user-service
-        url: http://localhost:8082/v3/api-docs
+        url: /user-service/v3/api-docs
       - name: cinema-service
-        url: http://localhost:8083/v3/api-docs
+        url: /cinema-service/v3/api-docs
       - name: movie-service
-        url: http://localhost:8084/v3/api-docs
+        url: /movie-service/v3/api-docs
       - name: media-service
-        url: http://localhost:8085/v3/api-docs
+        url: /media-service/v3/api-docs
 
 minhnb:
   jwt:

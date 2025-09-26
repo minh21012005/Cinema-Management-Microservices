@@ -44,7 +44,6 @@ public class SecurityConfig implements WebMvcConfigurer {
 
         http
                 .csrf(AbstractHttpConfigurer::disable)
-                .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(whiteList).permitAll()
                         .anyRequest().authenticated()
@@ -90,16 +89,6 @@ public class SecurityConfig implements WebMvcConfigurer {
         byte[] keyBytes = Base64.from(jwtKey).decode();
         return new SecretKeySpec(keyBytes, 0, keyBytes.length,
                 JwtTokenProvider.JWT_ALGORITHM.getName());
-    }
-
-    @Override
-    public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/**") // áp dụng cho tất cả endpoint
-                .allowedOrigins("http://localhost:8080") // URL của gateway
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                .allowedHeaders("Authorization", "Content-Type", "Accept", "x-no-retry")
-                .allowCredentials(true)
-                .maxAge(3600);
     }
 
     @Bean

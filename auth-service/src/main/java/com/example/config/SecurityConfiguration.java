@@ -48,14 +48,11 @@ public class SecurityConfiguration implements WebMvcConfigurer {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         String[] whiteList = {
                 "/api/v1/auth/login", "/api/v1/auth/refresh", "/api/v1/auth/register",
-                "/api/v1/roles/code", "/api/v1/users/enabled",
-                "/swagger-ui/**", "/swagger-ui.html",
-                "/v3/api-docs", "/v3/api-docs/**"
+                "/api/v1/roles/code", "/api/v1/users/enabled", "/swagger-ui/**", "/v3/api-docs/**"
         };
 
         http
                 .csrf(c -> c.disable())
-                .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers(whiteList).permitAll()
                         .anyRequest().authenticated()
@@ -117,16 +114,6 @@ public class SecurityConfiguration implements WebMvcConfigurer {
         byte[] keyBytes = Base64.from(jwtKey).decode();
         return new SecretKeySpec(keyBytes, 0, keyBytes.length,
                 JwtUtil.JWT_ALGORITHM.getName());
-    }
-
-    @Override
-    public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/**") // áp dụng cho tất cả endpoint
-                .allowedOrigins("http://localhost:8080") // URL của gateway
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                .allowedHeaders("Authorization", "Content-Type", "Accept", "x-no-retry")
-                .allowCredentials(true)
-                .maxAge(3600);
     }
 
     @Bean
