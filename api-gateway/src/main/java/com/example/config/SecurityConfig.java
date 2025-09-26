@@ -40,8 +40,40 @@ public class SecurityConfig {
                         "/auth-service/api/v1/auth/login",
                         "/auth-service/api/v1/auth/register",
                         "/auth-service/api/v1/auth/refresh",
-                        "/swagger-ui/**", "/swagger-ui.html",
-                        "/v3/api-docs", "/v3/api-docs/**"
+                        "/swagger-ui/**",
+                        "/v3/api-docs/**",
+                        "/swagger-resources/**",
+                        "/webjars/**",
+
+                        // Auth service
+                        "/auth-service/swagger-ui/**",
+                        "/auth-service/v3/api-docs/**",
+                        "/auth-service/swagger-resources/**",
+                        "/auth-service/webjars/**",
+
+                        // User service
+                        "/user-service/swagger-ui/**",
+                        "/user-service/v3/api-docs/**",
+                        "/user-service/swagger-resources/**",
+                        "/user-service/webjars/**",
+
+                        // Movie service
+                        "/movie-service/swagger-ui/**",
+                        "/movie-service/v3/api-docs/**",
+                        "/movie-service/swagger-resources/**",
+                        "/movie-service/webjars/**",
+
+                        // Media service
+                        "/media-service/swagger-ui/**",
+                        "/media-service/v3/api-docs/**",
+                        "/media-service/swagger-resources/**",
+                        "/media-service/webjars/**",
+
+                        // Cinema service
+                        "/cinema-service/swagger-ui/**",
+                        "/cinema-service/v3/api-docs/**",
+                        "/cinema-service/swagger-resources/**",
+                        "/cinema-service/webjars/**"
                 ))
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .authorizeExchange(ex -> ex.anyExchange().permitAll())
@@ -66,7 +98,6 @@ public class SecurityConfig {
                         .accessDeniedHandler(new HttpStatusServerAccessDeniedHandler(HttpStatus.FORBIDDEN))
                 )
                 .addFilterAfter(new JwtUserHeaderFilter(), SecurityWebFiltersOrder.AUTHENTICATION)
-                .cors(cors -> {})
                 .build();
     }
 
