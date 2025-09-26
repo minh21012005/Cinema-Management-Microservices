@@ -3,6 +3,10 @@ package com.example.config;
 import com.example.util.JwtUtil;
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import com.nimbusds.jose.util.Base64;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.security.SecurityRequirement;
+import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -123,5 +127,22 @@ public class SecurityConfiguration implements WebMvcConfigurer {
                 .allowedHeaders("Authorization", "Content-Type", "Accept", "x-no-retry")
                 .allowCredentials(true)
                 .maxAge(3600);
+    }
+
+    @Bean
+    public OpenAPI customOpenAPI() {
+        final String securitySchemeName = "bearerAuth";
+
+        return new OpenAPI()
+                .info(new Info().title("API Gateway Swagger").version("1.0"))
+                .addSecurityItem(new SecurityRequirement().addList(securitySchemeName)) // Áp dụng cho tất cả API
+                .components(new io.swagger.v3.oas.models.Components()
+                        .addSecuritySchemes(securitySchemeName,
+                                new SecurityScheme()
+                                        .name(securitySchemeName)
+                                        .type(SecurityScheme.Type.HTTP)
+                                        .scheme("bearer")
+                                        .bearerFormat("JWT")
+                        ));
     }
 }

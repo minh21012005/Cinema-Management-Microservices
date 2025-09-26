@@ -199,13 +199,13 @@ public class AuthController {
     @GetMapping("/account")
     @ApiMessage("fetch account")
     public ResponseEntity<ResLoginDTO.UserGetAccount> getAccount(
-            @RequestHeader(value = "X-User-Email", required = false) String email) throws UnauthorizedException {
+            @RequestHeader(value = "X-User-Email", required = false) String email,
+            Authentication authentication) throws IdInvalidException {
 
-        if (email == null || email.isEmpty()) {
-            throw new UnauthorizedException("Token không hợp lệ");
-        }
+        AuthUser currentUserDB = this.authUserService.findById(Long.valueOf(authentication.getName())).orElseThrow(
+                () -> new IdInvalidException("User không tồn tại")
+        );
 
-        AuthUser currentUserDB = this.authUserService.findByEmail(email).orElse(null);
         ResLoginDTO.UserLogin userLogin = new ResLoginDTO.UserLogin();
         ResLoginDTO.UserGetAccount userGetAccount = new ResLoginDTO.UserGetAccount();
 
@@ -303,15 +303,11 @@ public class AuthController {
     @ApiMessage("Logout User")
     public ResponseEntity<Void> logout(
             @RequestHeader(value = "X-User-Email", required = false) String email,
-            Authentication authentication) throws UnauthorizedException {
-
-        if (email == null || email.isEmpty()) {
-            throw new UnauthorizedException("Token không hợp lệ");
-        }
-
-        AuthUser user = authUserService.findByEmail(email)
-                .or(() -> authUserService.findById(Long.valueOf(authentication.getName())))
-                .orElseThrow(() -> new UnauthorizedException("User không tồn tại trong hệ thống"));
+            Authentication authentication) throws IdInvalidException {
+        AuthUser user = this.authUserService.findById(
+                Long.valueOf(authentication.getName())).orElseThrow(
+                () -> new IdInvalidException("User không tồn tại")
+        );
 
         // update refresh token = null
         this.authUserService.updateUserToken(null, email);

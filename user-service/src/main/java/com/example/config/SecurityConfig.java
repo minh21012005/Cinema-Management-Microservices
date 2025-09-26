@@ -2,9 +2,14 @@ package com.example.config;
 
 import com.example.util.JwtTokenProvider;
 import com.nimbusds.jose.util.Base64;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.security.SecurityRequirement;
+import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -37,6 +42,7 @@ public class SecurityConfig implements WebMvcConfigurer {
 
         http
                 .csrf(AbstractHttpConfigurer::disable)
+                .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(whiteList).permitAll()
                         .anyRequest().authenticated()
@@ -81,5 +87,22 @@ public class SecurityConfig implements WebMvcConfigurer {
                 .allowedHeaders("Authorization", "Content-Type", "Accept", "x-no-retry")
                 .allowCredentials(true)
                 .maxAge(3600);
+    }
+
+    @Bean
+    public OpenAPI customOpenAPI() {
+        final String securitySchemeName = "bearerAuth";
+
+        return new OpenAPI()
+                .info(new Info().title("API Gateway Swagger").version("1.0"))
+                .addSecurityItem(new SecurityRequirement().addList(securitySchemeName)) // Áp dụng cho tất cả API
+                .components(new io.swagger.v3.oas.models.Components()
+                        .addSecuritySchemes(securitySchemeName,
+                                new SecurityScheme()
+                                        .name(securitySchemeName)
+                                        .type(SecurityScheme.Type.HTTP)
+                                        .scheme("bearer")
+                                        .bearerFormat("JWT")
+                        ));
     }
 }
