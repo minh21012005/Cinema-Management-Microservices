@@ -88,21 +88,4 @@ public class SecurityConfig implements WebMvcConfigurer {
         return new SecretKeySpec(keyBytes, 0, keyBytes.length,
                 JwtTokenProvider.JWT_ALGORITHM.getName());
     }
-
-    @Bean
-    public OpenAPI customOpenAPI() {
-        final String securitySchemeName = "bearerAuth";
-
-        return new OpenAPI()
-                .info(new Info().title("API Gateway Swagger").version("1.0"))
-                .addSecurityItem(new SecurityRequirement().addList(securitySchemeName)) // Áp dụng cho tất cả API
-                .components(new io.swagger.v3.oas.models.Components()
-                        .addSecuritySchemes(securitySchemeName,
-                                new SecurityScheme()
-                                        .name(securitySchemeName)
-                                        .type(SecurityScheme.Type.HTTP)
-                                        .scheme("bearer")
-                                        .bearerFormat("JWT")
-                        ));
-    }
 }

@@ -77,6 +77,12 @@
             <scope>provided</scope>
         </dependency>
 
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>2.8.13</version> <!-- dùng version mới nhất -->
+        </dependency>
+
         <!-- JJWT Modular Dependencies (fix lỗi jsonwebtoken) -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
