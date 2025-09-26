@@ -27,7 +27,10 @@ public class SwaggerGatewayConfig {
             String serviceLower = serviceId.toLowerCase();
             routesBuilder.route(serviceLower, r -> r
                     .path("/" + serviceLower + "/v3/api-docs/**")
-                    .filters(f -> f.rewritePath("/" + serviceLower + "/v3/api-docs/(?<path>.*)", "/v3/api-docs/${path}"))
+                    .filters(f -> f
+                            .rewritePath("/" + serviceLower + "/v3/api-docs(?<segment>/?.*)", "/v3/api-docs${segment}")
+                    )
+
                     .uri("lb://" + serviceId)
             );
         });
