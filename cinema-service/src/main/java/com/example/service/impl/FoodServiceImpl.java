@@ -3,10 +3,19 @@ package com.example.service.impl;
 import com.example.domain.entity.Food;
 import com.example.domain.request.FoodReqDTO;
 import com.example.domain.response.FoodResDTO;
+import com.example.domain.response.ResultPaginationDTO;
+import com.example.mapper.FoodMapper;
 import com.example.repository.FoodRepository;
+import com.example.repository.FoodTypeRepository;
 import com.example.service.FoodService;
-
+import com.example.service.specification.FoodSpecification;
+import com.example.util.error.IdInvalidException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -15,9 +24,80 @@ public class FoodServiceImpl
         implements FoodService {
 
     private final FoodRepository foodRepository;
+    private final FoodTypeRepository foodTypeRepository;
+    private final FoodMapper foodMapper;
 
-    protected FoodServiceImpl(FoodRepository foodRepository) {
+    protected FoodServiceImpl(FoodRepository foodRepository, FoodMapper foodMapper,
+                              FoodTypeRepository foodTypeRepository) {
         super(foodRepository);
         this.foodRepository = foodRepository;
+        this.foodMapper = foodMapper;
+        this.foodTypeRepository = foodTypeRepository;
     }
+
+    @Override
+    public ResultPaginationDTO fetchAllFoods(String name, Long typeId, Pageable pageable) {
+        Page<Food> pageFood = this.foodRepository.findAll(
+                FoodSpecification.findFoodWithFilters(name, typeId), pageable);
+        ResultPaginationDTO rs = new ResultPaginationDTO();
+        ResultPaginationDTO.Meta mt = new ResultPaginationDTO.Meta();
+
+        mt.setPage(pageable.getPageNumber());
+        mt.setPageSize(pageable.getPageSize());
+
+        mt.setPages(pageFood.getTotalPages());
+        mt.setTotal(pageFood.getTotalElements());
+
+        rs.setMeta(mt);
+
+        // remove sensitive data
+        List<FoodResDTO> listFood = pageFood.getContent()
+                .stream().map(foodMapper::toDto)
+                .collect(Collectors.toList());
+
+        rs.setResult(listFood);
+
+        return rs;
+    }
+
+    @Override
+    public FoodResDTO createFood(FoodReqDTO dto) throws IdInvalidException {
+        // Validate code
+        if (dto.getCode() == null || dto.getCode().trim().isEmpty()) {
+            throw new IdInvalidException("Food code is required");
+        }
+        if (foodRepository.existsByCode(dto.getCode())) {
+            throw new IdInvalidException("Food code already exists");
+        }
+
+        // Validate name
+        if (dto.getName() == null || dto.getName().trim().isEmpty()) {
+            throw new IdInvalidException("Food name is required");
+        }
+
+        // Validate price
+        if (dto.getPrice() == null || dto.getPrice() <= 0) {
+            throw new IdInvalidException("Food price must be greater than 0");
+        }
+
+        // Validate imageKey
+        if (dto.getImageKey() == null || dto.getImageKey().trim().isEmpty()) {
+            throw new IdInvalidException("Food image is required");
+        }
+
+        // Validate typeId
+        if (dto.getTypeId() == null) {
+            throw new IdInvalidException("Food typeId is required");
+        }
+        foodTypeRepository.findById(dto.getTypeId())
+                .orElseThrow(() -> new IdInvalidException("Food type not found"));
+
+        // Build entity
+        Food food = foodMapper.toEntity(dto);
+
+        foodRepository.save(food);
+
+        return foodMapper.toDto(food);
+    }
+
 }

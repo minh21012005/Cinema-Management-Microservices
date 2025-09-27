@@ -9,7 +9,6 @@ import lombok.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class FoodType extends BaseEntity<Long> {
 
     // code duy nhất, ví dụ: POPCORN, DRINK, SNACK

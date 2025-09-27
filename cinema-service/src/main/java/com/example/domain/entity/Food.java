@@ -32,5 +32,5 @@ public class Food extends BaseEntity<Long> {
     // Liên kết với loại món ăn
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "food_type_id", nullable = false)
-    private FoodType foodType;
+    private FoodType type;
 }

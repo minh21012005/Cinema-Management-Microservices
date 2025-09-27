@@ -42,13 +42,10 @@ public class SwaggerConfigCommon {
     private String getBasePath(String serviceName) {
         switch (serviceName) {
             case "auth-service": return "/auth-service";
-            case "user-service": return "/users";
-            case "product-service": return "/products";
-            case "support-service": return "/support";
-            case "notification-service": return "/notifications";
-            case "order-service": return "/orders";
-            case "payment-service": return "/payments";
-            case "file-service": return "/files";
+            case "user-service": return "/user-service";
+            case "cinema-service": return "/cinema-service";
+            case "movie-service": return "/movie-service";
+            case "media-service": return "/media-service";
             default: return "";
         }
     }

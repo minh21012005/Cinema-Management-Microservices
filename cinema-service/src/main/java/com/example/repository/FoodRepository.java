@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface FoodRepository extends BaseRepository<Food, Long>, JpaSpecificationExecutor<Food> {
+    boolean existsByCode(String code);
 }
