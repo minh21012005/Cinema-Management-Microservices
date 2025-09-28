@@ -1,6 +1,7 @@
 package com.example.service.impl;
 
 import com.example.domain.entity.Food;
+import com.example.domain.entity.FoodType;
 import com.example.domain.request.FoodReqDTO;
 import com.example.domain.response.FoodResDTO;
 import com.example.domain.response.ResultPaginationDTO;
@@ -89,12 +90,12 @@ public class FoodServiceImpl
         if (dto.getTypeId() == null) {
             throw new IdInvalidException("Food typeId is required");
         }
-        foodTypeRepository.findById(dto.getTypeId())
+        FoodType type = foodTypeRepository.findById(dto.getTypeId())
                 .orElseThrow(() -> new IdInvalidException("Food type not found"));
 
         // Build entity
         Food food = foodMapper.toEntity(dto);
-
+        food.setType(type); // gán entity đầy đủ, có cả name
         foodRepository.save(food);
 
         return foodMapper.toDto(food);

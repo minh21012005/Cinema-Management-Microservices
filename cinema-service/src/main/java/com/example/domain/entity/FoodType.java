@@ -21,4 +21,6 @@ public class FoodType extends BaseEntity<Long> {
 
     @Column(length = 255)
     private String description;
+
+    private boolean active = true; // trạng thái loại món ăn (còn sử dụng hay không)
 }
