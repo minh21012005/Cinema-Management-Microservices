@@ -10,4 +10,5 @@ import org.springframework.data.domain.Pageable;
 public interface FoodService extends BaseService<Food, Long, FoodReqDTO, FoodResDTO> {
     ResultPaginationDTO fetchAllFoods(String name, Long typeId, Pageable pageable);
     FoodResDTO createFood(FoodReqDTO dto) throws IdInvalidException;
+    FoodResDTO updateFood(Long id, FoodReqDTO dto) throws IdInvalidException;
 }

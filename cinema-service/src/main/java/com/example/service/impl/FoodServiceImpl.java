@@ -101,4 +101,62 @@ public class FoodServiceImpl
         return foodMapper.toDto(food);
     }
 
+    @Override
+    public FoodResDTO updateFood(Long id, FoodReqDTO dto) throws IdInvalidException {
+        // Validate id
+        if (id == null) {
+            throw new IdInvalidException("Food id is required for update");
+        }
+
+        // Tìm món ăn cần update
+        Food food = foodRepository.findById(id)
+                .orElseThrow(() -> new IdInvalidException("Food not found with id: " + id));
+
+        // Validate code
+        if (dto.getCode() == null || dto.getCode().trim().isEmpty()) {
+            throw new IdInvalidException("Food code is required");
+        }
+        // Nếu đổi code thì check trùng
+        if (!dto.getCode().equals(food.getCode()) && foodRepository.existsByCode(dto.getCode())) {
+            throw new IdInvalidException("Food code already exists");
+        }
+
+        // Validate name
+        if (dto.getName() == null || dto.getName().trim().isEmpty()) {
+            throw new IdInvalidException("Food name is required");
+        }
+
+        // Validate price
+        if (dto.getPrice() == null || dto.getPrice() <= 0) {
+            throw new IdInvalidException("Food price must be greater than 0");
+        }
+
+        // Validate imageKey
+        if (dto.getImageKey() == null || dto.getImageKey().trim().isEmpty()) {
+            throw new IdInvalidException("Food image is required");
+        }
+
+        // Validate typeId
+        if (dto.getTypeId() == null) {
+            throw new IdInvalidException("Food typeId is required");
+        }
+        FoodType type = foodTypeRepository.findById(dto.getTypeId())
+                .orElseThrow(() -> new IdInvalidException("Food type not found"));
+
+        // Update các field
+        food.setCode(dto.getCode());
+        food.setName(dto.getName());
+        food.setPrice(dto.getPrice());
+        food.setDescription(dto.getDescription());
+        food.setImageKey(dto.getImageKey());
+        food.setAvailable(dto.getAvailable() != null ? dto.getAvailable() : true);
+        food.setType(type);
+
+        // Lưu lại
+        foodRepository.save(food);
+
+        return foodMapper.toDto(food);
+    }
+
+
 }

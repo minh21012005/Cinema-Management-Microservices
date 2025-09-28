@@ -40,4 +40,10 @@ public class FoodController extends BaseController<Food, Long, FoodReqDTO, FoodR
     public ResponseEntity<FoodResDTO> create(FoodReqDTO dto) throws IdInvalidException {
         return ResponseEntity.status(HttpStatus.CREATED).body(foodService.createFood(dto));
     }
+
+    @Override
+    @PreAuthorize("hasPermission(null, 'FOOD_UPDATE')")
+    public ResponseEntity<FoodResDTO> update(@PathVariable("id") Long id, FoodReqDTO dto) throws IdInvalidException {
+        return ResponseEntity.ok(foodService.updateFood(id,dto));
+    }
 }
