@@ -3,12 +3,16 @@ package com.example.service.impl;
 import com.example.domain.entity.Permission;
 import com.example.domain.entity.Role;
 import com.example.domain.request.RoleReqDTO;
+import com.example.domain.response.ResultPaginationDTO;
 import com.example.domain.response.RoleResponseDTO;
 import com.example.mapper.RoleMapper;
 import com.example.repository.PermissionRepository;
 import com.example.repository.RoleRepository;
 import com.example.service.RoleService;
+import com.example.service.specification.RoleSpecification;
 import com.example.util.error.IdInvalidException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +20,9 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
-public class RoleServiceImpl extends BaseServiceImpl<Role, Long, RoleReqDTO, RoleResponseDTO> implements RoleService {
+public class RoleServiceImpl
+        extends BaseServiceImpl<Role, Long, RoleReqDTO, RoleResponseDTO>
+        implements RoleService {
 
     private final RoleRepository roleRepository;
     private final RoleMapper roleMapper;
@@ -100,6 +106,32 @@ public class RoleServiceImpl extends BaseServiceImpl<Role, Long, RoleReqDTO, Rol
         }
 
         return response;
+    }
+
+    @Override
+    public ResultPaginationDTO fetchAllRolesWithPagination(String name, Pageable pageable) {
+        Page<Role> pageRole = this.roleRepository.findAll(
+                RoleSpecification.findRoleWithFilters(name), pageable);
+
+        ResultPaginationDTO rs = new ResultPaginationDTO();
+        ResultPaginationDTO.Meta mt = new ResultPaginationDTO.Meta();
+
+        mt.setPage(pageable.getPageNumber());
+        mt.setPageSize(pageable.getPageSize());
+        mt.setPages(pageRole.getTotalPages());
+        mt.setTotal(pageRole.getTotalElements());
+
+        rs.setMeta(mt);
+
+        // map entity -> dto
+        List<RoleResponseDTO> listRole = pageRole.getContent()
+                .stream()
+                .map(roleMapper::toDto)
+                .collect(Collectors.toList());
+
+        rs.setResult(listRole);
+
+        return rs;
     }
 
     @Override

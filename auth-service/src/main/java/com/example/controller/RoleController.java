@@ -2,11 +2,14 @@ package com.example.controller;
 
 import com.example.domain.entity.Role;
 import com.example.domain.request.RoleReqDTO;
+import com.example.domain.response.ResultPaginationDTO;
 import com.example.domain.response.RoleResponseDTO;
 import com.example.mapper.RoleMapper;
 import com.example.service.RoleService;
+import com.example.util.annotation.ApiMessage;
 import com.example.util.error.IdInvalidException;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -17,18 +20,25 @@ import java.util.List;
 @RequestMapping("/api/v1/roles")
 public class RoleController extends BaseController<Role, Long, RoleReqDTO, RoleResponseDTO> {
     private final RoleService roleService;
-    private final RoleMapper roleMapper;
 
     public RoleController(RoleService roleService, RoleMapper roleMapper) {
         super(roleService, roleMapper);
         this.roleService = roleService;
-        this.roleMapper = roleMapper;
     }
 
     @Override
     @PreAuthorize("hasPermission(null, 'ROLE_CREATE')")
     public ResponseEntity<RoleResponseDTO> create(@Valid @RequestBody RoleReqDTO role) throws IdInvalidException {
         return ResponseEntity.ok(roleService.createRole(role));
+    }
+
+    @GetMapping("/all")
+    @ApiMessage("Fetched all roles")
+    @PreAuthorize("hasPermission(null, 'ROLE_VIEW')")
+    public ResponseEntity<ResultPaginationDTO> fetchAllPagination(
+            @RequestParam(name = "name", required = false) String name,
+            Pageable pageable) {
+        return ResponseEntity.ok(roleService.fetchAllRolesWithPagination(name, pageable));
     }
 
     @Override
