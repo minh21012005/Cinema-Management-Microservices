@@ -7,8 +7,11 @@ import com.example.domain.response.ResultPaginationDTO;
 import com.example.util.error.IdInvalidException;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
+
 public interface FoodService extends BaseService<Food, Long, FoodReqDTO, FoodResDTO> {
     ResultPaginationDTO fetchAllFoods(String name, Long typeId, Pageable pageable);
     FoodResDTO createFood(FoodReqDTO dto) throws IdInvalidException;
     FoodResDTO updateFood(Long id, FoodReqDTO dto) throws IdInvalidException;
+    List<FoodResDTO> fetchAllFoodsActive();
 }

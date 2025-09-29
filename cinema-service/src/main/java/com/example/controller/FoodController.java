@@ -14,6 +14,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/v1/foods")
 public class FoodController extends BaseController<Food, Long, FoodReqDTO, FoodResDTO> {
@@ -33,6 +35,13 @@ public class FoodController extends BaseController<Food, Long, FoodReqDTO, FoodR
             @RequestParam(name = "typeId", required = false) Long typeId,
             Pageable pageable) {
         return ResponseEntity.ok(foodService.fetchAllFoods(name, typeId, pageable));
+    }
+
+    @GetMapping("/active")
+    @ApiMessage("Fetched all foods active")
+    @PreAuthorize("hasPermission(null, 'FOOD_VIEW')")
+    public ResponseEntity<List<FoodResDTO>> getAllFoodsActive() {
+        return ResponseEntity.ok(foodService.fetchAllFoodsActive());
     }
 
     @Override

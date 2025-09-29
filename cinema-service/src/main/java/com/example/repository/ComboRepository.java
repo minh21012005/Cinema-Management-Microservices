@@ -1,13 +1,10 @@
 package com.example.repository;
 
-import com.example.domain.entity.Food;
+import com.example.domain.entity.Combo;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-
 @Repository
-public interface FoodRepository extends BaseRepository<Food, Long>, JpaSpecificationExecutor<Food> {
+public interface ComboRepository extends BaseRepository<Combo, Long>, JpaSpecificationExecutor<Combo> {
     boolean existsByCode(String code);
-    List<Food> findByAvailableTrue();
 }

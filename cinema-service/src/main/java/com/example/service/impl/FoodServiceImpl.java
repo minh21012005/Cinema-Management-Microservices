@@ -158,5 +158,11 @@ public class FoodServiceImpl
         return foodMapper.toDto(food);
     }
 
-
+    @Override
+    public List<FoodResDTO> fetchAllFoodsActive() {
+        return foodRepository.findByAvailableTrue()
+                .stream()
+                .map(foodMapper::toDto)
+                .toList();
+    }
 }

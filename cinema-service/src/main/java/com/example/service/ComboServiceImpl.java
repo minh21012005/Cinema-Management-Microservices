@@ -1,0 +1,106 @@
+package com.example.service;
+
+import com.example.domain.entity.Combo;
+import com.example.domain.entity.ComboFood;
+import com.example.domain.entity.ComboFoodId;
+import com.example.domain.entity.Food;
+import com.example.domain.request.ComboReqDTO;
+import com.example.domain.response.ComboResDTO;
+import com.example.domain.response.ResultPaginationDTO;
+import com.example.mapper.ComboMapper;
+import com.example.repository.ComboRepository;
+import com.example.repository.FoodRepository;
+import com.example.service.impl.BaseServiceImpl;
+import com.example.service.specification.ComboSpecification;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+public class ComboServiceImpl
+        extends BaseServiceImpl<Combo, Long, ComboReqDTO, ComboResDTO>
+        implements ComboService {
+
+    private final ComboRepository comboRepository;
+    private final ComboMapper comboMapper;
+    private final FoodRepository foodRepository;
+
+    protected ComboServiceImpl(ComboRepository comboRepository,
+                               ComboMapper comboMapper,
+                               FoodRepository foodRepository) {
+        super(comboRepository);
+        this.comboRepository = comboRepository;
+        this.comboMapper = comboMapper;
+        this.foodRepository = foodRepository;
+    }
+
+    @Override
+    public ComboResDTO create(ComboReqDTO dto) {
+        String newCode = generateComboCode();
+
+        // 2. Map DTO -> Entity (chưa có comboFoods)
+        Combo combo = comboMapper.toEntity(dto);
+        combo.setCode(newCode);
+
+        // 3. Xử lý foods trong DTO
+        List<ComboFood> comboFoods = new ArrayList<>();
+        if (dto.getFoods() != null) {
+            for (ComboReqDTO.ComboFoodItem item : dto.getFoods()) {
+                Food food = foodRepository.findById(item.getFoodId())
+                        .orElseThrow(() -> new RuntimeException("Food not found: " + item.getFoodId()));
+
+                ComboFood comboFood = ComboFood.builder()
+                        .id(new ComboFoodId(null, food.getId())) // comboId sẽ set sau khi persist
+                        .combo(combo)
+                        .food(food)
+                        .quantity(item.getQuantity())
+                        .build();
+
+                comboFoods.add(comboFood);
+            }
+        }
+        combo.setComboFoods(comboFoods);
+
+        // 4. Lưu combo
+        Combo saved = comboRepository.save(combo);
+
+        // 5. Map sang DTO trả về
+        return comboMapper.toDto(saved);
+    }
+
+    @Override
+    public ResultPaginationDTO fetchAllCombos(String name, Pageable pageable) {
+        Page<Combo> pageCombo = this.comboRepository.findAll(
+                ComboSpecification.findComboWithFilters(name), pageable);
+
+        ResultPaginationDTO rs = new ResultPaginationDTO();
+        ResultPaginationDTO.Meta mt = new ResultPaginationDTO.Meta();
+
+        mt.setPage(pageable.getPageNumber());
+        mt.setPageSize(pageable.getPageSize());
+        mt.setPages(pageCombo.getTotalPages());
+        mt.setTotal(pageCombo.getTotalElements());
+
+        rs.setMeta(mt);
+
+        // map entity -> dto
+        List<ComboResDTO> listCombo = pageCombo.getContent()
+                .stream()
+                .map(comboMapper::toDto)
+                .collect(Collectors.toList());
+
+        rs.setResult(listCombo);
+
+        return rs;
+    }
+
+    public String generateComboCode() {
+        // Ví dụ: CB + số tăng dần
+        Long count = comboRepository.count() + 1;
+        return String.format("CB%03d", count); // CB001, CB002, ...
+    }
+}

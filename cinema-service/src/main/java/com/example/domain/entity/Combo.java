@@ -26,6 +26,9 @@ public class Combo extends BaseEntity<Long>{
     private String description; // Mô tả combo
 
     @Column(nullable = false)
+    private String imageKey;
+
+    @Column(nullable = false)
     private boolean available = true; // Còn bán hay không
 
     @OneToMany(mappedBy = "combo", cascade = CascadeType.ALL, orphanRemoval = true)
