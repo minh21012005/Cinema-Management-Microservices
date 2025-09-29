@@ -11,4 +11,5 @@ public class PermissionResDTO {
     private String apiPath;
     private String module;
     private String description; // optional
+    private boolean active;
 }

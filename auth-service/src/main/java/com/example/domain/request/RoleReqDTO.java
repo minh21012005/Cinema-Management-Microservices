@@ -1,6 +1,5 @@
 package com.example.domain.request;
 
-import com.example.validator.UniqueRoleName;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;

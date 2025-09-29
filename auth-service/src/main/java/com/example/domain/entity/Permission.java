@@ -29,4 +29,6 @@ public class Permission extends BaseEntity<Long> {
     private String module;
 
     private String description; // optional
+
+    private boolean active = true;
 }
