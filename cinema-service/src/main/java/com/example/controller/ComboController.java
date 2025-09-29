@@ -31,6 +31,12 @@ public class ComboController extends BaseController<Combo, Long, ComboReqDTO, Co
         return ResponseEntity.status(HttpStatus.CREATED).body(comboService.create(dto));
     }
 
+    @Override
+    @PreAuthorize("hasPermission(null, 'COMBO_UPDATE')")
+    public ResponseEntity<ComboResDTO> update(@PathVariable("id") Long id, ComboReqDTO dto) throws IdInvalidException {
+        return ResponseEntity.ok(comboService.update(id, dto));
+    }
+
     @GetMapping("/all")
     @ApiMessage("Fetched all combos")
     @PreAuthorize("hasPermission(null, 'COMBO_VIEW')")

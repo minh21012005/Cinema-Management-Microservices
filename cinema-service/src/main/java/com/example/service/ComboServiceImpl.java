@@ -12,9 +12,11 @@ import com.example.repository.ComboRepository;
 import com.example.repository.FoodRepository;
 import com.example.service.impl.BaseServiceImpl;
 import com.example.service.specification.ComboSpecification;
+import com.example.util.error.IdInvalidException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -70,6 +72,47 @@ public class ComboServiceImpl
 
         // 5. Map sang DTO trả về
         return comboMapper.toDto(saved);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public ComboResDTO update(Long id, ComboReqDTO dto) throws IdInvalidException {
+        // 1. Tìm combo
+        Combo combo = comboRepository.findById(id)
+                .orElseThrow(() -> new IdInvalidException("Combo not found with id: " + id));
+
+        // 2. Cập nhật các field cơ bản
+        combo.setName(dto.getName());
+        combo.setPrice(dto.getPrice());
+        combo.setDescription(dto.getDescription());
+        combo.setAvailable(dto.isAvailable());
+        combo.setImageKey(dto.getImageKey());
+
+        // 3. Xử lý danh sách foods
+        // Xóa danh sách cũ trước (cascade = ALL, orphanRemoval = true nên tự xóa trong DB)
+        combo.getComboFoods().clear();
+
+        if (dto.getFoods() != null) {
+            for (ComboReqDTO.ComboFoodItem item : dto.getFoods()) {
+                Food food = foodRepository.findById(item.getFoodId())
+                        .orElseThrow(() -> new RuntimeException("Food not found: " + item.getFoodId()));
+
+                ComboFood comboFood = ComboFood.builder()
+                        .id(new ComboFoodId(combo.getId(), food.getId()))
+                        .combo(combo)
+                        .food(food)
+                        .quantity(item.getQuantity())
+                        .build();
+
+                combo.getComboFoods().add(comboFood); // ✅ thêm trực tiếp vào list gốc
+            }
+        }
+
+        // 4. Lưu thay đổi
+        Combo updated = comboRepository.save(combo);
+
+        // 5. Trả về DTO
+        return comboMapper.toDto(updated);
     }
 
     @Override
