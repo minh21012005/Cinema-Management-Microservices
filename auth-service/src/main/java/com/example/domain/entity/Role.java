@@ -20,6 +20,8 @@ public class Role extends BaseEntity<Long> {
     private String code;
 
     private String description;
+
+    @Column(nullable = false)
     private boolean active = true;
 
     @ManyToMany

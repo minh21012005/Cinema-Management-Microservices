@@ -34,6 +34,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -154,11 +155,19 @@ public class AuthController {
         roleDTO.setId(currentUserDB.getRole().getId());
         roleDTO.setName(currentUserDB.getRole().getCode());
 
-        List<String> permissions = currentUserDB.getRole().getPermissions().stream()
-                .map(Permission::getCode)
-                .toList();
+        List<String> permissions = new ArrayList<>();
+        if (currentUserDB.getRole().isActive()) {
+            permissions = currentUserDB.getRole().getPermissions().stream()
+                    .filter(Permission::isActive) // chỉ lấy permission đang active
+                    .map(Permission::getCode)
+                    .toList();
+        }
 
         String redisKey = "user:permissions:" + currentUserDB.getId();
+
+        // reset permission trước khi lưu lại
+        redisTemplate.delete(redisKey);
+
         Map<String, String> permissionMap = new HashMap<>();
         permissions.forEach(perm -> permissionMap.put(perm, "1"));
         redisTemplate.opsForHash().putAll(redisKey, permissionMap);

@@ -30,5 +30,6 @@ public class Permission extends BaseEntity<Long> {
 
     private String description; // optional
 
+    @Column(nullable = false)
     private boolean active = true;
 }
