@@ -11,6 +11,7 @@ import com.example.util.error.IdInvalidException;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -41,12 +42,18 @@ public class PermissionController
     @PreAuthorize("hasPermission(null, 'PERMISSION_CREATE')")
     public ResponseEntity<PermissionResDTO> create(@Valid @RequestBody PermissionReqDTO dto)
             throws IdInvalidException {
-        return ResponseEntity.ok(permissionService.createPermission(dto));
+        return ResponseEntity.status(HttpStatus.CREATED).body(permissionService.createPermission(dto));
     }
 
     @GetMapping("/active")
     @PreAuthorize("hasPermission(null, 'PERMISSION_VIEW')")
     public ResponseEntity<List<PermissionResDTO>> getActivePermissions() {
         return ResponseEntity.ok(permissionService.getActivePermissions());
+    }
+
+    @Override
+    @PreAuthorize("hasPermission(null, 'PERMISSION_UPDATE')")
+    public ResponseEntity<PermissionResDTO> update(@PathVariable("id") Long id, PermissionReqDTO dto) throws IdInvalidException {
+        return ResponseEntity.ok(permissionService.updatePermission(id, dto));
     }
 }

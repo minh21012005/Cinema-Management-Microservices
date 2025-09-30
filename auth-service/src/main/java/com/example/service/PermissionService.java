@@ -13,4 +13,5 @@ public interface PermissionService extends BaseService<Permission, Long, Permiss
     List<PermissionResDTO> getActivePermissions();
     ResultPaginationDTO fetchAllPermissionsWithPagination(String module, Pageable pageable);
     PermissionResDTO createPermission(PermissionReqDTO dto) throws IdInvalidException;
+    PermissionResDTO updatePermission(Long id, PermissionReqDTO dto) throws IdInvalidException;
 }
