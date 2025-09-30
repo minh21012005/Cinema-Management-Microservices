@@ -109,9 +109,9 @@ public class RoleServiceImpl
     }
 
     @Override
-    public ResultPaginationDTO fetchAllRolesWithPagination(String name, Pageable pageable) {
+    public ResultPaginationDTO fetchAllRolesWithPagination(String code, Pageable pageable) {
         Page<Role> pageRole = this.roleRepository.findAll(
-                RoleSpecification.findRoleWithFilters(name), pageable);
+                RoleSpecification.findRoleWithFilters(code), pageable);
 
         ResultPaginationDTO rs = new ResultPaginationDTO();
         ResultPaginationDTO.Meta mt = new ResultPaginationDTO.Meta();

@@ -36,9 +36,9 @@ public class RoleController extends BaseController<Role, Long, RoleReqDTO, RoleR
     @ApiMessage("Fetched all roles")
     @PreAuthorize("hasPermission(null, 'ROLE_VIEW')")
     public ResponseEntity<ResultPaginationDTO> fetchAllPagination(
-            @RequestParam(name = "name", required = false) String name,
+            @RequestParam(name = "code", required = false) String code,
             Pageable pageable) {
-        return ResponseEntity.ok(roleService.fetchAllRolesWithPagination(name, pageable));
+        return ResponseEntity.ok(roleService.fetchAllRolesWithPagination(code, pageable));
     }
 
     @Override

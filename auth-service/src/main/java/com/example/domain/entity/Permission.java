@@ -16,7 +16,7 @@ public class Permission extends BaseEntity<Long> {
     @Column(nullable = false, unique = true)
     private String code; // MOVIE_CREATE, BOOKING_MANAGE...
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String name;
 
     @Column(nullable = false)
