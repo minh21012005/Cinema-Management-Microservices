@@ -6,6 +6,7 @@ import com.example.domain.request.UserUpdateDTO;
 import com.example.domain.response.ResUserDTO;
 import com.example.domain.response.ResultPaginationDTO;
 import com.example.service.UserService;
+import com.example.util.SecurityUtil;
 import com.example.util.annotation.ApiMessage;
 import com.example.util.error.IdInvalidException;
 import jakarta.validation.Valid;
@@ -87,5 +88,21 @@ public class UserController {
             throw new IdInvalidException("Phone " + dto.getPhone() + " đã tồn tại!");
         }
         return ResponseEntity.ok(this.userService.updateUser(user, dto));
+    }
+
+    @GetMapping("/fetch-cinema")
+    @PreAuthorize("hasPermission(null, 'CINEMA_VIEW')")
+    public Long getCinemaIdByUser(Authentication authentication) throws IdInvalidException {
+        String email = SecurityUtil.extractPrincipal(authentication);
+        if(email == null) {
+            throw new IdInvalidException("Email không hợp lệ!");
+        }
+        User user = userService.findByEmail(email).orElseThrow(
+                () -> new IdInvalidException("Không tìm thấy user trong hệ thống!")
+        );
+        if (user.getCinemaId() == null) {
+            throw new IdInvalidException("User không thuộc rạp nào trong hệ thống!");
+        }
+        return user.getCinemaId();
     }
 }

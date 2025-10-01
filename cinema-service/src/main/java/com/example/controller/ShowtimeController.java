@@ -48,6 +48,14 @@ public class ShowtimeController extends BaseController<Showtime, Long, ShowtimeR
         return ResponseEntity.ok(showtimeService.fetchAllByCinema(cinemaId, title, roomId, fromDate, toDate,pageable));
     }
 
+    @GetMapping("/inday")
+    @PreAuthorize("hasPermission(null, 'SHOWTIME_VIEW')")
+    public ResponseEntity<ResultPaginationDTO> fetchShowtimeInDayForStaff(
+            @RequestParam(name = "title", required = false) String title,
+            Pageable pageable) throws IdInvalidException {
+        return ResponseEntity.ok(showtimeService.fetchShowtimeInDayForStaff(title, pageable));
+    }
+
     @PutMapping("/change-status/{id}")
     @PreAuthorize("hasPermission(null, 'SHOWTIME_UPDATE')")
     public ResponseEntity<ShowtimeResDTO> changeShowtimeStatus(

@@ -1,6 +1,8 @@
 package com.example.service.impl;
 
 import com.example.client.MovieClient;
+import com.example.client.UserClient;
+import com.example.domain.entity.Cinema;
 import com.example.domain.entity.Room;
 import com.example.domain.entity.Showtime;
 import com.example.domain.request.ShowtimeReqDTO;
@@ -38,18 +40,21 @@ public class ShowtimeServiceImpl
     private final RoomRepository roomRepository;
     private final MovieClient movieClient;
     private final ShowtimeMapper showtimeMapper;
+    private final UserClient userClient;
 
     protected ShowtimeServiceImpl(ShowtimeRepository showtimeRepository,
                                   RoomRepository roomRepository,
                                   ShowtimeMapper showtimeMapper,
                                   CinemaRepository cinemaRepository,
-                                  MovieClient movieClient) {
+                                  MovieClient movieClient,
+                                  UserClient userClient) {
         super(showtimeRepository);
         this.roomRepository = roomRepository;
         this.showtimeRepository = showtimeRepository;
         this.movieClient = movieClient;
         this.showtimeMapper = showtimeMapper;
         this.cinemaRepository = cinemaRepository;
+        this.userClient = userClient;
     }
 
     @Override
@@ -279,6 +284,77 @@ public class ShowtimeServiceImpl
                 .toList();
     }
 
+    @Override
+    public ResultPaginationDTO fetchShowtimeInDayForStaff(String title, Pageable pageable) throws IdInvalidException {
+        Long cinemaId = userClient.findCinemaIdByUser().getData();
+
+        // check cinema tồn tại
+        Cinema cinema = cinemaRepository.findById(cinemaId)
+                .orElseThrow(() -> new IdInvalidException("Cinema không tồn tại trong hệ thống!"));
+
+        if (cinema.getRooms().isEmpty()) {
+            throw new IdInvalidException("Cinema hiện chưa có phòng chiếu!");
+        }
+
+        List<Long> movieIds = null;
+        if (title != null && !title.isBlank()) {
+            // gọi movie-service để tìm movieIds theo title
+            movieIds = movieClient.findByTitle(title)
+                    .getData()
+                    .stream()
+                    .map(MovieResDTO::getId)
+                    .toList();
+        }
+
+        if (pageable.getSort().isUnsorted()) {
+            pageable = PageRequest.of(
+                    pageable.getPageNumber(),
+                    pageable.getPageSize(),
+                    Sort.by(Sort.Direction.ASC, "startTime")
+            );
+        }
+
+        // build spec
+        Specification<Showtime> spec = ShowtimeSpecification.findShowtimesWithFilterForStaff(cinemaId, movieIds);
+
+        // query có phân trang
+        Page<Showtime> pageShowtimes = showtimeRepository.findAll(spec, pageable);
+
+        // Lấy tất cả movieId duy nhất trong page
+        List<Long> idsInPage = pageShowtimes.getContent().stream()
+                .map(Showtime::getMovieId)
+                .distinct()
+                .toList();
+
+        // Gọi 1 lần API để lấy danh sách phim
+        List<MovieResDTO> movies = movieClient.findByIds(idsInPage).getData();
+
+        // Tạo map cho nhanh lookup
+        Map<Long, String> movieMap = movies.stream()
+                .collect(Collectors.toMap(MovieResDTO::getId, MovieResDTO::getTitle));
+
+        // Map sang ShowtimeResDTO
+        List<ShowtimeResDTO> result = pageShowtimes.getContent().stream()
+                .map(showtime -> {
+                    ShowtimeResDTO resDTO = showtimeMapper.toDto(showtime);
+                    resDTO.setMovieTitle(movieMap.get(showtime.getMovieId())); // lấy title từ map
+                    return resDTO;
+                })
+                .toList();
+
+        // build response
+        ResultPaginationDTO rs = new ResultPaginationDTO();
+        ResultPaginationDTO.Meta mt = new ResultPaginationDTO.Meta();
+        mt.setPage(pageShowtimes.getNumber());
+        mt.setPageSize(pageShowtimes.getSize());
+        mt.setPages(pageShowtimes.getTotalPages());
+        mt.setTotal(pageShowtimes.getTotalElements());
+
+        rs.setMeta(mt);
+        rs.setResult(result);
+
+        return rs;
+    }
 
     public void validateShowtime(Long roomId, LocalDateTime startTime, LocalDateTime endTime) {
         List<Showtime> overlaps = showtimeRepository.findOverlappingShowtimes(roomId, startTime, endTime);

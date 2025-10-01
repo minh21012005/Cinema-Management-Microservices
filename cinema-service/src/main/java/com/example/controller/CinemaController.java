@@ -21,12 +21,10 @@ import java.util.List;
 public class CinemaController extends BaseController<Cinema, Long, CinemaReqDTO, CinemaResDTO> {
 
     private final CinemaService cinemaService;
-    private final CinemaMapper cinemaMapper;
 
     protected CinemaController(CinemaService cinemaService, CinemaMapper cinemaMapper) {
         super(cinemaService, cinemaMapper);
         this.cinemaService = cinemaService;
-        this.cinemaMapper = cinemaMapper;
     }
 
     @Override
@@ -56,13 +54,13 @@ public class CinemaController extends BaseController<Cinema, Long, CinemaReqDTO,
             @PathVariable("id") Long id, @RequestBody CinemaReqDTO dto) throws IdInvalidException {
         Cinema cinema = cinemaService.findById(id).orElse(null);
         if (cinema != null) {
-            if(!cinema.getName().equals(dto.getName()) && cinemaService.existsByName(dto.getName())){
+            if (!cinema.getName().equals(dto.getName()) && cinemaService.existsByName(dto.getName())) {
                 throw new IdInvalidException("Name is already existed!");
             }
-            if(!cinema.getPhone().equals(dto.getPhone()) && cinemaService.existsByPhone(dto.getPhone())){
+            if (!cinema.getPhone().equals(dto.getPhone()) && cinemaService.existsByPhone(dto.getPhone())) {
                 throw new IdInvalidException("Phone is already existed!");
             }
-            if(!cinema.getAddress().equals(dto.getAddress()) && cinemaService.existsByAddress(dto.getAddress())){
+            if (!cinema.getAddress().equals(dto.getAddress()) && cinemaService.existsByAddress(dto.getAddress())) {
                 throw new IdInvalidException("Address is already existed!");
             }
         }
@@ -78,12 +76,13 @@ public class CinemaController extends BaseController<Cinema, Long, CinemaReqDTO,
     }
 
     @Override
-    public ResponseEntity<Void> delete(Long aLong) throws IdInvalidException {
-        throw new UnsupportedOperationException("Delete cinema is not supported!");
+    @PreAuthorize("hasPermission(null, 'CINEMA_VIEW')")
+    public ResponseEntity<List<Cinema>> getAll() {
+        throw new UnsupportedOperationException("Fetch all cinema is not supported!");
     }
 
     @Override
-    public ResponseEntity<List<Cinema>> getAll() {
-        throw new UnsupportedOperationException("GET /fetch-all is supported!");
+    public ResponseEntity<Void> delete(Long aLong) throws IdInvalidException {
+        throw new UnsupportedOperationException("Delete cinema is not supported!");
     }
 }

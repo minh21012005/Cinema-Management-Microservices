@@ -24,12 +24,10 @@ public class RoomController extends BaseController<Room, Long, RoomReqDTO, RoomR
 
     private final RoomService roomService;
     private final CinemaService cinemaService;
-    private final RoomMapper roomMapper;
 
     protected RoomController(RoomService roomService, RoomMapper roomMapper, CinemaService cinemaService) {
         super(roomService, roomMapper);
         this.roomService = roomService;
-        this.roomMapper = roomMapper;
         this.cinemaService = cinemaService;
     }
 

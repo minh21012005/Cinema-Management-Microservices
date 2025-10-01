@@ -31,4 +31,7 @@ public class User extends BaseEntity<Long> {
     private String address;
 
     private Long roleId;
+
+    @Column(name = "cinema_id")
+    private Long cinemaId;
 }

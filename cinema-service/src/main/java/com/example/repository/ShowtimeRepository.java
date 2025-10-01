@@ -38,4 +38,6 @@ public interface ShowtimeRepository extends BaseRepository<Showtime, Long>, JpaS
     List<Showtime> findAllByCinemaId(@Param("cinemaId") Long cinemaId);
 
     List<Showtime> findByMovieIdAndActiveTrueAndStartTimeAfter(Long movieId, LocalDateTime now);
+    List<Showtime> findByRoom_IdAndStartTimeBetweenAndActiveTrue
+            (Long roomId, LocalDateTime startOfDay, LocalDateTime endOfDay);
 }
