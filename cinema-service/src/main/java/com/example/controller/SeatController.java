@@ -4,6 +4,7 @@ import com.example.domain.entity.Seat;
 import com.example.domain.entity.SeatType;
 import com.example.domain.request.ReqSeatDTO;
 import com.example.domain.response.ResSeatDTO;
+import com.example.domain.response.SeatStatusDTO;
 import com.example.mapper.SeatMapper;
 import com.example.service.SeatService;
 import com.example.util.error.IdInvalidException;
@@ -57,7 +58,7 @@ public class SeatController extends BaseController<Seat, Long, ReqSeatDTO, ResSe
 
     @GetMapping("/fetch-by-showtime/{id}")
     @PreAuthorize("hasPermission(null, 'SEAT_VIEW')")
-    public ResponseEntity<List<ResSeatDTO>> fetchSeatsByShowtime(@PathVariable("id") Long id)
+    public ResponseEntity<List<SeatStatusDTO>> fetchSeatsByShowtime(@PathVariable("id") Long id)
             throws IdInvalidException {
         return ResponseEntity.ok(seatService.fetchSeatsByShowtime(id));
     }

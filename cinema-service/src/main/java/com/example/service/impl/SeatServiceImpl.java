@@ -1,8 +1,10 @@
 package com.example.service.impl;
 
+import com.example.client.BookingClient;
 import com.example.domain.entity.*;
 import com.example.domain.request.ReqSeatDTO;
 import com.example.domain.response.ResSeatDTO;
+import com.example.domain.response.SeatStatusDTO;
 import com.example.mapper.SeatMapper;
 import com.example.repository.RoomRepository;
 import com.example.repository.SeatRepository;
@@ -25,18 +27,21 @@ public class SeatServiceImpl
     private final SeatTypeRepository seatTypeRepository;
     private final ShowtimeRepository showtimeRepository;
     private final SeatMapper seatMapper;
+    private final BookingClient bookingClient;
 
     public SeatServiceImpl(RoomRepository roomRepository,
                            SeatRepository seatRepository,
                            SeatMapper seatMapper,
                            ShowtimeRepository showtimeRepository,
-                           SeatTypeRepository seatTypeRepository) {
+                           SeatTypeRepository seatTypeRepository,
+                           BookingClient bookingClient) {
         super(seatRepository);
         this.roomRepository = roomRepository;
         this.seatMapper = seatMapper;
         this.seatRepository = seatRepository;
         this.seatTypeRepository = seatTypeRepository;
         this.showtimeRepository = showtimeRepository;
+        this.bookingClient = bookingClient;
     }
 
     @Override
@@ -157,7 +162,7 @@ public class SeatServiceImpl
     }
 
     @Override
-    public List<ResSeatDTO> fetchSeatsByShowtime(Long id) throws IdInvalidException {
+    public List<SeatStatusDTO> fetchSeatsByShowtime(Long id) throws IdInvalidException {
         Showtime showtime = showtimeRepository.findById(id).orElseThrow(
                 () -> new IdInvalidException("Showtime không tồn tại!")
         );
@@ -167,7 +172,22 @@ public class SeatServiceImpl
             throw new IdInvalidException("Room không tồn tại!");
         }
 
-        return fetchSeatsByRoom(room.getId());
+        // 2. Lấy danh sách ghế active
+        List<Seat> activeSeats = room.getSeats().stream()
+                .filter(Seat::isActive) // chỉ lấy ghế active
+                .toList();
+        List<Long> bookedSeatIds = bookingClient.getBookedSeatIds(id).getData();
+
+        return activeSeats.stream()
+                .map(seat -> SeatStatusDTO.builder()
+                        .id(seat.getId())
+                        .name(seat.getName())
+                        .rowIndex(seat.getRowIndex())
+                        .colIndex(seat.getColIndex())
+                        .seatType(seat.getSeatType())
+                        .booked(bookedSeatIds.contains(seat.getId())) // ghế đã đặt
+                        .build())
+                .toList();
     }
 
     public Optional<SeatType> findSeatTypeById(Long id) {

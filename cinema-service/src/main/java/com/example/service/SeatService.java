@@ -4,6 +4,7 @@ import com.example.domain.entity.Seat;
 import com.example.domain.entity.SeatType;
 import com.example.domain.request.ReqSeatDTO;
 import com.example.domain.response.ResSeatDTO;
+import com.example.domain.response.SeatStatusDTO;
 import com.example.util.error.IdInvalidException;
 
 import java.util.List;
@@ -14,5 +15,5 @@ public interface SeatService extends BaseService<Seat, Long, ReqSeatDTO, ResSeat
     List<ResSeatDTO> fetchSeatsByRoom(Long id) throws IdInvalidException;
     ResSeatDTO changeSeatStatus(Long id) throws IdInvalidException;
     ResSeatDTO changeSeatType(Long id, Long typeId) throws IdInvalidException;
-    List<ResSeatDTO> fetchSeatsByShowtime(Long id) throws IdInvalidException;
+    List<SeatStatusDTO> fetchSeatsByShowtime(Long id) throws IdInvalidException;
 }

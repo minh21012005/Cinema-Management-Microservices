@@ -19,6 +19,7 @@
         <module>cinema-service</module>
         <module>movie-service</module>
         <module>media-service</module>
+        <module>booking-service</module>
     </modules>
 
     <properties>
