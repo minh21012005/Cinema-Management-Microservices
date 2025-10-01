@@ -7,6 +7,7 @@ import com.example.mapper.SeatMapper;
 import com.example.repository.RoomRepository;
 import com.example.repository.SeatRepository;
 import com.example.repository.SeatTypeRepository;
+import com.example.repository.ShowtimeRepository;
 import com.example.service.SeatService;
 import com.example.util.error.IdInvalidException;
 import org.springframework.stereotype.Service;
@@ -22,17 +23,20 @@ public class SeatServiceImpl
     private final RoomRepository roomRepository;
     private final SeatRepository seatRepository;
     private final SeatTypeRepository seatTypeRepository;
+    private final ShowtimeRepository showtimeRepository;
     private final SeatMapper seatMapper;
 
     public SeatServiceImpl(RoomRepository roomRepository,
                            SeatRepository seatRepository,
                            SeatMapper seatMapper,
+                           ShowtimeRepository showtimeRepository,
                            SeatTypeRepository seatTypeRepository) {
         super(seatRepository);
         this.roomRepository = roomRepository;
         this.seatMapper = seatMapper;
         this.seatRepository = seatRepository;
         this.seatTypeRepository = seatTypeRepository;
+        this.showtimeRepository = showtimeRepository;
     }
 
     @Override
@@ -89,6 +93,8 @@ public class SeatServiceImpl
             dto.setId(seat.getId());
             dto.setName(seat.getName());
             dto.setActive(seat.isActive());
+            dto.setRowIndex(seat.getRowIndex());
+            dto.setColIndex(seat.getColIndex());
             dto.setSeatType(seat.getSeatType());
             return dto;
         }).collect(Collectors.toList());
@@ -148,6 +154,20 @@ public class SeatServiceImpl
             seat.setSeatType(seatType);
         }
         return seatMapper.toDto(seatRepository.save(seat));
+    }
+
+    @Override
+    public List<ResSeatDTO> fetchSeatsByShowtime(Long id) throws IdInvalidException {
+        Showtime showtime = showtimeRepository.findById(id).orElseThrow(
+                () -> new IdInvalidException("Showtime không tồn tại!")
+        );
+
+        Room room = showtime.getRoom();
+        if(room == null){
+            throw new IdInvalidException("Room không tồn tại!");
+        }
+
+        return fetchSeatsByRoom(room.getId());
     }
 
     public Optional<SeatType> findSeatTypeById(Long id) {

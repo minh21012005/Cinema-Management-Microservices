@@ -14,4 +14,5 @@ public interface SeatService extends BaseService<Seat, Long, ReqSeatDTO, ResSeat
     List<ResSeatDTO> fetchSeatsByRoom(Long id) throws IdInvalidException;
     ResSeatDTO changeSeatStatus(Long id) throws IdInvalidException;
     ResSeatDTO changeSeatType(Long id, Long typeId) throws IdInvalidException;
+    List<ResSeatDTO> fetchSeatsByShowtime(Long id) throws IdInvalidException;
 }

@@ -19,12 +19,10 @@ import java.util.List;
 public class SeatController extends BaseController<Seat, Long, ReqSeatDTO, ResSeatDTO> {
 
     private final SeatService seatService;
-    private final SeatMapper seatMapper;
 
     protected SeatController(SeatService seatService, SeatMapper seatMapper) {
         super(seatService, seatMapper);
         this.seatService = seatService;
-        this.seatMapper = seatMapper;
     }
 
     @Override
@@ -55,6 +53,13 @@ public class SeatController extends BaseController<Seat, Long, ReqSeatDTO, ResSe
     public ResponseEntity<ResSeatDTO> changeSeatType(
             @PathVariable("id") Long id, @PathVariable("typeId") Long typeId) throws IdInvalidException {
         return ResponseEntity.ok(seatService.changeSeatType(id, typeId));
+    }
+
+    @GetMapping("/fetch-by-showtime/{id}")
+    @PreAuthorize("hasPermission(null, 'SEAT_VIEW')")
+    public ResponseEntity<List<ResSeatDTO>> fetchSeatsByShowtime(@PathVariable("id") Long id)
+            throws IdInvalidException {
+        return ResponseEntity.ok(seatService.fetchSeatsByShowtime(id));
     }
 
     @Override

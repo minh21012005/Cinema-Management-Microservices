@@ -329,15 +329,21 @@ public class ShowtimeServiceImpl
         // Gọi 1 lần API để lấy danh sách phim
         List<MovieResDTO> movies = movieClient.findByIds(idsInPage).getData();
 
-        // Tạo map cho nhanh lookup
-        Map<Long, String> movieMap = movies.stream()
-                .collect(Collectors.toMap(MovieResDTO::getId, MovieResDTO::getTitle));
+        // Tạo map để lookup nhanh
+        Map<Long, MovieResDTO> movieMap = movies.stream()
+                .collect(Collectors.toMap(MovieResDTO::getId, m -> m));
 
         // Map sang ShowtimeResDTO
         List<ShowtimeResDTO> result = pageShowtimes.getContent().stream()
                 .map(showtime -> {
                     ShowtimeResDTO resDTO = showtimeMapper.toDto(showtime);
-                    resDTO.setMovieTitle(movieMap.get(showtime.getMovieId())); // lấy title từ map
+
+                    MovieResDTO movie = movieMap.get(showtime.getMovieId());
+                    if (movie != null) {
+                        resDTO.setMovieTitle(movie.getTitle());
+                        resDTO.setPosterKey(movie.getPosterKey());
+                    }
+
                     return resDTO;
                 })
                 .toList();

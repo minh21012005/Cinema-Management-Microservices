@@ -12,6 +12,7 @@ public class ShowtimeResDTO {
     private boolean active;
     private Long movieId;   // lấy trực tiếp
     private String movieTitle;  // thêm tên phim
+    private String posterKey;
     private Long roomId;    // chỉ lấy id thay vì map nguyên Room
     private String roomName;    // thêm tên phòng
 }

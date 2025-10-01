@@ -13,4 +13,6 @@ public class ResSeatDTO {
     private String name; // Ví dụ: A1, B5...
     private boolean active;
     private SeatType seatType;
+    private Integer rowIndex;
+    private Integer colIndex;
 }
