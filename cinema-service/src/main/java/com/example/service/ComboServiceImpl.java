@@ -141,6 +141,14 @@ public class ComboServiceImpl
         return rs;
     }
 
+    @Override
+    public List<ComboResDTO> fetchAllCombosActive() {
+        return comboRepository.findByAvailableTrue()
+                .stream()
+                .map(comboMapper::toDto)
+                .toList();
+    }
+
     public String generateComboCode() {
         // Ví dụ: CB + số tăng dần
         Long count = comboRepository.count() + 1;

@@ -14,6 +14,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/v1/combos")
 public class ComboController extends BaseController<Combo, Long, ComboReqDTO, ComboResDTO> {
@@ -44,5 +46,12 @@ public class ComboController extends BaseController<Combo, Long, ComboReqDTO, Co
             @RequestParam(name = "name", required = false) String name,
             Pageable pageable) {
         return ResponseEntity.ok(comboService.fetchAllCombos(name, pageable));
+    }
+
+    @GetMapping("/active")
+    @ApiMessage("Fetched all combos active")
+    @PreAuthorize("hasPermission(null, 'COMBO_VIEW')")
+    public ResponseEntity<List<ComboResDTO>> getAllCombosActive() {
+        return ResponseEntity.ok(comboService.fetchAllCombosActive());
     }
 }

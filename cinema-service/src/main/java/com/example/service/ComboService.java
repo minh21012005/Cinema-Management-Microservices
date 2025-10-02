@@ -7,8 +7,11 @@ import com.example.domain.response.ResultPaginationDTO;
 import com.example.util.error.IdInvalidException;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
+
 public interface ComboService extends BaseService<Combo, Long, ComboReqDTO, ComboResDTO> {
     ComboResDTO create(ComboReqDTO dto);
     ComboResDTO update(Long id, ComboReqDTO dto) throws IdInvalidException;
     ResultPaginationDTO fetchAllCombos(String name, Pageable pageable);
+    List<ComboResDTO> fetchAllCombosActive();
 }
