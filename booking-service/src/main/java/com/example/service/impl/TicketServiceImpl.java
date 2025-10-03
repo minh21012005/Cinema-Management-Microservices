@@ -7,6 +7,7 @@ import com.example.repository.TicketRepository;
 import com.example.service.TicketService;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -22,8 +23,8 @@ public class TicketServiceImpl
     }
 
     @Override
-    public List<Long> findByShowtimeIdAndPaidTrue(Long id) {
-        List<Ticket> tickets = ticketRepository.findByShowtimeIdAndPaidTrue(id);
+    public List<Long> findLockedSeats(Long id, LocalDateTime time) {
+        List<Ticket> tickets = ticketRepository.findLockedSeats(id, time);
         return tickets.stream()
                 .map(Ticket::getSeatId)
                 .toList();

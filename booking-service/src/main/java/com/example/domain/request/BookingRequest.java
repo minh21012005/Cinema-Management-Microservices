@@ -5,11 +5,11 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-public class OrderReqDTO {
+public class BookingRequest {
     private Long showtimeId;
-    private List<BookingRequest.SeatDTO> seats;
-    private List<BookingRequest.FoodDTO> foods;
-    private List<BookingRequest.ComboDTO> combos;
+    private List<SeatDTO> seats;
+    private List<FoodDTO> foods;
+    private List<ComboDTO> combos;
     private String customerName;
     private String customerPhone;
 
@@ -33,3 +33,4 @@ public class OrderReqDTO {
         private double price;
     }
 }
+

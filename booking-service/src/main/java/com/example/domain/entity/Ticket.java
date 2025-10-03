@@ -3,11 +3,10 @@ package com.example.domain.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Entity
-@Table(
-        name = "tickets",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"seat_id", "showtime_id"})
-)
+@Table(name = "tickets")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -20,6 +19,11 @@ public class Ticket extends BaseEntity<Long>{
 
     @Column(nullable = false)
     private boolean paid = false; // Trạng thái thanh toán
+
+    @Column(nullable = false)
+    private boolean reserved = false; // Tạm giữ ghế
+
+    private LocalDateTime reservedAt; // Thời điểm bắt đầu giữ ghế
 
     @Column(name = "seat_id", nullable = false)
     private Long seatId;

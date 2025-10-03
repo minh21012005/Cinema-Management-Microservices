@@ -8,6 +8,7 @@ import com.example.service.TicketService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -24,6 +25,6 @@ public class TicketController extends BaseController<Ticket, Long, TicketReqDTO,
     @GetMapping("/showtime/{id}/booked-seats")
     @PreAuthorize("hasPermission(null, 'SEAT_VIEW')")
     public List<Long> getBookedSeats(@PathVariable("id") Long id) {
-        return ticketService.findByShowtimeIdAndPaidTrue(id);
+        return ticketService.findLockedSeats(id, LocalDateTime.now().minusMinutes(5));
     }
 }
