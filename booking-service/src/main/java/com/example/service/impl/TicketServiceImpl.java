@@ -14,9 +14,6 @@ public class TicketServiceImpl
         extends BaseServiceImpl<Ticket, Long, TicketReqDTO, TicketResDTO>
         implements TicketService {
 
-    private static final String YOUTUBE_REGEX =
-            "^(https?://)?(www\\.)?(youtube\\.com/watch\\?v=|youtu\\.be/)[\\w-]{11}.*$";
-
     private final TicketRepository ticketRepository;
 
     protected TicketServiceImpl(TicketRepository ticketRepository) {
