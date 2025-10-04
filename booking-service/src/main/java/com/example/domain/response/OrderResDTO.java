@@ -10,7 +10,7 @@ import java.util.List;
 
 @Data
 public class OrderResDTO {
-    private Long orderId;
+    private Long id;
     private Long staffId;
     private double totalAmount;
     private boolean paid;

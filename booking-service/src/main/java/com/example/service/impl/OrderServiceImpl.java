@@ -1,5 +1,6 @@
 package com.example.service.impl;
 
+import com.example.client.ShowtimeClient;
 import com.example.domain.entity.Order;
 import com.example.domain.entity.OrderItem;
 import com.example.domain.entity.Ticket;
@@ -10,6 +11,7 @@ import com.example.mapper.OrderMapper;
 import com.example.repository.OrderRepository;
 import com.example.repository.TicketRepository;
 import com.example.service.OrderService;
+import com.example.util.error.IdInvalidException;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.Authentication;
@@ -30,28 +32,38 @@ public class OrderServiceImpl
     private final OrderRepository orderRepository;
     private final SimpMessagingTemplate messagingTemplate;
     private final OrderMapper orderMapper;
+    private final ShowtimeClient showtimeClient;
 
     public OrderServiceImpl(TicketRepository ticketRepository,
                               OrderRepository orderRepository,
                               OrderMapper orderMapper,
+                              ShowtimeClient showtimeClient,
                               SimpMessagingTemplate simpMessagingTemplate) {
         super(orderRepository);
         this.ticketRepository = ticketRepository;
         this.orderRepository = orderRepository;
         this.orderMapper = orderMapper;
+        this.showtimeClient = showtimeClient;
         this.messagingTemplate = simpMessagingTemplate;
     }
 
     @Transactional
-    public OrderResDTO createOrder(OrderReqDTO request) {
+    public OrderResDTO createOrder(OrderReqDTO request) throws IdInvalidException {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        //Kiểm tra xuất chiếu đã xong chưa
+        boolean isShowtimeEnd = showtimeClient.isShowtimeEnd(request.getShowtimeId());
+        if(isShowtimeEnd){
+            throw new IdInvalidException("Xuất chiếu đã kết thúc, không thể đặt vé!");
+        }
+
         // 1. Kiểm tra ghế có còn trống không
         LocalDateTime now = LocalDateTime.now();
         for (BookingRequest.SeatDTO seatReq : request.getSeats()) {
             boolean exists = ticketRepository.existsBySeatIdAndShowtimeIdAndPaidTrueOrReservedTrue(
                     seatReq.getSeatId(), request.getShowtimeId(), now.minusMinutes(5));
             if (exists) {
-                throw new RuntimeException("Seat " + seatReq.getSeatId() + " đã được đặt!");
+                throw new IdInvalidException("Seat " + seatReq.getSeatId() + " đã được đặt!");
             }
         }
 

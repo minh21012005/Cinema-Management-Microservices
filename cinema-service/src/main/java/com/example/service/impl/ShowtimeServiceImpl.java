@@ -362,6 +362,13 @@ public class ShowtimeServiceImpl
         return rs;
     }
 
+    @Override
+    public boolean isShowtimeEnd(Long id) throws IdInvalidException {
+        Showtime showtime = showtimeRepository.findById(id)
+                .orElseThrow(() -> new IdInvalidException("Showtime không tồn tại!"));
+        return LocalDateTime.now().isAfter(showtime.getEndTime());
+    }
+
     public void validateShowtime(Long roomId, LocalDateTime startTime, LocalDateTime endTime) {
         List<Showtime> overlaps = showtimeRepository.findOverlappingShowtimes(roomId, startTime, endTime);
         if (!overlaps.isEmpty()) {

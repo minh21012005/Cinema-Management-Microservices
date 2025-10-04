@@ -56,6 +56,9 @@ public class ShowtimeSpecification {
             LocalDateTime endOfDay = startOfDay.plusDays(1).minusNanos(1);
             predicates.add(cb.between(root.get("startTime"), startOfDay, endOfDay));
 
+            // chỉ lấy showtime chưa kết thúc (endTime > now)
+            predicates.add(cb.greaterThan(root.get("endTime"), LocalDateTime.now()));
+
             // chỉ lấy showtime thuộc cinema hiện tại
             predicates.add(cb.equal(root.get("room").get("cinema").get("id"), cinemaId));
 

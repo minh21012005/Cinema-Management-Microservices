@@ -89,6 +89,12 @@ public class ShowtimeController extends BaseController<Showtime, Long, ShowtimeR
         return super.getAll();
     }
 
+    @GetMapping("/{id}/is-end")
+    @PreAuthorize("hasPermission(null, 'SHOWTIME_VIEW')")
+    public boolean isShowtimeEnd(@PathVariable("id") Long id) throws IdInvalidException {
+        return showtimeService.isShowtimeEnd(id);
+    }
+
     @Override
     public ResponseEntity<Void> delete(@PathVariable("id") Long id) throws IdInvalidException {
         throw new UnsupportedOperationException("Delete showtime is not supported!");
