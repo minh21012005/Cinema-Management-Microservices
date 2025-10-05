@@ -1,0 +1,14 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="BookingServiceApplication" type="Application" factoryName="Application">
+    <option name="ALTERNATIVE_JRE_PATH" value="21" />
+    <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
+    <envs>
+      <env name="SEPAY_API_KEY" value="WFEHMVASBLOGKRDFYONQPLEAR0SZX8D36TQBUKQHCCPK3KV92SEIZ75YVXI20IRF" />
+    </envs>
+    <option name="MAIN_CLASS_NAME" value="com.example.BookingServiceApplication" />
+    <module name="booking-service" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

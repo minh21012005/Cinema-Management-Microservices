@@ -73,7 +73,10 @@ public class SecurityConfig {
                         "/cinema-service/swagger-ui/**",
                         "/cinema-service/v3/api-docs/**",
                         "/cinema-service/swagger-resources/**",
-                        "/cinema-service/webjars/**"
+                        "/cinema-service/webjars/**",
+
+                        // Booking service
+                        "/booking-service/api/v1/sepay/**"
                 ))
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .authorizeExchange(ex -> ex.anyExchange().permitAll())

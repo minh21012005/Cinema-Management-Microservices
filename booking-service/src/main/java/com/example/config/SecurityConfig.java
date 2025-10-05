@@ -32,11 +32,13 @@ public class SecurityConfig implements WebMvcConfigurer {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
+        String[] whiteList = {"/ws/**", "/api/v1/sepay/**"};
+
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         // WS endpoint cho phép tất cả
-                        .requestMatchers("/ws/**").permitAll()
+                        .requestMatchers(whiteList).permitAll()
 
                         // Các API khác vẫn yêu cầu token
                         .anyRequest().authenticated()
