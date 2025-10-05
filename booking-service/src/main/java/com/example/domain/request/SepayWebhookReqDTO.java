@@ -1,9 +1,9 @@
-package com.example.domain.response;
+package com.example.domain.request;
 
 import lombok.Data;
 
 @Data
-public class SepayWebhookPayload {
+public class SepayWebhookReqDTO {
     private Long id;
     private String gateway;
     private String transactionDate;

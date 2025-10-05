@@ -1,7 +1,9 @@
 package com.example.controller;
 
-import com.example.domain.response.SepayWebhookPayload;
-import com.example.service.OrderService;
+import com.example.domain.request.SepayWebhookReqDTO;
+import com.example.domain.response.OrderResDTO;
+import com.example.service.PaymentService;
+import com.example.util.error.IdInvalidException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -9,33 +11,52 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/sepay")
 public class SepayWebhookController {
-    private final OrderService orderService;
+    private final PaymentService paymentService;
 
-    public SepayWebhookController(OrderService orderService) {
-        this.orderService = orderService;
+    public SepayWebhookController(PaymentService paymentService) {
+        this.paymentService = paymentService;
     }
 
     @Value("${sepay.api-key}")
     private String apiKey;
 
+    @Value("${sepay.account}")
+    private String bankAccount;
+
+    @Value("${sepay.bank}")
+    private String bankCode;
+
     @PostMapping("/webhook")
-    public ResponseEntity<String> handleWebhook(
+    public ResponseEntity<OrderResDTO> handleWebhook(
             @RequestHeader(value = "Authorization", required = false) String authHeader,
-            @RequestBody SepayWebhookPayload payload) {
+            @RequestBody SepayWebhookReqDTO payload) throws IdInvalidException {
 
         // ✅ 1. Kiểm tra xác thực bằng API Key
         if (authHeader == null || !authHeader.equals("Apikey " + apiKey)) {
-            return ResponseEntity.status(403).body("Unauthorized");
+            throw new IdInvalidException("Unauthorized");
         }
 
-        // ✅ 2. Kiểm tra giao dịch là tiền vào
-        if (!"in".equalsIgnoreCase(payload.getTransferType())) {
-            return ResponseEntity.ok("Ignored non-incoming transaction");
+        return ResponseEntity.ok(paymentService.confirmSepayPayment(payload));
+    }
+
+    @GetMapping("/generate-qr")
+    public ResponseEntity<String> generateQr(
+            @RequestParam("amount") Double amount,
+            @RequestParam("orderId") Long orderId
+            ) throws IdInvalidException {
+        // ✅ Validate cơ bản
+        if (amount <= 0) {
+            throw new IdInvalidException("Số tiền không hợp lệ!");
         }
 
-        System.out.println("📩 Webhook received: " + payload);
+        String amountFormatted = String.format("%.2f", amount);
 
-        // TODO: cập nhật trạng thái giao dịch trong DB (đã thanh toán/thất bại)
-        return ResponseEntity.ok("Received");
+        // ✅ Ghép URL QR code SEPAY
+        String qrUrl = String.format(
+                "https://qr.sepay.vn/img?acc=%s&bank=%s&template=compact&amount=%s&des=%s",
+                bankAccount, bankCode, amountFormatted, orderId
+        );
+
+        return ResponseEntity.ok(qrUrl);
     }
 }

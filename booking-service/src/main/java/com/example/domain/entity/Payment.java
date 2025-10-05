@@ -38,7 +38,7 @@ public class Payment extends BaseEntity<Long> {
     private String note;
 
     // Nếu là giao dịch SePay → liên kết đến SePayTransaction
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "sepay_tx_id")
     private SePayTransaction sePayTransaction;
 }

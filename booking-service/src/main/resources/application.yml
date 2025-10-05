@@ -44,4 +44,6 @@ minhnb:
     refresh-token-validity-in-seconds: 2592000
 
 sepay:
+  account: ${SEPAY_ACCOUNT}
+  bank: ${SEPAY_BANK}
   api-key: ${SEPAY_API_KEY}

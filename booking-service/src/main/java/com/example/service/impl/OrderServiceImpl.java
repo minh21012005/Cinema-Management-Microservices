@@ -3,14 +3,19 @@ package com.example.service.impl;
 import com.example.client.ShowtimeClient;
 import com.example.domain.entity.Order;
 import com.example.domain.entity.OrderItem;
+import com.example.domain.entity.Payment;
 import com.example.domain.entity.Ticket;
+import com.example.domain.enums.PaymentMethod;
+import com.example.domain.enums.PaymentStatus;
 import com.example.domain.request.BookingRequest;
 import com.example.domain.request.OrderReqDTO;
 import com.example.domain.response.OrderResDTO;
 import com.example.mapper.OrderMapper;
 import com.example.repository.OrderRepository;
+import com.example.repository.PaymentRepository;
 import com.example.repository.TicketRepository;
 import com.example.service.OrderService;
+import com.example.service.PaymentService;
 import com.example.util.error.IdInvalidException;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -33,17 +38,23 @@ public class OrderServiceImpl
     private final SimpMessagingTemplate messagingTemplate;
     private final OrderMapper orderMapper;
     private final ShowtimeClient showtimeClient;
+    private final PaymentService paymentService;
+    private final PaymentRepository paymentRepository;
 
     public OrderServiceImpl(TicketRepository ticketRepository,
-                              OrderRepository orderRepository,
-                              OrderMapper orderMapper,
-                              ShowtimeClient showtimeClient,
-                              SimpMessagingTemplate simpMessagingTemplate) {
+                            OrderRepository orderRepository,
+                            OrderMapper orderMapper,
+                            ShowtimeClient showtimeClient,
+                            PaymentRepository paymentRepository,
+                            PaymentService paymentService,
+                            SimpMessagingTemplate simpMessagingTemplate) {
         super(orderRepository);
         this.ticketRepository = ticketRepository;
         this.orderRepository = orderRepository;
         this.orderMapper = orderMapper;
         this.showtimeClient = showtimeClient;
+        this.paymentRepository = paymentRepository;
+        this.paymentService = paymentService;
         this.messagingTemplate = simpMessagingTemplate;
     }
 
@@ -53,7 +64,7 @@ public class OrderServiceImpl
 
         //Kiểm tra xuất chiếu đã xong chưa
         boolean isShowtimeEnd = showtimeClient.isShowtimeEnd(request.getShowtimeId());
-        if(isShowtimeEnd){
+        if (isShowtimeEnd) {
             throw new IdInvalidException("Xuất chiếu đã kết thúc, không thể đặt vé!");
         }
 
@@ -82,10 +93,10 @@ public class OrderServiceImpl
                 .paid(false) // ban đầu chưa thanh toán
                 .build();
 
-        if(request.getCustomerName()!= null && !request.getCustomerPhone().isEmpty()){
+        if (request.getCustomerName() != null && !request.getCustomerPhone().isEmpty()) {
             order.setCustomerName(request.getCustomerName());
         }
-        if(request.getCustomerPhone()!= null && !request.getCustomerPhone().isEmpty()){
+        if (request.getCustomerPhone() != null && !request.getCustomerPhone().isEmpty()) {
             order.setCustomerPhone(request.getCustomerPhone());
         }
 
@@ -126,9 +137,23 @@ public class OrderServiceImpl
         // 6. Lưu Order + Ticket + Item
         Order saved = orderRepository.save(order);
 
-        // 7. Publish WebSocket event thông báo ghế đã đặt
+        // 7. Tạo payment tương ứng
+        Payment payment = Payment.builder()
+                .order(saved)
+                .method(request.getPaymentMethod())
+                .amount(total)
+                .status(PaymentStatus.PENDING)
+                .build();
+        paymentRepository.save(payment);
+
+        // 8. Publish WebSocket event thông báo ghế đã đặt
         List<Long> bookedSeats = tickets.stream().map(Ticket::getSeatId).toList();
         messagingTemplate.convertAndSend("/topic/seats/" + request.getShowtimeId(), bookedSeats);
+
+        // 9. Nếu thanh toán COD → trả về luôn Order
+        if (request.getPaymentMethod() == PaymentMethod.CASH) {
+            paymentService.confirmCodPayment(payment);
+        }
 
         return orderMapper.toDto(saved);
     }

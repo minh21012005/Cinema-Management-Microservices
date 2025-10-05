@@ -67,10 +67,6 @@ public class SePayTransaction extends BaseEntity<Long> {
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
-    // Thời điểm hệ thống của bạn nhận webhook
-    @Column(name = "received_at", nullable = false)
-    private LocalDateTime receivedAt;
-
     // Trạng thái giao dịch (SUCCESS/FAILED/PENDING)
     @Column(name = "status", nullable = false)
     private String status;
