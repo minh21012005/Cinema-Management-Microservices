@@ -7,6 +7,8 @@ import com.example.domain.response.ResultPaginationDTO;
 import com.example.util.error.IdInvalidException;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
+
 public interface CinemaService extends BaseService<Cinema, Long, CinemaReqDTO, CinemaResDTO> {
     CinemaResDTO createCinema(CinemaReqDTO dto) throws IdInvalidException;
     ResultPaginationDTO fetchAllCinema(String name, Pageable pageable);
@@ -14,4 +16,6 @@ public interface CinemaService extends BaseService<Cinema, Long, CinemaReqDTO, C
     boolean existsByPhone(String phone);
     boolean existsByAddress(String address);
     Cinema changeStatusOfCinema(Long id) throws IdInvalidException;
+    List<CinemaResDTO> fetchActiveCinemas();
+    boolean isExists(Long id);
 }

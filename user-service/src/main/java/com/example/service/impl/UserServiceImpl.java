@@ -1,6 +1,7 @@
 package com.example.service.impl;
 
 import com.example.client.AuthClient;
+import com.example.client.CinemaClient;
 import com.example.domain.entity.User;
 import com.example.domain.entity.UserAuthDTO;
 import com.example.domain.request.CreateUserRequest;
@@ -37,13 +38,16 @@ public class UserServiceImpl
     private final UserRepository userRepository;
     private final RabbitTemplate rabbitTemplate;
     private final AuthClient authClient;
+    private final CinemaClient cinemaClient;
 
     public UserServiceImpl(UserRepository userRepository, RabbitTemplate rabbitTemplate,
-                           AuthClient roleClient, AuthClient authClient) {
+                           AuthClient roleClient, AuthClient authClient,
+                           CinemaClient cinemaClient) {
         super(userRepository);
         this.userRepository = userRepository;
         this.rabbitTemplate = rabbitTemplate;
         this.authClient = roleClient;
+        this.cinemaClient = cinemaClient;
     }
 
     @Override
@@ -97,6 +101,12 @@ public class UserServiceImpl
         String codeRole;
         try {
             codeRole = authClient.getRoleCode(dto.getRoleId());
+            if (codeRole.equals("STAFF")) {
+                boolean isCinemaExists = cinemaClient.isCinemaExists(dto.getCinemaId());
+                if (!isCinemaExists) {
+                    throw new IdInvalidException("Cinema không tồn tại trong hệ thống!");
+                }
+            }
         } catch (FeignException.BadRequest e) {
             throw new IdInvalidException("Role ID không hợp lệ: " + dto.getRoleId());
         }
@@ -119,6 +129,10 @@ public class UserServiceImpl
         user.setGender(GenderEnum.valueOf(dto.getGender()));
         user.setDateOfBirth(dto.getDateOfBirth());
         user.setRoleId(dto.getRoleId());
+
+        if(codeRole.equals("STAFF")){
+            user.setCinemaId(dto.getCinemaId());
+        }
 
         User saved = userRepository.save(user);
 

@@ -130,4 +130,18 @@ public class CinemaServiceImpl
 
         return cinemaRepository.save(cinema);
     }
+
+    @Override
+    public List<CinemaResDTO> fetchActiveCinemas() {
+        return cinemaRepository.findByActiveTrue().stream().map(
+                cinemaMapper::toDto
+        ).toList();
+    }
+
+    @Override
+    public boolean isExists(Long id) {
+        return cinemaRepository.existsById(id);
+    }
+
+
 }

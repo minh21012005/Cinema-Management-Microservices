@@ -20,5 +20,6 @@ public class CreateUserRequest {
     private LocalDate dateOfBirth;
     private String gender;
     private Long roleId;
+    private Long cinemaId;
 }
 

@@ -75,6 +75,18 @@ public class CinemaController extends BaseController<Cinema, Long, CinemaReqDTO,
         return ResponseEntity.status(HttpStatus.OK).body(cinema);
     }
 
+    @GetMapping("/active")
+    @PreAuthorize("hasPermission(null, 'CINEMA_VIEW')")
+    public ResponseEntity<List<CinemaResDTO>> fetchActiveCinemas() {
+        return ResponseEntity.ok(cinemaService.fetchActiveCinemas());
+    }
+
+    @GetMapping("/{id}/exists")
+    @PreAuthorize("hasPermission(null, 'CINEMA_VIEW')")
+    public boolean isExists(@PathVariable("id") Long id) {
+        return cinemaService.isExists(id);
+    }
+
     @Override
     @PreAuthorize("hasPermission(null, 'CINEMA_VIEW')")
     public ResponseEntity<List<Cinema>> getAll() {
