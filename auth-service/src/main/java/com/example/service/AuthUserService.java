@@ -4,7 +4,10 @@ import com.example.domain.entity.AuthUser;
 import com.example.domain.entity.Role;
 import com.example.domain.request.CreateUserRequest;
 import com.example.domain.request.UserUpdateDTO;
+import com.example.domain.request.VerifyOtpRequest;
 import com.example.domain.response.ResUserDTO;
+import com.example.util.error.IdInvalidException;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 import java.util.Optional;
 
@@ -16,4 +19,5 @@ public interface AuthUserService extends BaseService<AuthUser, Long, CreateUserR
     void updateUserToken(String token, String email);
     ResUserDTO updateUser(AuthUser user, Role role, UserUpdateDTO dto);
     ResUserDTO updateUserStatus(AuthUser user);
+    ResUserDTO registerVerify(VerifyOtpRequest req) throws IdInvalidException, JsonProcessingException;
 }

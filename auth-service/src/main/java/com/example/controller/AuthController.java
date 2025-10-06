@@ -1,23 +1,22 @@
 package com.example.controller;
 
 import com.example.domain.entity.RoleDTO;
-import com.example.domain.entity.UserProfileDTO;
 import com.example.domain.request.CreateUserRequest;
 import com.example.domain.request.ReqLoginDTO;
+import com.example.domain.request.VerifyOtpRequest;
 import com.example.domain.response.ResLoginDTO;
 import com.example.domain.response.ResUserDTO;
 import com.example.domain.entity.AuthUser;
 import com.example.domain.entity.Permission;
-import com.example.domain.entity.Role;
 import com.example.service.AuthUserService;
-import com.example.service.RoleService;
+import com.example.service.EmailOtpVerificationService;
 import com.example.client.UserClient;
 import com.example.util.JwtUtil;
 import com.example.util.annotation.ApiMessage;
 import com.example.util.error.IdInvalidException;
 import com.example.util.error.UnauthorizedException;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.validation.Valid;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -34,29 +33,19 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("/api/v1/auth")
 public class AuthController {
 
-    @Value("${app.rabbitmq.send-routing-key}")
-    private String sendRoutingKey;
-
-    @Value("${app.rabbitmq.exchange}")
-    private String exchangeName;
-
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
     private final AuthUserService authUserService;
-    private final RoleService roleService;
-    private final RabbitTemplate rabbitTemplate;
     private final UserClient userClient;
+    private final EmailOtpVerificationService emailOtpVerificationService;
 
     @Autowired
     private RedisTemplate<String, String> redisTemplate;
@@ -68,65 +57,33 @@ public class AuthController {
             AuthenticationManagerBuilder authenticationManagerBuilder,
             JwtUtil jwtUtil, PasswordEncoder passwordEncoder,
             AuthUserService authUserService,
-            RoleService roleService,
-            RabbitTemplate rabbitTemplate,
+            EmailOtpVerificationService emailOtpVerificationService,
             UserClient userClient) {
         this.authenticationManagerBuilder = authenticationManagerBuilder;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
         this.authUserService = authUserService;
-        this.roleService = roleService;
-        this.rabbitTemplate = rabbitTemplate;
+        this.emailOtpVerificationService = emailOtpVerificationService;
         this.userClient = userClient;
     }
 
-    @PostMapping("/register")
+    @PostMapping("/register-request")
+    @ApiMessage("Request to register new user - send OTP")
+    public ResponseEntity<?> registerRequest(@Valid @RequestBody CreateUserRequest req) throws Exception {
+        // 1️⃣ Kiểm tra email, phone
+        if (authUserService.isEmailExist(req.getEmail()))
+            throw new IdInvalidException("Email đã tồn tại");
+        if (userClient.isPhoneExist(req.getPhone())) {
+            throw new IdInvalidException("Phone " + req.getPhone() + " đã tồn tại.");
+        }
+        return emailOtpVerificationService.sendOtp(req);
+    }
+
+    @PostMapping("/register-verify")
     @ApiMessage("Register a new user")
-    public ResponseEntity<ResUserDTO> register(@Valid @RequestBody CreateUserRequest userRequest) throws IdInvalidException {
-        boolean isEmailExist = this.authUserService.isEmailExist(userRequest.getEmail());
-        if (isEmailExist) {
-            throw new IdInvalidException(
-                    "Email " + userRequest.getEmail() + " đã tồn tại, vui lòng sử dụng email khác.");
-        }
-
-        if (userClient.isPhoneExist(userRequest.getPhone())) {
-            throw new IdInvalidException("Phone " + userRequest.getPhone() + " đã tồn tại.");
-        }
-
-        String hashedPassword = passwordEncoder.encode(userRequest.getPassword());
-
-        Role role = this.roleService.findByCode("CUSTOMER").orElse(null);
-
-        AuthUser authUser = new AuthUser();
-        authUser.setEmail(userRequest.getEmail());
-        authUser.setPassword(hashedPassword);
-        authUser.setRole(role);
-
-        AuthUser savedUser = this.authUserService.save(authUser);
-
-        assert role != null;
-        UserProfileDTO profileEvent = new UserProfileDTO(
-                userRequest.getName(),
-                userRequest.getPhone(),
-                userRequest.getDateOfBirth(),
-                userRequest.getGender(),
-                userRequest.getEmail(),
-                userRequest.getAddress(),
-                role.getId()
-        );
-
-        // Publish event sang user-service
-        this.rabbitTemplate.convertAndSend(
-                exchangeName, sendRoutingKey, profileEvent
-        );
-
-        ResUserDTO res = new ResUserDTO();
-        res.setId(savedUser.getId());
-        res.setName(userRequest.getName());
-        res.setEmail(userRequest.getEmail());
-        res.setRole(role.getCode());
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(res);
+    public ResponseEntity<ResUserDTO> register(@Valid @RequestBody VerifyOtpRequest req)
+            throws IdInvalidException, JsonProcessingException {
+        return ResponseEntity.status(HttpStatus.CREATED).body(authUserService.registerVerify(req));
     }
 
     @PostMapping("/login")

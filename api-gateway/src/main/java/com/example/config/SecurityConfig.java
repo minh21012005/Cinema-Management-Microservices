@@ -39,6 +39,8 @@ public class SecurityConfig {
                 .securityMatcher(ServerWebExchangeMatchers.pathMatchers(
                         "/auth-service/api/v1/auth/login",
                         "/auth-service/api/v1/auth/register",
+                        "/auth-service/api/v1/auth/register-request",
+                        "/auth-service/api/v1/auth/register-verify",
                         "/auth-service/api/v1/auth/refresh",
                         "/swagger-ui/**",
                         "/v3/api-docs/**",
@@ -56,6 +58,7 @@ public class SecurityConfig {
                         "/user-service/v3/api-docs/**",
                         "/user-service/swagger-resources/**",
                         "/user-service/webjars/**",
+                        "/user-service/api/v1/users/check-phone",
 
                         // Movie service
                         "/movie-service/swagger-ui/**",
