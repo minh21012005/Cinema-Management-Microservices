@@ -17,6 +17,7 @@ import com.example.repository.PaymentRepository;
 import com.example.repository.SepayRepository;
 import com.example.service.PaymentService;
 import com.example.util.error.IdInvalidException;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,13 +34,15 @@ public class PaymentServiceImpl
     private final SepayMapper sepayMapper;
     private final OrderMapper orderMapper;
     private final SepayRepository sepayRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
     protected PaymentServiceImpl(PaymentRepository paymentRepository,
                                  OrderRepository orderRepository,
                                  PaymentMapper paymentMapper,
                                  SepayMapper sepayMapper,
                                  OrderMapper orderMapper,
-                                 SepayRepository sepayRepository) {
+                                 SepayRepository sepayRepository,
+                                 SimpMessagingTemplate messagingTemplate) {
         super(paymentRepository);
         this.paymentRepository = paymentRepository;
         this.orderRepository = orderRepository;
@@ -47,6 +50,7 @@ public class PaymentServiceImpl
         this.sepayMapper = sepayMapper;
         this.orderMapper = orderMapper;
         this.sepayRepository = sepayRepository;
+        this.messagingTemplate = messagingTemplate;
     }
 
     @Override
@@ -107,8 +111,9 @@ public class PaymentServiceImpl
                 payment.setSePayTransaction(sePayTransaction); // đã persist trước
             }
         }
+        OrderResDTO dto = orderMapper.toDto(orderRepository.save(order));
+        messagingTemplate.convertAndSend("/topic/order-status/" + order.getId(), dto);
 
-        // Lưu Order
-        return orderMapper.toDto(orderRepository.save(order));
+        return dto;
     }
 }
