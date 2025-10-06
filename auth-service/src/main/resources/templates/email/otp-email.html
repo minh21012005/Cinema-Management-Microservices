@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Xác thực tài khoản</title>
+</head>
+<body style="font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 30px;">
+<div style="max-width: 500px; margin: auto; background: white; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 30px;">
+    <div style="text-align: center;">
+        <h2 style="color: #333;">Xác thực tài khoản của bạn</h2>
+        <p style="font-size: 15px; color: #555;">
+            Cảm ơn bạn đã đăng ký tài khoản tại <strong>CNM</strong>.<br>
+            Đây là mã OTP của bạn:
+        </p>
+        <h1 style="letter-spacing: 8px; color: #007bff; font-size: 32px; margin: 20px 0;" th:text="${otp}">000000</h1>
+        <p style="color: #777;">Mã OTP này sẽ hết hạn sau <b>5 phút</b>.</p>
+        <p style="margin-top: 30px; font-size: 14px; color: #888;">
+            Trân trọng,<br>
+            <strong>Đội ngũ CNM</strong>
+        </p>
+    </div>
+</div>
+</body>
+</html>
