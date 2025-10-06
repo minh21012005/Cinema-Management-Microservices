@@ -7,4 +7,5 @@ import org.springframework.http.ResponseEntity;
 
 public interface EmailOtpVerificationService {
     ResponseEntity<?> sendOtp(CreateUserRequest req) throws IdInvalidException, JsonProcessingException;
+    void cleanExpiredOtp();
 }

@@ -1,9 +1,11 @@
 package com.example.repository;
 
 import com.example.domain.entity.EmailOtpVerification;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -22,4 +24,9 @@ public interface EmailOtpVerificationRepository extends BaseRepository<EmailOtpV
             @Param("otp") String otp,
             @Param("now") LocalDateTime now
     );
+
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM EmailOtpVerification e WHERE e.expiredAt < :now OR e.verified = true")
+    void deleteAllExpiredOrVerified(@Param("now") LocalDateTime now);
 }

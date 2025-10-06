@@ -8,6 +8,7 @@ import com.example.service.EmailService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -50,5 +51,12 @@ public class EmailOtpVerificationServiceImpl implements EmailOtpVerificationServ
                 "message", "Mã OTP đã được gửi đến email của bạn",
                 "expiredAt", expiredAt
         ));
+    }
+
+    @Override
+    @Scheduled(cron = "0 0 * * * *")
+    public void cleanExpiredOtp() {
+        LocalDateTime now = LocalDateTime.now();
+        emailOtpVerificationRepository.deleteAllExpiredOrVerified(now);
     }
 }
