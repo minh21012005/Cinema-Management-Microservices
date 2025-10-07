@@ -20,6 +20,7 @@
         <module>movie-service</module>
         <module>media-service</module>
         <module>booking-service</module>
+        <module>content-service</module>
     </modules>
 
     <properties>

@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface BannerRepository extends BaseRepository<Banner, Long>, JpaSpecificationExecutor<Banner> {
+    boolean existsByDisplayOrderAndActiveTrue(int displayOrder);
 }

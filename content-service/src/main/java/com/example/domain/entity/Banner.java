@@ -8,10 +8,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(
         name = "banners",
-        indexes = {
-                @Index(name = "idx_banner_active", columnList = "active"),
-                @Index(name = "idx_banner_start_end", columnList = "start_date, end_date")
-        }
+        uniqueConstraints = {@UniqueConstraint(columnNames = {"display_order", "active"})}
 )
 @Getter
 @Setter

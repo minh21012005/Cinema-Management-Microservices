@@ -5,6 +5,10 @@ import com.example.domain.request.BannerReqDTO;
 import com.example.domain.response.BannerResDTO;
 import com.example.mapper.BannerMapper;
 import com.example.service.BannerService;
+import com.example.util.error.IdInvalidException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -18,5 +22,10 @@ public class BannerController extends BaseController<Banner, Long, BannerReqDTO,
         this.bannerService = bannerService;
     }
 
+    @Override
+    @PreAuthorize("hasPermission(null, 'FOOD_CREATE')")
+    public ResponseEntity<BannerResDTO> create(BannerReqDTO dto) throws IdInvalidException {
+        return ResponseEntity.status(HttpStatus.CREATED).body(bannerService.createBanner(dto));
+    }
 
 }
