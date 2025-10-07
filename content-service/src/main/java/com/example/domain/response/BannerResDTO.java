@@ -16,7 +16,7 @@ public class BannerResDTO {
 
     private String subtitle;
 
-    private String imageUrl;
+    private String imageKey;
 
     private String redirectUrl;
 

@@ -3,11 +3,18 @@ package com.example.service.impl;
 import com.example.domain.entity.Banner;
 import com.example.domain.request.BannerReqDTO;
 import com.example.domain.response.BannerResDTO;
+import com.example.domain.response.ResultPaginationDTO;
 import com.example.mapper.BannerMapper;
 import com.example.repository.BannerRepository;
 import com.example.service.BannerService;
+import com.example.service.specification.BannerSpecification;
 import com.example.util.error.IdInvalidException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class BannerServiceImpl
@@ -57,4 +64,37 @@ public class BannerServiceImpl
         return bannerMapper.toDto(saved);
     }
 
+    @Override
+    public ResultPaginationDTO fetchAllBanners(String title, Pageable pageable) {
+        Page<Banner> pageBanner = this.bannerRepository.findAll(
+                BannerSpecification.findBannersWithFilters(title), pageable);
+        ResultPaginationDTO rs = new ResultPaginationDTO();
+        ResultPaginationDTO.Meta mt = new ResultPaginationDTO.Meta();
+
+        mt.setPage(pageable.getPageNumber());
+        mt.setPageSize(pageable.getPageSize());
+
+        mt.setPages(pageBanner.getTotalPages());
+        mt.setTotal(pageBanner.getTotalElements());
+
+        rs.setMeta(mt);
+
+        // remove sensitive data
+        List<BannerResDTO> listBanner = pageBanner.getContent()
+                .stream().map(bannerMapper::toDto)
+                .collect(Collectors.toList());
+
+        rs.setResult(listBanner);
+
+        return rs;
+    }
+
+    @Override
+    public List<BannerResDTO> fetchAllBannersActive() {
+        return bannerRepository.findByActiveTrue()
+                .stream()
+                .map(bannerMapper::toDto)
+                .toList();
+
+    }
 }

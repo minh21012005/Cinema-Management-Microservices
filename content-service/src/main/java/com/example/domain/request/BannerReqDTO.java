@@ -19,7 +19,7 @@ public class BannerReqDTO {
     private String subtitle;
 
     @NotBlank(message = "Ảnh banner không được để trống")
-    private String imageUrl;
+    private String imageKey;
 
     private String redirectUrl; // link đến trang phim / event / external
 
@@ -27,7 +27,7 @@ public class BannerReqDTO {
 
     private LocalDateTime endDate;
 
-    @Min(value = 0, message = "Thứ tự hiển thị không được âm")
+    @Min(value = 1, message = "Thứ tự hiển thị không được nhỏ hơn 1")
     private int displayOrder;
 
     private boolean active = true;

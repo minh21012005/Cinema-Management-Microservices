@@ -24,9 +24,9 @@ public class Banner extends BaseEntity<Long> {
     @Column(length = 300)
     private String subtitle;
 
-    @Column(name = "image_url", nullable = false)
     @NotBlank(message = "Ảnh banner không được để trống")
-    private String imageUrl;
+    @Column(nullable = false)
+    private String imageKey;
 
     @Column(name = "redirect_url")
     private String redirectUrl; // link đến trang phim / event / external
