@@ -97,4 +97,39 @@ public class BannerServiceImpl
                 .toList();
 
     }
+
+    @Override
+    public BannerResDTO updateBanner(Long id, BannerReqDTO dto) throws IdInvalidException {
+        // Validate id
+        if (id == null) {
+            throw new IdInvalidException("Banner id is required for update");
+        }
+
+        // Tìm banner cần update
+        Banner banner = bannerRepository.findById(id)
+                .orElseThrow(() -> new IdInvalidException("Banner not found with id: " + id));
+
+        // Nếu đổi displayOrder thì check trùng
+        if (dto.getDisplayOrder() != banner.getDisplayOrder() &&
+                bannerRepository.existsByDisplayOrderAndActiveTrue(dto.getDisplayOrder())) {
+            throw new IdInvalidException("Display order already exists for another active banner");
+        }
+
+        // Cập nhật các field
+        banner.setTitle(dto.getTitle());
+        banner.setSubtitle(dto.getSubtitle());
+        banner.setImageKey(dto.getImageKey());
+        banner.setRedirectUrl(dto.getRedirectUrl());
+        banner.setStartDate(dto.getStartDate());
+        banner.setEndDate(dto.getEndDate());
+        banner.setDisplayOrder(dto.getDisplayOrder());
+        banner.setActive(dto.isActive());
+
+        // Lưu lại
+        bannerRepository.save(banner);
+
+        return bannerMapper.toDto(banner);
+    }
+
+
 }

@@ -48,4 +48,10 @@ public class BannerController extends BaseController<Banner, Long, BannerReqDTO,
         return ResponseEntity.status(HttpStatus.CREATED).body(bannerService.createBanner(dto));
     }
 
+    @Override
+    @PreAuthorize("hasPermission(null, 'BANNER_UPDATE')")
+    public ResponseEntity<BannerResDTO> update(@PathVariable("id") Long id, BannerReqDTO dto) throws IdInvalidException {
+        return ResponseEntity.ok(bannerService.updateBanner(id,dto));
+    }
+
 }

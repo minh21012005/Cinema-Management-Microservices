@@ -13,4 +13,5 @@ public interface BannerService extends BaseService<Banner, Long, BannerReqDTO, B
     BannerResDTO createBanner(BannerReqDTO dto) throws IdInvalidException;
     ResultPaginationDTO fetchAllBanners(String title, Pageable pageable);
     List<BannerResDTO> fetchAllBannersActive();
+    BannerResDTO updateBanner(Long id, BannerReqDTO dto) throws IdInvalidException;
 }
