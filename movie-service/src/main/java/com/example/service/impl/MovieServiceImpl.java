@@ -200,10 +200,7 @@ public class MovieServiceImpl
             if (movie.getEndDate() != null && movie.getEndDate().isBefore(LocalDate.now())) {
                 throw new IdInvalidException("Không thể bật phim: đã hết hạn (endDate).");
             }
-            if (movie.getReleaseDate() != null && movie.getReleaseDate().isAfter(LocalDate.now())) {
-                throw new IdInvalidException("Không thể bật phim: ngày phát hành chưa tới (releaseDate).");
-            }
-        }else{
+        } else {
             showtimeClient.disableShowtimesByMovie(id);
         }
 
@@ -280,4 +277,17 @@ public class MovieServiceImpl
         return movieMapper.toDto(updated);
     }
 
+    @Override
+    public List<MovieResDTO> fetchShowingMovies(int limit) {
+        return movieRepository.findNowShowingMovies
+                (LocalDate.now(), PageRequest.of(0, limit)).stream().map(
+                movieMapper::toDto).toList();
+    }
+
+    @Override
+    public List<MovieResDTO> getComingSoonMovies(int limit) {
+        return movieRepository.findComingSoonMovies
+                (LocalDate.now(), PageRequest.of(0, limit)).stream().map(
+                movieMapper::toDto).toList();
+    }
 }

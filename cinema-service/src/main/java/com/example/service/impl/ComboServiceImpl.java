@@ -1,4 +1,4 @@
-package com.example.service;
+package com.example.service.impl;
 
 import com.example.domain.entity.Combo;
 import com.example.domain.entity.ComboFood;
@@ -10,7 +10,7 @@ import com.example.domain.response.ResultPaginationDTO;
 import com.example.mapper.ComboMapper;
 import com.example.repository.ComboRepository;
 import com.example.repository.FoodRepository;
-import com.example.service.impl.BaseServiceImpl;
+import com.example.service.ComboService;
 import com.example.service.specification.ComboSpecification;
 import com.example.util.error.IdInvalidException;
 import org.springframework.data.domain.Page;

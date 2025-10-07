@@ -33,7 +33,6 @@ public class MediaController {
 
     // Get presigned URL
     @GetMapping("/url")
-    @PreAuthorize("hasPermission(null, 'FILE_VIEW')")
     public ResponseEntity<String> getUrl(@RequestParam("objectKey") String objectKey,
                                          @RequestParam(defaultValue = "3600", name = "expireSeconds")
                                          long expireSeconds) throws Exception {

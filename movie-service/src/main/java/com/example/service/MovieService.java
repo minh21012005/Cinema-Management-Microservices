@@ -20,4 +20,6 @@ public interface MovieService extends BaseService<Movie, Long, MovieReqDTO, Movi
     MovieResDTO createMovie(MovieReqDTO dto) throws IdInvalidException;
     MovieResDTO changeStatus(Long id) throws IdInvalidException;
     MovieResDTO updateMovie(Long id, MovieReqDTO dto) throws IdInvalidException;
+    List<MovieResDTO> fetchShowingMovies(int limit);
+    List<MovieResDTO> getComingSoonMovies(int limit);
 }

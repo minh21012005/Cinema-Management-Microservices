@@ -82,6 +82,20 @@ public class MovieController extends BaseController<Movie, Long, MovieReqDTO, Mo
         return ResponseEntity.ok(movieService.searchByTitle(title));
     }
 
+    @GetMapping("/showing")
+    @ApiMessage("Fetched movies now showing")
+    public ResponseEntity<List<MovieResDTO>> fetchShowingMovies
+            (@RequestParam(value = "limit", defaultValue = "8") int limit) {
+        return ResponseEntity.ok(movieService.fetchShowingMovies(limit));
+    }
+
+    @GetMapping("/coming-soon")
+    @ApiMessage("Fetched movies coming soon")
+    public ResponseEntity<List<MovieResDTO>> fetchComingSoonMovies(
+            @RequestParam(value = "limit", defaultValue = "8") int limit) {
+        return ResponseEntity.ok(movieService.getComingSoonMovies(limit));
+    }
+
     @Override
     @PreAuthorize("hasPermission(null, 'MOVIE_UPDATE')")
     public ResponseEntity<MovieResDTO> update(@PathVariable("id") Long id, MovieReqDTO dto) throws IdInvalidException {
