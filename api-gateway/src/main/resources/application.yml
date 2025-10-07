@@ -47,3 +47,41 @@ minhnb:
     access-token-validity-in-seconds: 1800
     refresh-token-validity-in-seconds: 2592000
 
+security:
+  whitelist:
+    - /auth-service/api/v1/auth/login
+    - /auth-service/api/v1/auth/register
+    - /auth-service/api/v1/auth/register-request
+    - /auth-service/api/v1/auth/register-verify
+    - /auth-service/api/v1/auth/refresh
+    - /swagger-ui/**
+    - /v3/api-docs/**
+    - /swagger-resources/**
+    - /webjars/**
+    - /auth-service/swagger-ui/**
+    - /auth-service/v3/api-docs/**
+    - /auth-service/swagger-resources/**
+    - /auth-service/webjars/**
+    - /user-service/swagger-ui/**
+    - /user-service/v3/api-docs/**
+    - /user-service/swagger-resources/**
+    - /user-service/webjars/**
+    - /user-service/api/v1/users/check-phone
+    - /movie-service/swagger-ui/**
+    - /movie-service/v3/api-docs/**
+    - /movie-service/swagger-resources/**
+    - /movie-service/webjars/**
+    - /media-service/swagger-ui/**
+    - /media-service/v3/api-docs/**
+    - /media-service/swagger-resources/**
+    - /media-service/webjars/**
+    - /cinema-service/swagger-ui/**
+    - /cinema-service/v3/api-docs/**
+    - /cinema-service/swagger-resources/**
+    - /cinema-service/webjars/**
+    - /booking-service/api/v1/sepay/**
+    - /movie-service/api/v1/movies/coming-soon
+    - /movie-service/api/v1/movies/showing
+    - /content-service/api/v1/banners/active
+    - /media-service/api/v1/media/url
+

@@ -2,6 +2,7 @@ package com.example.config;
 
 import com.nimbusds.jose.util.Base64;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -22,13 +23,21 @@ import org.springframework.web.cors.CorsConfiguration;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 @EnableWebFluxSecurity
+@ConfigurationProperties(prefix = "security")
 public class SecurityConfig {
+
+    private List<String> whitelist;
 
     @Value("${minhnb.jwt.base64-secret}")
     private String jwtKey;
+
+    public void setWhitelist(List<String> whitelist) {
+        this.whitelist = whitelist;
+    }
 
     private static final MacAlgorithm JWT_ALGORITHM = MacAlgorithm.HS512;
 
@@ -36,51 +45,7 @@ public class SecurityConfig {
     @Order(1)
     public SecurityWebFilterChain publicSecurityWebFilterChain(ServerHttpSecurity http) {
         return http
-                .securityMatcher(ServerWebExchangeMatchers.pathMatchers(
-                        "/auth-service/api/v1/auth/login",
-                        "/auth-service/api/v1/auth/register",
-                        "/auth-service/api/v1/auth/register-request",
-                        "/auth-service/api/v1/auth/register-verify",
-                        "/auth-service/api/v1/auth/refresh",
-                        "/swagger-ui/**",
-                        "/v3/api-docs/**",
-                        "/swagger-resources/**",
-                        "/webjars/**",
-
-                        // Auth service
-                        "/auth-service/swagger-ui/**",
-                        "/auth-service/v3/api-docs/**",
-                        "/auth-service/swagger-resources/**",
-                        "/auth-service/webjars/**",
-
-                        // User service
-                        "/user-service/swagger-ui/**",
-                        "/user-service/v3/api-docs/**",
-                        "/user-service/swagger-resources/**",
-                        "/user-service/webjars/**",
-                        "/user-service/api/v1/users/check-phone",
-
-                        // Movie service
-                        "/movie-service/swagger-ui/**",
-                        "/movie-service/v3/api-docs/**",
-                        "/movie-service/swagger-resources/**",
-                        "/movie-service/webjars/**",
-
-                        // Media service
-                        "/media-service/swagger-ui/**",
-                        "/media-service/v3/api-docs/**",
-                        "/media-service/swagger-resources/**",
-                        "/media-service/webjars/**",
-
-                        // Cinema service
-                        "/cinema-service/swagger-ui/**",
-                        "/cinema-service/v3/api-docs/**",
-                        "/cinema-service/swagger-resources/**",
-                        "/cinema-service/webjars/**",
-
-                        // Booking service
-                        "/booking-service/api/v1/sepay/**"
-                ))
+                .securityMatcher(ServerWebExchangeMatchers.pathMatchers(whitelist.toArray(new String[0])))
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .authorizeExchange(ex -> ex.anyExchange().permitAll())
                 .build();
