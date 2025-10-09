@@ -42,6 +42,7 @@ public class SecurityConfig implements WebMvcConfigurer {
                 "/v3/api-docs", "/v3/api-docs/**",
                 "/api/v1/movies/coming-soon",
                 "/api/v1/movies/showing",
+                "/api/v1/movies/fetch/**"
         };
 
         http

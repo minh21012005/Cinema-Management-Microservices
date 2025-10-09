@@ -76,7 +76,6 @@ public class CinemaController extends BaseController<Cinema, Long, CinemaReqDTO,
     }
 
     @GetMapping("/active")
-    @PreAuthorize("hasPermission(null, 'CINEMA_VIEW')")
     public ResponseEntity<List<CinemaResDTO>> fetchActiveCinemas() {
         return ResponseEntity.ok(cinemaService.fetchActiveCinemas());
     }

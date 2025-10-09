@@ -84,4 +84,8 @@ security:
     - /movie-service/api/v1/movies/showing
     - /content-service/api/v1/banners/active
     - /media-service/api/v1/media/url
+    - /movie-service/api/v1/movies/fetch/**
+    - /cinema-service/api/v1/showtime/movie/**
+    - /cinema-service/api/v1/cinemas/active
+
 

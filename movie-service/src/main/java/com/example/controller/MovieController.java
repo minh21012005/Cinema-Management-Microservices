@@ -56,7 +56,6 @@ public class MovieController extends BaseController<Movie, Long, MovieReqDTO, Mo
 
     @GetMapping("/fetch/{id}")
     @ApiMessage("Fetched movie")
-    @PreAuthorize("hasPermission(null, 'MOVIE_VIEW')")
     public ResponseEntity<MovieResDTO> findById(@PathVariable("id") Long id) throws IdInvalidException {
         return ResponseEntity.ok(movieService.getById(id));
     }

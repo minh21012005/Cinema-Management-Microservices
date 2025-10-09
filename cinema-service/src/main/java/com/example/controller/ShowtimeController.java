@@ -45,7 +45,7 @@ public class ShowtimeController extends BaseController<Showtime, Long, ShowtimeR
             @RequestParam(name = "toDate", required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate,
             Pageable pageable) throws IdInvalidException {
-        return ResponseEntity.ok(showtimeService.fetchAllByCinema(cinemaId, title, roomId, fromDate, toDate,pageable));
+        return ResponseEntity.ok(showtimeService.fetchAllByCinema(cinemaId, title, roomId, fromDate, toDate, pageable));
     }
 
     @GetMapping("/inday")
@@ -75,6 +75,15 @@ public class ShowtimeController extends BaseController<Showtime, Long, ShowtimeR
     public ResponseEntity<Void> disableShowtimesByMovie(@PathVariable("id") Long id) {
         showtimeService.disableShowtimesByMovie(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/movie/{id}")
+    public ResponseEntity<List<ShowtimeResDTO>> fetchShowtimesActiveByMovie(
+            @PathVariable("id") Long id,
+            @RequestParam(name = "date", required = false) String date, // yyyy-MM-dd
+            @RequestParam(name = "cinemaId", required = false) Long cinemaId
+    ) throws IdInvalidException {
+        return ResponseEntity.ok(showtimeService.fetchShowtimesActiveByMovie(id, date, cinemaId));
     }
 
     @Override

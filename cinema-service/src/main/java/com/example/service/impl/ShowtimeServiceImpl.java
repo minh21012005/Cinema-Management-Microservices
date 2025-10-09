@@ -369,6 +369,28 @@ public class ShowtimeServiceImpl
         return LocalDateTime.now().isAfter(showtime.getEndTime());
     }
 
+    @Override
+    public List<ShowtimeResDTO> fetchShowtimesActiveByMovie
+            (Long id, String date, Long cinemaId) throws IdInvalidException {
+        LocalDateTime startDateTime;
+        LocalDateTime endDateTime;
+
+        if (date != null && !date.isEmpty()) {
+            LocalDate localDate = LocalDate.parse(date); // yyyy-MM-dd
+            startDateTime = localDate.atStartOfDay();
+            endDateTime = localDate.plusDays(1).atStartOfDay();
+        } else {
+            startDateTime = LocalDateTime.now();
+            endDateTime = LocalDateTime.MAX;
+        }
+
+        return showtimeRepository.findActiveShowtimesByMovieAndOptionalCinema
+                        (id, cinemaId, startDateTime, endDateTime)
+                .stream()
+                .map(showtimeMapper::toDto)
+                .toList();
+    }
+
     public void validateShowtime(Long roomId, LocalDateTime startTime, LocalDateTime endTime) {
         List<Showtime> overlaps = showtimeRepository.findOverlappingShowtimes(roomId, startTime, endTime);
         if (!overlaps.isEmpty()) {
