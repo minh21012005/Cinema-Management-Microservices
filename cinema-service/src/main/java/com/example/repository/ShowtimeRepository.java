@@ -39,15 +39,17 @@ public interface ShowtimeRepository extends BaseRepository<Showtime, Long>, JpaS
 
     List<Showtime> findByMovieIdAndActiveTrueAndStartTimeAfter(Long movieId, LocalDateTime now);
 
-    @Query("SELECT s FROM Showtime s " +
-            "JOIN s.room r " +
-            "JOIN r.cinema c " +
-            "WHERE s.movieId = :movieId " +
-            "AND s.active = true " +
-            "AND s.startTime >= :startDate " +
-            "AND s.startTime < :endDate " +
-            "AND (:cinemaId IS NULL OR c.id = :cinemaId) " +
-            "ORDER BY s.startTime ASC")
+    @Query("""
+                SELECT s FROM Showtime s
+                JOIN s.room r
+                JOIN r.cinema c
+                WHERE s.movieId = :movieId
+                  AND s.active = true
+                  AND s.startTime BETWEEN :startDate AND :endDate
+                  AND s.startTime > CURRENT_TIMESTAMP
+                  AND (:cinemaId IS NULL OR c.id = :cinemaId)
+                ORDER BY s.startTime ASC
+            """)
     List<Showtime> findActiveShowtimesByMovieAndOptionalCinema(
             @Param("movieId") Long movieId,
             @Param("cinemaId") Long cinemaId,
