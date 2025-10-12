@@ -25,8 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class OrderServiceImpl
@@ -148,7 +147,10 @@ public class OrderServiceImpl
 
         // 8. Publish WebSocket event thông báo ghế đã đặt
         List<Long> bookedSeats = tickets.stream().map(Ticket::getSeatId).toList();
-        messagingTemplate.convertAndSend("/topic/seats/" + request.getShowtimeId(), bookedSeats);
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("type", "BOOKED");
+        payload.put("seatIds", bookedSeats);
+        messagingTemplate.convertAndSend("/topic/seats/" + request.getShowtimeId(), payload);
 
         // 9. Nếu thanh toán COD → trả về luôn Order
         if (request.getPaymentMethod() == PaymentMethod.CASH) {
@@ -156,6 +158,137 @@ public class OrderServiceImpl
         }
 
         return orderMapper.toDto(saved);
+    }
+
+    @Override
+    public OrderResDTO booking(OrderReqDTO request) throws IdInvalidException {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        //Kiểm tra xuất chiếu đã xong chưa
+        boolean isShowtimeEnd = showtimeClient.isShowtimeEnd(request.getShowtimeId());
+        if (isShowtimeEnd) {
+            throw new IdInvalidException("Xuất chiếu đã kết thúc, không thể đặt vé!");
+        }
+
+        // 1. Kiểm tra ghế có còn trống không
+        LocalDateTime now = LocalDateTime.now();
+        for (BookingRequest.SeatDTO seatReq : request.getSeats()) {
+            boolean exists = ticketRepository.existsBySeatIdAndShowtimeIdAndPaidTrueOrReservedTrue(
+                    seatReq.getSeatId(), request.getShowtimeId(), now.minusMinutes(5));
+            if (exists) {
+                throw new IdInvalidException("Seat " + seatReq.getSeatId() + " đã được đặt!");
+            }
+        }
+
+        // 2. Tính tổng tiền
+        double total = 0.0;
+        total += request.getSeats().stream().mapToDouble(BookingRequest.SeatDTO::getPrice).sum();
+        total += request.getFoods().stream().mapToDouble(f -> f.getPrice() * f.getQuantity()).sum();
+        total += request.getCombos().stream().mapToDouble(c -> c.getPrice() * c.getQuantity()).sum();
+
+        Long userId = Long.valueOf(authentication.getName());
+
+        // 3. Tạo Order
+        Order order = Order.builder()
+                .userId(userId)
+                .totalAmount(total)
+                .paid(false) // ban đầu chưa thanh toán
+                .build();
+
+        // 4. Thêm Ticket
+        List<Ticket> tickets = request.getSeats().stream()
+                .map(seatReq -> Ticket.builder()
+                        .seatId(seatReq.getSeatId())
+                        .showtimeId(request.getShowtimeId())
+                        .price(seatReq.getPrice())
+                        .paid(false)
+                        .reserved(true)
+                        .reservedAt(LocalDateTime.now())
+                        .order(order)
+                        .build())
+                .toList();
+        order.setTickets(tickets);
+
+        // 5. Thêm OrderItem (food/combo)
+        List<OrderItem> items = new ArrayList<>();
+        request.getFoods().forEach(f -> items.add(
+                OrderItem.builder()
+                        .foodId(f.getFoodId())
+                        .quantity(f.getQuantity())
+                        .price(f.getPrice() * f.getQuantity())
+                        .order(order)
+                        .build()
+        ));
+        request.getCombos().forEach(c -> items.add(
+                OrderItem.builder()
+                        .comboId(c.getComboId())
+                        .quantity(c.getQuantity())
+                        .price(c.getPrice() * c.getQuantity())
+                        .order(order)
+                        .build()
+        ));
+        order.setItems(items);
+
+        // 6. Lưu Order + Ticket + Item
+        Order saved = orderRepository.save(order);
+
+        // 7. Tạo payment tương ứng
+        Payment payment = Payment.builder()
+                .order(saved)
+                .method(request.getPaymentMethod())
+                .amount(total)
+                .status(PaymentStatus.PENDING)
+                .build();
+        paymentRepository.save(payment);
+
+        // 8. Publish WebSocket event thông báo ghế đã đặt
+        List<Long> bookedSeats = tickets.stream().map(Ticket::getSeatId).toList();
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("type", "BOOKED");
+        payload.put("seatIds", bookedSeats);
+        messagingTemplate.convertAndSend("/topic/seats/" + request.getShowtimeId(), payload);
+        return orderMapper.toDto(saved);
+    }
+
+    @Override
+    public void cancel(Long id) throws IdInvalidException {
+        Order order = orderRepository.findById(id).orElseThrow(
+                () -> new IdInvalidException("Order không tồn tại trong hệ thống!")
+        );
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Long userId = Long.valueOf(authentication.getName()); //ID của staff hoặc customer
+
+        if(order.getUserId() != null){
+            if (!Objects.equals(order.getUserId(), userId)) {
+                throw new IdInvalidException("Không có quyền hủy order này!");
+            }
+        }else{
+            if (!Objects.equals(order.getStaffId(), userId)) {
+                throw new IdInvalidException("Không có quyền hủy order này!");
+            }
+        }
+
+        // 🔹 Lấy danh sách ghế của order
+        List<Long> seatIds = order.getTickets()
+                .stream()
+                .map(Ticket::getSeatId)
+                .toList();
+
+        // 🔹 Lấy showtimeId để biết kênh WebSocket cần gửi
+        Long showtimeId = order.getTickets().isEmpty()
+                ? null
+                : order.getTickets().getFirst().getShowtimeId();
+
+        orderRepository.delete(order);
+
+        if (showtimeId != null && !seatIds.isEmpty()) {
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("type", "RELEASED");
+            payload.put("seatIds", seatIds);
+            messagingTemplate.convertAndSend("/topic/seats/" + showtimeId, payload);
+
+        }
     }
 
     @Scheduled(fixedRate = 60000)
