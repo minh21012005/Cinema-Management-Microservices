@@ -33,7 +33,7 @@ public class SecurityConfig implements WebMvcConfigurer {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         String[] whiteList = {
                 "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**",
-                "/api/v1/showtime/movie/**", "/api/v1/cinemas/active"
+                "/api/v1/showtime/movie/**", "/api/v1/cinemas/active", "/api/v1/showtime/*/ticket-data"
         };
 
         http

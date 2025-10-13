@@ -1,7 +1,10 @@
 package com.example.controller;
 
 import com.example.domain.entity.Showtime;
+import com.example.domain.entity.TicketEmailDTO;
 import com.example.domain.request.ShowtimeReqDTO;
+import com.example.domain.request.TicketDataRequest;
+import com.example.domain.response.MovieResDTO;
 import com.example.domain.response.ResultPaginationDTO;
 import com.example.domain.response.ShowtimeResDTO;
 import com.example.mapper.ShowtimeMapper;
@@ -102,6 +105,18 @@ public class ShowtimeController extends BaseController<Showtime, Long, ShowtimeR
     @PreAuthorize("hasPermission(null, 'SHOWTIME_VIEW')")
     public boolean isShowtimeEnd(@PathVariable("id") Long id) throws IdInvalidException {
         return showtimeService.isShowtimeEnd(id);
+    }
+
+    @PostMapping("/{id}/ticket-data")
+    public ResponseEntity<TicketEmailDTO> fetchTicketData(
+            @PathVariable("id") Long id,
+            @RequestBody TicketDataRequest request
+    ) throws IdInvalidException {
+        return ResponseEntity.ok(showtimeService.fetchTicketData(
+                id,
+                request.getSeatIds(),
+                request.getFoodIds(),
+                request.getComboIds()));
     }
 
     @Override

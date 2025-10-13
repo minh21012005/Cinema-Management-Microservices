@@ -2,17 +2,13 @@ package com.example.service.impl;
 
 import com.example.client.MovieClient;
 import com.example.client.UserClient;
-import com.example.domain.entity.Cinema;
-import com.example.domain.entity.Room;
-import com.example.domain.entity.Showtime;
+import com.example.domain.entity.*;
 import com.example.domain.request.ShowtimeReqDTO;
 import com.example.domain.response.MovieResDTO;
 import com.example.domain.response.ResultPaginationDTO;
 import com.example.domain.response.ShowtimeResDTO;
 import com.example.mapper.ShowtimeMapper;
-import com.example.repository.CinemaRepository;
-import com.example.repository.RoomRepository;
-import com.example.repository.ShowtimeRepository;
+import com.example.repository.*;
 import com.example.service.ShowtimeService;
 import com.example.service.specification.ShowtimeSpecification;
 import com.example.util.error.IdInvalidException;
@@ -41,13 +37,19 @@ public class ShowtimeServiceImpl
     private final MovieClient movieClient;
     private final ShowtimeMapper showtimeMapper;
     private final UserClient userClient;
+    private final SeatRepository seatRepository;
+    private final FoodRepository foodRepository;
+    private final ComboRepository comboRepository;
 
     protected ShowtimeServiceImpl(ShowtimeRepository showtimeRepository,
                                   RoomRepository roomRepository,
                                   ShowtimeMapper showtimeMapper,
                                   CinemaRepository cinemaRepository,
                                   MovieClient movieClient,
-                                  UserClient userClient) {
+                                  UserClient userClient,
+                                  SeatRepository seatRepository,
+                                  FoodRepository foodRepository,
+                                  ComboRepository comboRepository) {
         super(showtimeRepository);
         this.roomRepository = roomRepository;
         this.showtimeRepository = showtimeRepository;
@@ -55,6 +57,9 @@ public class ShowtimeServiceImpl
         this.showtimeMapper = showtimeMapper;
         this.cinemaRepository = cinemaRepository;
         this.userClient = userClient;
+        this.seatRepository = seatRepository;
+        this.foodRepository = foodRepository;
+        this.comboRepository = comboRepository;
     }
 
     @Override
@@ -389,6 +394,34 @@ public class ShowtimeServiceImpl
                 .stream()
                 .map(showtimeMapper::toDto)
                 .toList();
+    }
+
+    @Override
+    public TicketEmailDTO fetchTicketData(Long id, List<Long> seatIds, List<Long> foodIds, List<Long> comboIds)
+            throws IdInvalidException {
+        Showtime showtime = showtimeRepository.findById(id).orElseThrow(
+                () -> new IdInvalidException("Show time không hợp lệ")
+        );
+
+        MovieResDTO movieResDTO = movieClient.findById(showtime.getMovieId()).getData();
+
+        List<String> seatCodes = seatRepository.findAllById(seatIds).stream().map(Seat::getName).toList();
+        List<String> foodNames = foodRepository.findAllById(foodIds).stream().map(Food::getName).toList();
+        List<String> comboNames = comboRepository.findAllById(comboIds).stream().map(Combo::getName).toList();
+
+        Room room = showtime.getRoom();
+        Cinema cinema = room.getCinema();
+
+        TicketEmailDTO dto = new TicketEmailDTO();
+        dto.setCinemaName(cinema.getName());
+        dto.setRoomName(room.getName());
+        dto.setShowtime(showtime.getStartTime());
+        dto.setMovieTitle(movieResDTO.getTitle());
+        dto.setSeatCodes(seatCodes);
+        dto.setFoods(foodNames);
+        dto.setCombos(comboNames);
+
+        return dto;
     }
 
     public void validateShowtime(Long roomId, LocalDateTime startTime, LocalDateTime endTime) {

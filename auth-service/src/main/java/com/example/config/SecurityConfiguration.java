@@ -45,6 +45,7 @@ public class SecurityConfiguration implements WebMvcConfigurer {
                 "/api/v1/auth/register-request", "/api/v1/auth/register-verify",
                 "/api/v1/roles/code", "/api/v1/users/enabled", "/swagger-ui/**",
                 "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**",
+                "/api/v1/users/*/email"
         };
 
         http

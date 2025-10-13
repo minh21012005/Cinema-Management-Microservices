@@ -10,6 +10,7 @@ import com.example.service.AuthUserService;
 import com.example.service.RoleService;
 import com.example.util.error.IdInvalidException;
 import jakarta.validation.Valid;
+import jakarta.ws.rs.Path;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -97,4 +98,11 @@ public class UserController {
         return user.isEnabled();
     }
 
+    @GetMapping("/{id}/email")
+    public String fetchEmailById(@PathVariable("id") Long id) throws IdInvalidException {
+        AuthUser user = authUserService.findById(id).orElseThrow(
+                () -> new IdInvalidException("Không tìm thấy user trong hệ thống!")
+        );
+        return user.getEmail();
+    }
 }

@@ -1,5 +1,6 @@
 package com.example.service.impl;
 
+import com.example.domain.entity.TicketEmailDTO;
 import com.example.service.EmailService;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -44,4 +45,26 @@ public class EmailServiceImpl implements EmailService {
             throw new RuntimeException("Không thể gửi email OTP", e);
         }
     }
+
+    @Async
+    @Override
+    public void sendTicketEmail(String toEmail, TicketEmailDTO ticketInfo) {
+        try {
+            Context context = new Context();
+            context.setVariable("ticket", ticketInfo);
+
+            String htmlContent = templateEngine.process("email/ticket-confirmation.html", context);
+
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, "UTF-8");
+            helper.setTo(toEmail);
+            helper.setSubject("🎟️ Vé xem phim của bạn tại CNM đã được xác nhận!");
+            helper.setText(htmlContent, true);
+
+            mailSender.send(message);
+        } catch (MessagingException e) {
+            throw new RuntimeException("Không thể gửi email vé", e);
+        }
+    }
+
 }

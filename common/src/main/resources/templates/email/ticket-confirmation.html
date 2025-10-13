@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Xác nhận đặt vé</title>
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6;">
+<h2>🎬 Cảm ơn bạn đã đặt vé tại CNM Cinema!</h2>
+<p>Đơn hàng <strong th:text="${ticket.orderId}"></strong> đã được thanh toán thành công.</p>
+
+<h3>Thông tin vé</h3>
+<p><strong>Phim:</strong> <span th:text="${ticket.movieTitle}"></span></p>
+<p><strong>Rạp:</strong> <span th:text="${ticket.cinemaName}"></span></p>
+<p><strong>Phòng:</strong> <span th:text="${ticket.roomName}"></span></p>
+<p><strong>Suất chiếu:</strong>
+    <span th:text="${#temporals.format(ticket.showtime, 'HH:mm dd/MM/yyyy')}"></span>
+</p>
+<p><strong>Ghế:</strong>
+    <span th:each="code : ${ticket.seatCodes}" th:text="${code + ' '}"></span>
+</p>
+
+<h3>Tổng tiền</h3>
+<p><strong th:text="${#numbers.formatDecimal(ticket.totalPrice, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'"></strong></p>
+
+<hr>
+<p>Chúc bạn có trải nghiệm xem phim tuyệt vời! 🍿</p>
+</body>
+</html>

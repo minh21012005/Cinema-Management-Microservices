@@ -1,12 +1,12 @@
 package com.example.service.impl;
 
-import com.example.domain.entity.Order;
-import com.example.domain.entity.Payment;
-import com.example.domain.entity.SePayTransaction;
-import com.example.domain.entity.Ticket;
+import com.example.client.AuthClient;
+import com.example.client.ShowtimeClient;
+import com.example.domain.entity.*;
 import com.example.domain.enums.PaymentStatus;
 import com.example.domain.request.PaymentReqDTO;
 import com.example.domain.request.SepayWebhookReqDTO;
+import com.example.domain.request.TicketDataRequest;
 import com.example.domain.response.OrderResDTO;
 import com.example.domain.response.PaymentResDTO;
 import com.example.mapper.OrderMapper;
@@ -35,6 +35,8 @@ public class PaymentServiceImpl
     private final OrderMapper orderMapper;
     private final SepayRepository sepayRepository;
     private final SimpMessagingTemplate messagingTemplate;
+    private final ShowtimeClient showtimeClient;
+    private final AuthClient authClient;
 
     protected PaymentServiceImpl(PaymentRepository paymentRepository,
                                  OrderRepository orderRepository,
@@ -42,6 +44,8 @@ public class PaymentServiceImpl
                                  SepayMapper sepayMapper,
                                  OrderMapper orderMapper,
                                  SepayRepository sepayRepository,
+                                 ShowtimeClient showtimeClient,
+                                 AuthClient authClient,
                                  SimpMessagingTemplate messagingTemplate) {
         super(paymentRepository);
         this.paymentRepository = paymentRepository;
@@ -50,6 +54,8 @@ public class PaymentServiceImpl
         this.sepayMapper = sepayMapper;
         this.orderMapper = orderMapper;
         this.sepayRepository = sepayRepository;
+        this.showtimeClient = showtimeClient;
+        this.authClient = authClient;
         this.messagingTemplate = messagingTemplate;
     }
 
@@ -114,6 +120,27 @@ public class PaymentServiceImpl
         OrderResDTO dto = orderMapper.toDto(orderRepository.save(order));
         messagingTemplate.convertAndSend("/topic/order-status/" + order.getId(), dto);
 
+        if(order.getUserId() != null){
+            String email = authClient.fetchEmailById(order.getUserId());
+            this.sendTicketEmail(order, email);
+        }
+
         return dto;
+    }
+
+    private void sendTicketEmail(Order order, String email){
+        List<Ticket> tickets = order.getTickets();
+        Long showtimeId = tickets.getFirst().getShowtimeId();
+        List<Long> seatIds = order.getTickets().stream().map(Ticket::getSeatId).toList();
+        List<Long> foodIds = order.getItems().stream().map(OrderItem::getFoodId).toList();
+        List<Long> comboIds = order.getItems().stream().map(OrderItem::getComboId).toList();
+
+        TicketDataRequest request = new TicketDataRequest();
+        request.setSeatIds(seatIds);
+        request.setFoodIds(foodIds);
+        request.setComboIds(comboIds);
+
+        TicketEmailDTO dto = showtimeClient.fetchTicketData(showtimeId, request).getData();
+        dto.setTotalPrice(order.getTotalAmount());
     }
 }
