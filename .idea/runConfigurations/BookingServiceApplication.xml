@@ -3,8 +3,10 @@
     <option name="ALTERNATIVE_JRE_PATH" value="21" />
     <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
     <envs>
-      <env name="SEPAY_API_KEY" value="WFEHMVASBLOGKRDFYONQPLEAR0SZX8D36TQBUKQHCCPK3KV92SEIZ75YVXI20IRF" />
+      <env name="MAIL_PASSWORD" value="hmsu cwcg qsmq fekl" />
+      <env name="MAIL_USERNAME" value="minhhtestt@gmail.com" />
       <env name="SEPAY_ACCOUNT" value="56711111111" />
+      <env name="SEPAY_API_KEY" value="WFEHMVASBLOGKRDFYONQPLEAR0SZX8D36TQBUKQHCCPK3KV92SEIZ75YVXI20IRF" />
       <env name="SEPAY_BANK" value="TPBank" />
     </envs>
     <option name="MAIN_CLASS_NAME" value="com.example.BookingServiceApplication" />

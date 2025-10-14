@@ -23,32 +23,28 @@ public class EmailServiceImpl implements EmailService {
     }
 
     @Override
-    @Async
     public void sendOtpEmail(String toEmail, String otp) {
-        try {
-            // ✅ 1. Tạo dữ liệu truyền vào template
-            Context context = new Context();
-            context.setVariable("otp", otp);
-
-            // ✅ 2. Render file HTML template
-            String htmlContent = templateEngine.process("email/otp-email.html", context);
-
-            // ✅ 3. Tạo và gửi email
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, "UTF-8");
-            helper.setTo(toEmail);
-            helper.setSubject("🔐 Xác thực đăng ký tài khoản CNM");
-            helper.setText(htmlContent, true); // HTML email
-            mailSender.send(message);
-
-        } catch (MessagingException e) {
-            throw new RuntimeException("Không thể gửi email OTP", e);
-        }
     }
 
     @Async
     @Override
     public void sendTicketEmail(String toEmail, TicketEmailDTO ticketInfo) {
+        try {
+            Context context = new Context();
+            context.setVariable("ticket", ticketInfo);
+
+            String htmlContent = templateEngine.process("email/ticket-confirmation.html", context);
+
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, "UTF-8");
+            helper.setTo(toEmail);
+            helper.setSubject("🎟️ Vé xem phim của bạn tại CNM đã được xác nhận!");
+            helper.setText(htmlContent, true);
+
+            mailSender.send(message);
+        } catch (MessagingException e) {
+            throw new RuntimeException("Không thể gửi email vé", e);
+        }
     }
 
 }

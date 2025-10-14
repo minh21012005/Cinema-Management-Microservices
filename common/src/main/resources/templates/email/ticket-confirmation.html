@@ -2,27 +2,107 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Xác nhận đặt vé</title>
+    <title>Xác nhận vé xem phim</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 600px;
+            background-color: #ffffff;
+            margin: 0 auto;
+            padding: 25px 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+            text-align: center;
+            color: #e50914;
+            margin-bottom: 10px;
+        }
+
+        h3 {
+            color: #444;
+            margin-top: 25px;
+            border-bottom: 2px solid #e50914;
+            padding-bottom: 6px;
+        }
+
+        p {
+            font-size: 15px;
+            margin: 8px 0;
+        }
+
+        ul {
+            list-style: none;
+            padding-left: 0;
+            margin: 10px 0 20px 0;
+        }
+
+        li {
+            background-color: #f2f2f2;
+            margin-bottom: 5px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+
+        .total {
+            background-color: #e50914;
+            color: white;
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 16px;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 25px;
+            font-size: 14px;
+            color: #555;
+        }
+    </style>
 </head>
-<body style="font-family: Arial, sans-serif; line-height: 1.6;">
-<h2>🎬 Cảm ơn bạn đã đặt vé tại CNM Cinema!</h2>
-<p>Đơn hàng <strong th:text="${ticket.orderId}"></strong> đã được thanh toán thành công.</p>
+<body>
+<div class="container">
+    <h2>Cảm ơn bạn đã đặt vé tại <strong>CNM</strong>!</h2>
 
-<h3>Thông tin vé</h3>
-<p><strong>Phim:</strong> <span th:text="${ticket.movieTitle}"></span></p>
-<p><strong>Rạp:</strong> <span th:text="${ticket.cinemaName}"></span></p>
-<p><strong>Phòng:</strong> <span th:text="${ticket.roomName}"></span></p>
-<p><strong>Suất chiếu:</strong>
-    <span th:text="${#temporals.format(ticket.showtime, 'HH:mm dd/MM/yyyy')}"></span>
-</p>
-<p><strong>Ghế:</strong>
-    <span th:each="code : ${ticket.seatCodes}" th:text="${code + ' '}"></span>
-</p>
+    <p><strong>Bộ phim:</strong> <span th:text="${ticket.movieTitle}"></span></p>
+    <p><strong>Rạp chiếu:</strong> <span th:text="${ticket.cinemaName}"></span></p>
+    <p><strong>Phòng chiếu:</strong> <span th:text="${ticket.roomName}"></span></p>
+    <p><strong>Suất chiếu:</strong>
+        <span th:text="${#temporals.format(ticket.showtime, 'dd/MM/yyyy HH:mm')}"></span>
+    </p>
 
-<h3>Tổng tiền</h3>
-<p><strong th:text="${#numbers.formatDecimal(ticket.totalPrice, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'"></strong></p>
+    <h3>🎟️ Ghế ngồi</h3>
+    <ul>
+        <li th:each="s : ${ticket.seatCodes}" th:text="${s}"></li>
+    </ul>
 
-<hr>
-<p>Chúc bạn có trải nghiệm xem phim tuyệt vời! 🍿</p>
+    <h3>🍿 Đồ ăn & Combo</h3>
+    <ul>
+        <li th:each="f : ${ticket.foods}" th:text="${f}"></li>
+        <li th:each="c : ${ticket.combos}" th:text="${c}"></li>
+    </ul>
+
+    <div class="total">
+        Tổng tiền:
+        <span th:text="${#numbers.formatDecimal(ticket.totalPrice, 0, 'POINT', 0, 'COMMA')} + ' VND'"></span>
+    </div>
+
+    <div class="footer">
+        🎉 Chúc bạn xem phim vui vẻ!
+        <br>— Đội ngũ CNM Cinema —
+    </div>
+</div>
 </body>
 </html>

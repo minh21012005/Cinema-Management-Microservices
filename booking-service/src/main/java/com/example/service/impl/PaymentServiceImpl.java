@@ -15,6 +15,7 @@ import com.example.mapper.SepayMapper;
 import com.example.repository.OrderRepository;
 import com.example.repository.PaymentRepository;
 import com.example.repository.SepayRepository;
+import com.example.service.EmailService;
 import com.example.service.PaymentService;
 import com.example.util.error.IdInvalidException;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -37,6 +38,7 @@ public class PaymentServiceImpl
     private final SimpMessagingTemplate messagingTemplate;
     private final ShowtimeClient showtimeClient;
     private final AuthClient authClient;
+    private final EmailService emailService;
 
     protected PaymentServiceImpl(PaymentRepository paymentRepository,
                                  OrderRepository orderRepository,
@@ -46,6 +48,7 @@ public class PaymentServiceImpl
                                  SepayRepository sepayRepository,
                                  ShowtimeClient showtimeClient,
                                  AuthClient authClient,
+                                 EmailService emailService,
                                  SimpMessagingTemplate messagingTemplate) {
         super(paymentRepository);
         this.paymentRepository = paymentRepository;
@@ -56,6 +59,7 @@ public class PaymentServiceImpl
         this.sepayRepository = sepayRepository;
         this.showtimeClient = showtimeClient;
         this.authClient = authClient;
+        this.emailService = emailService;
         this.messagingTemplate = messagingTemplate;
     }
 
@@ -128,19 +132,35 @@ public class PaymentServiceImpl
         return dto;
     }
 
-    private void sendTicketEmail(Order order, String email){
-        List<Ticket> tickets = order.getTickets();
-        Long showtimeId = tickets.getFirst().getShowtimeId();
-        List<Long> seatIds = order.getTickets().stream().map(Ticket::getSeatId).toList();
-        List<Long> foodIds = order.getItems().stream().map(OrderItem::getFoodId).toList();
-        List<Long> comboIds = order.getItems().stream().map(OrderItem::getComboId).toList();
+    private void sendTicketEmail(Order order, String email) {
+        try {
+            List<Ticket> tickets = order.getTickets();
+            if (tickets == null || tickets.isEmpty()) return;
 
-        TicketDataRequest request = new TicketDataRequest();
-        request.setSeatIds(seatIds);
-        request.setFoodIds(foodIds);
-        request.setComboIds(comboIds);
+            Long showtimeId = tickets.getFirst().getShowtimeId();
+            List<Long> seatIds = order.getTickets().stream().map(Ticket::getSeatId).toList();
+            List<Long> foodIds = order.getItems().stream()
+                    .filter(i -> i.getFoodId() != null)
+                    .map(OrderItem::getFoodId)
+                    .toList();
+            List<Long> comboIds = order.getItems().stream()
+                    .filter(i -> i.getComboId() != null)
+                    .map(OrderItem::getComboId)
+                    .toList();
 
-        TicketEmailDTO dto = showtimeClient.fetchTicketData(showtimeId, request).getData();
-        dto.setTotalPrice(order.getTotalAmount());
+            TicketDataRequest request = new TicketDataRequest();
+            request.setSeatIds(seatIds);
+            request.setFoodIds(foodIds);
+            request.setComboIds(comboIds);
+
+            TicketEmailDTO ticketData = showtimeClient.fetchTicketData(showtimeId, request).getData();
+            ticketData.setTotalPrice(order.getTotalAmount());
+
+            // ✅ Gửi mail
+            emailService.sendTicketEmail(email, ticketData);
+
+        } catch (Exception e) {
+            System.err.println("❌ Lỗi khi gửi email vé: " + e.getMessage());
+        }
     }
 }
