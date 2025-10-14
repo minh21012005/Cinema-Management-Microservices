@@ -3,6 +3,7 @@ package com.example.service.impl;
 import com.example.client.MovieClient;
 import com.example.client.UserClient;
 import com.example.domain.entity.*;
+import com.example.domain.request.ItemDTO;
 import com.example.domain.request.ShowtimeReqDTO;
 import com.example.domain.response.MovieResDTO;
 import com.example.domain.response.ResultPaginationDTO;
@@ -397,17 +398,38 @@ public class ShowtimeServiceImpl
     }
 
     @Override
-    public TicketEmailDTO fetchTicketData(Long id, List<Long> seatIds, List<Long> foodIds, List<Long> comboIds)
+    public TicketEmailDTO fetchTicketData(Long id, List<Long> seatIds, List<ItemDTO> foods, List<ItemDTO> combos)
             throws IdInvalidException {
+
         Showtime showtime = showtimeRepository.findById(id).orElseThrow(
                 () -> new IdInvalidException("Show time không hợp lệ")
         );
 
         MovieResDTO movieResDTO = movieClient.findById(showtime.getMovieId()).getData();
 
-        List<String> seatCodes = seatRepository.findAllById(seatIds).stream().map(Seat::getName).toList();
-        List<String> foodNames = foodRepository.findAllById(foodIds).stream().map(Food::getName).toList();
-        List<String> comboNames = comboRepository.findAllById(comboIds).stream().map(Combo::getName).toList();
+        // ✅ Lấy danh sách ghế
+        List<String> seatCodes = seatRepository.findAllById(seatIds)
+                .stream()
+                .map(Seat::getName)
+                .toList();
+
+        // ✅ Gán lại tên cho từng food (giữ nguyên quantity)
+        if (foods != null && !foods.isEmpty()) {
+            List<Long> foodIds = foods.stream().map(ItemDTO::getId).toList();
+            Map<Long, String> foodNameMap = foodRepository.findAllById(foodIds).stream()
+                    .collect(Collectors.toMap(Food::getId, Food::getName));
+
+            foods.forEach(f -> f.setName(foodNameMap.getOrDefault(f.getId(), "Không rõ")));
+        }
+
+        // ✅ Gán lại tên cho từng combo (giữ nguyên quantity)
+        if (combos != null && !combos.isEmpty()) {
+            List<Long> comboIds = combos.stream().map(ItemDTO::getId).toList();
+            Map<Long, String> comboNameMap = comboRepository.findAllById(comboIds).stream()
+                    .collect(Collectors.toMap(Combo::getId, Combo::getName));
+
+            combos.forEach(c -> c.setName(comboNameMap.getOrDefault(c.getId(), "Không rõ")));
+        }
 
         Room room = showtime.getRoom();
         Cinema cinema = room.getCinema();
@@ -418,11 +440,12 @@ public class ShowtimeServiceImpl
         dto.setShowtime(showtime.getStartTime());
         dto.setMovieTitle(movieResDTO.getTitle());
         dto.setSeatCodes(seatCodes);
-        dto.setFoods(foodNames);
-        dto.setCombos(comboNames);
+        dto.setFoods(foods);
+        dto.setCombos(combos);
 
         return dto;
     }
+
 
     public void validateShowtime(Long roomId, LocalDateTime startTime, LocalDateTime endTime) {
         List<Showtime> overlaps = showtimeRepository.findOverlappingShowtimes(roomId, startTime, endTime);

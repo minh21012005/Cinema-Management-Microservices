@@ -4,6 +4,7 @@ import com.example.client.AuthClient;
 import com.example.client.ShowtimeClient;
 import com.example.domain.entity.*;
 import com.example.domain.enums.PaymentStatus;
+import com.example.domain.request.ItemDTO;
 import com.example.domain.request.PaymentReqDTO;
 import com.example.domain.request.SepayWebhookReqDTO;
 import com.example.domain.request.TicketDataRequest;
@@ -23,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class PaymentServiceImpl
@@ -138,25 +140,59 @@ public class PaymentServiceImpl
             if (tickets == null || tickets.isEmpty()) return;
 
             Long showtimeId = tickets.getFirst().getShowtimeId();
-            List<Long> seatIds = order.getTickets().stream().map(Ticket::getSeatId).toList();
-            List<Long> foodIds = order.getItems().stream()
-                    .filter(i -> i.getFoodId() != null)
-                    .map(OrderItem::getFoodId)
+            List<Long> seatIds = order.getTickets().stream()
+                    .map(Ticket::getSeatId)
                     .toList();
+
+            // Lọc foodId và comboId hợp lệ
+            List<Long> foodIds = order.getItems().stream()
+                    .map(OrderItem::getFoodId)
+                    .filter(Objects::nonNull)
+                    .distinct() // ✅ tránh trùng ID
+                    .toList();
+
             List<Long> comboIds = order.getItems().stream()
-                    .filter(i -> i.getComboId() != null)
                     .map(OrderItem::getComboId)
+                    .filter(Objects::nonNull)
+                    .distinct()
+                    .toList();
+
+            // ✅ Cộng dồn quantity cho mỗi foodId
+            List<ItemDTO> foods = foodIds.stream()
+                    .map(id -> {
+                        ItemDTO itemDTO = new ItemDTO();
+                        int totalQuantity = order.getItems().stream()
+                                .filter(item -> Objects.equals(item.getFoodId(), id))
+                                .mapToInt(OrderItem::getQuantity)
+                                .sum();
+                        itemDTO.setId(id);
+                        itemDTO.setQuantity(totalQuantity);
+                        return itemDTO;
+                    })
+                    .toList();
+
+            // ✅ Cộng dồn quantity cho mỗi comboId
+            List<ItemDTO> combos = comboIds.stream()
+                    .map(id -> {
+                        ItemDTO itemDTO = new ItemDTO();
+                        int totalQuantity = order.getItems().stream()
+                                .filter(item -> Objects.equals(item.getComboId(), id))
+                                .mapToInt(OrderItem::getQuantity)
+                                .sum();
+                        itemDTO.setId(id);
+                        itemDTO.setQuantity(totalQuantity);
+                        return itemDTO;
+                    })
                     .toList();
 
             TicketDataRequest request = new TicketDataRequest();
             request.setSeatIds(seatIds);
-            request.setFoodIds(foodIds);
-            request.setComboIds(comboIds);
+            request.setFoods(foods);
+            request.setCombos(combos);
 
             TicketEmailDTO ticketData = showtimeClient.fetchTicketData(showtimeId, request).getData();
             ticketData.setTotalPrice(order.getTotalAmount());
 
-            // ✅ Gửi mail
             emailService.sendTicketEmail(email, ticketData);
 
         } catch (Exception e) {

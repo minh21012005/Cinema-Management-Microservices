@@ -2,6 +2,7 @@ package com.example.service;
 
 import com.example.domain.entity.Showtime;
 import com.example.domain.entity.TicketEmailDTO;
+import com.example.domain.request.ItemDTO;
 import com.example.domain.request.ShowtimeReqDTO;
 import com.example.domain.response.MovieResDTO;
 import com.example.domain.response.ResultPaginationDTO;
@@ -23,6 +24,6 @@ public interface ShowtimeService extends BaseService<Showtime, Long, ShowtimeReq
     boolean isShowtimeEnd(Long id) throws IdInvalidException;
     List<ShowtimeResDTO> fetchShowtimesActiveByMovie
             (Long id, String date, Long cinemaId) throws IdInvalidException;
-    TicketEmailDTO fetchTicketData(Long id, List<Long> seatIds, List<Long> foodIds, List<Long> comboIds)
+    TicketEmailDTO fetchTicketData(Long id, List<Long> seatIds, List<ItemDTO> foods, List<ItemDTO> combos)
             throws IdInvalidException;
 }

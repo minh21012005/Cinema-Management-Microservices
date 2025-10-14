@@ -115,8 +115,8 @@ public class ShowtimeController extends BaseController<Showtime, Long, ShowtimeR
         return ResponseEntity.ok(showtimeService.fetchTicketData(
                 id,
                 request.getSeatIds(),
-                request.getFoodIds(),
-                request.getComboIds()));
+                request.getFoods(),
+                request.getCombos()));
     }
 
     @Override

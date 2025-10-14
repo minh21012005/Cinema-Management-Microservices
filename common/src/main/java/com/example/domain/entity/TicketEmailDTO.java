@@ -1,5 +1,6 @@
 package com.example.domain.entity;
 
+import com.example.domain.request.ItemDTO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -16,7 +17,7 @@ public class TicketEmailDTO {
     private String roomName;
     private LocalDateTime showtime;
     private List<String> seatCodes;
-    private List<String> foods;
-    private List<String> combos;
+    private List<ItemDTO> foods;
+    private List<ItemDTO> combos;
     private double totalPrice;
 }

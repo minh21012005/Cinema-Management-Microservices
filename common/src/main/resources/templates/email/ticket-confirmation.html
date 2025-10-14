@@ -88,11 +88,27 @@
         <li th:each="s : ${ticket.seatCodes}" th:text="${s}"></li>
     </ul>
 
-    <h3>🍿 Đồ ăn & Combo</h3>
-    <ul>
-        <li th:each="f : ${ticket.foods}" th:text="${f}"></li>
-        <li th:each="c : ${ticket.combos}" th:text="${c}"></li>
-    </ul>
+    <!-- 🍿 Đồ ăn -->
+    <div th:if="${ticket.foods != null and !#lists.isEmpty(ticket.foods)}">
+        <h3>🍿 Đồ ăn</h3>
+        <ul>
+            <li th:each="f : ${ticket.foods}">
+                <span th:text="${f.name}"></span> -
+                <strong th:text="'x' + ${f.quantity}"></strong>
+            </li>
+        </ul>
+    </div>
+
+    <!-- 🥤 Combo -->
+    <div th:if="${ticket.combos != null and !#lists.isEmpty(ticket.combos)}">
+        <h3>🥤 Combo</h3>
+        <ul>
+            <li th:each="c : ${ticket.combos}">
+                <span th:text="${c.name}"></span> -
+                <strong th:text="'x' + ${c.quantity}"></strong>
+            </li>
+        </ul>
+    </div>
 
     <div class="total">
         Tổng tiền:
