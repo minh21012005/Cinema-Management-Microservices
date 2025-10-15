@@ -1,7 +1,7 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="MovieServiceApplication" type="Application" factoryName="Application" nameIsGenerated="true">
     <envs>
-      <env name="OPENAI_API_KEY" value="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" />
+      <env name="OPENAI_API_KEY" value="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" />
     </envs>
     <option name="MAIN_CLASS_NAME" value="com.example.MovieServiceApplication" />
     <module name="movie-service" />
