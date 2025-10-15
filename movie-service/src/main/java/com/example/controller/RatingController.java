@@ -3,10 +3,12 @@ package com.example.controller;
 import com.example.domain.entity.Rating;
 import com.example.domain.request.RatingReqDTO;
 import com.example.domain.response.RatingResDTO;
+import com.example.domain.response.ResultPaginationDTO;
 import com.example.mapper.RatingMapper;
 import com.example.service.RatingService;
 import com.example.util.error.IdInvalidException;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -33,7 +35,8 @@ public class RatingController extends BaseController<Rating, Long, RatingReqDTO,
 
     @GetMapping("/movies/{id}")
     @PreAuthorize("hasPermission(null, 'RATING_VIEW')")
-    public ResponseEntity<List<RatingResDTO>> getRatingsByMovie(@PathVariable("id") Long id) throws IdInvalidException {
-        return ResponseEntity.ok(ratingService.getRatingsByMovie(id));
+    public ResponseEntity<ResultPaginationDTO> getRatingsByMovie(
+            @PathVariable("id") Long id, Pageable pageable) throws IdInvalidException {
+        return ResponseEntity.ok(ratingService.getRatingsByMovie(id, pageable));
     }
 }

@@ -6,12 +6,17 @@ import com.example.domain.entity.Rating;
 import com.example.domain.enums.RatingStatus;
 import com.example.domain.request.RatingReqDTO;
 import com.example.domain.response.RatingResDTO;
+import com.example.domain.response.ResultPaginationDTO;
 import com.example.mapper.RatingMapper;
 import com.example.repository.MovieRepository;
 import com.example.repository.RatingRepository;
 import com.example.service.CommentModerationService;
 import com.example.service.RatingService;
 import com.example.util.error.IdInvalidException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -82,12 +87,42 @@ public class RatingServiceImpl
     }
 
     @Override
-    public List<RatingResDTO> getRatingsByMovie(Long id) throws IdInvalidException {
+    public ResultPaginationDTO getRatingsByMovie(Long id, Pageable pageable) throws IdInvalidException {
         movieRepository.findById(id).orElseThrow(
                 () -> new IdInvalidException("Phim không hợp lệ!")
         );
 
-        return ratingRepository.findByMovie_IdAndStatus(id, RatingStatus.APPROVED)
-                .stream().map(ratingMapper::toDto).toList();
+        // Nếu chưa có sort, thì sort mặc định theo createdAt giảm dần
+        if (pageable.getSort().isUnsorted()) {
+            pageable = PageRequest.of(
+                    pageable.getPageNumber(),
+                    pageable.getPageSize(),
+                    Sort.by(Sort.Direction.DESC, "createdAt")
+            );
+        }
+
+        // Gọi repo với phân trang
+        Page<Rating> page = ratingRepository.findByMovie_IdAndStatus(id, RatingStatus.APPROVED, pageable);
+
+        // Map sang DTO
+        List<RatingResDTO> content = page.getContent()
+                .stream()
+                .map(ratingMapper::toDto)
+                .toList();
+
+        ResultPaginationDTO rs = new ResultPaginationDTO();
+        ResultPaginationDTO.Meta mt = new ResultPaginationDTO.Meta();
+
+        mt.setPage(pageable.getPageNumber());
+        mt.setPageSize(pageable.getPageSize());
+
+        mt.setPages(page.getTotalPages());
+        mt.setTotal(page.getTotalElements());
+
+        rs.setMeta(mt);
+        rs.setResult(content);
+
+        return rs;
     }
+
 }
