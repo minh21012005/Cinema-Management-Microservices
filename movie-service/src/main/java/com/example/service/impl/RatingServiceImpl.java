@@ -23,6 +23,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class RatingServiceImpl
@@ -104,18 +105,27 @@ public class RatingServiceImpl
         // Gọi repo với phân trang
         Page<Rating> page = ratingRepository.findByMovie_IdAndStatus(id, RatingStatus.APPROVED, pageable);
 
-        // Map sang DTO
-        List<RatingResDTO> content = page.getContent()
-                .stream()
-                .map(ratingMapper::toDto)
+        List<Rating> ratings = page.getContent();
+
+        // Lấy tất cả userId trong trang
+        List<Long> userIds = ratings.stream()
+                .map(Rating::getUserId)
+                .distinct()
                 .toList();
+
+        Map<Long, String> userMap = userClient.getNamesByIds(userIds).getData();
+
+        // Map sang DTO
+        List<RatingResDTO> content = ratings.stream().map(rating -> {
+            RatingResDTO dto = ratingMapper.toDto(rating);
+            dto.setUsername(userMap.get(rating.getUserId())); // gán username
+            return dto;
+        }).toList();
 
         ResultPaginationDTO rs = new ResultPaginationDTO();
         ResultPaginationDTO.Meta mt = new ResultPaginationDTO.Meta();
-
         mt.setPage(pageable.getPageNumber());
         mt.setPageSize(pageable.getPageSize());
-
         mt.setPages(page.getTotalPages());
         mt.setTotal(page.getTotalElements());
 

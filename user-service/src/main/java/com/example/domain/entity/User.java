@@ -2,6 +2,7 @@ package com.example.domain.entity;
 
 import com.example.util.constant.GenderEnum;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -34,4 +35,8 @@ public class User extends BaseEntity<Long> {
 
     @Column(name = "cinema_id")
     private Long cinemaId;
+
+    @NotNull
+    @Column(name = "auth_id")
+    private Long authId;
 }

@@ -21,6 +21,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -181,6 +182,16 @@ public class UserServiceImpl
         return userRepository.findByEmail(email).orElseThrow(
                 () -> new IdInvalidException("Email không hợp lệ!")
         ).getName();
+    }
+
+    @Override
+    public Map<Long, String> getNamesByIds(List<Long> authIds) {
+        // Lấy danh sách user theo authId
+        List<User> users = userRepository.findAllByAuthIdIn(authIds);
+
+        // Chuyển sang Map<authId, name>
+        return users.stream()
+                .collect(Collectors.toMap(User::getAuthId, User::getName));
     }
 
     public ResUserDTO convertToResUserDTO(User user) throws IdInvalidException {

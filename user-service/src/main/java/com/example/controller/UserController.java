@@ -17,6 +17,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/v1/users")
 public class UserController {
@@ -63,6 +66,11 @@ public class UserController {
     @GetMapping("/fetch-name-by-email")
     public String getNameByEmail(@RequestParam("email") String email) throws IdInvalidException {
         return userService.getNameByEmail(email);
+    }
+
+    @GetMapping("/fetch-name-by-ids")
+    public Map<Long, String> getNamesByIds(@RequestParam("ids") List<Long> ids) {
+        return userService.getNamesByIds(ids);
     }
 
     @GetMapping("/check-phone-update")
