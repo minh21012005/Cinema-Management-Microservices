@@ -1,0 +1,18 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="MovieServiceApplication" type="Application" factoryName="Application" nameIsGenerated="true">
+    <envs>
+      <env name="OPENAI_API_KEY" value="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" />
+    </envs>
+    <option name="MAIN_CLASS_NAME" value="com.example.MovieServiceApplication" />
+    <module name="movie-service" />
+    <extension name="coverage">
+      <pattern>
+        <option name="PATTERN" value="com.example.*" />
+        <option name="ENABLED" value="true" />
+      </pattern>
+    </extension>
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
