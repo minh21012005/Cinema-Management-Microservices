@@ -110,6 +110,7 @@ public class AuthUserServiceImpl extends BaseServiceImpl<AuthUser, Long, CreateU
         profileDTO.setAddress(dto.getAddress());
         profileDTO.setRoleId(role.getId());
         profileDTO.setOldEmail(oldEmail);
+        profileDTO.setAuthId(user.getId());
 
         this.rabbitTemplate.convertAndSend(
                 exchangeName, sendRoutingKeyUpdate, profileDTO
@@ -170,7 +171,8 @@ public class AuthUserServiceImpl extends BaseServiceImpl<AuthUser, Long, CreateU
                 userData.getGender(),
                 userData.getEmail(),
                 userData.getAddress(),
-                role.getId()
+                role.getId(),
+                savedUser.getId()
         );
         rabbitTemplate.convertAndSend(exchangeName, sendRoutingKey, profileEvent);
 

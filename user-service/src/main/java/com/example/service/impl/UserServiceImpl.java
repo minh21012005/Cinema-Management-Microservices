@@ -117,10 +117,7 @@ public class UserServiceImpl
         userAuthDTO.setPassword(dto.getPassword());
         userAuthDTO.setRoleId(dto.getRoleId());
 
-        // Publish event sang auth-service
-        this.rabbitTemplate.convertAndSend(
-                exchangeName, sendRoutingKey, userAuthDTO
-        );
+        Long authId = Long.valueOf(authClient.createUser(userAuthDTO));
 
         User user = new User();
         user.setName(dto.getName());
@@ -130,6 +127,7 @@ public class UserServiceImpl
         user.setGender(GenderEnum.valueOf(dto.getGender()));
         user.setDateOfBirth(dto.getDateOfBirth());
         user.setRoleId(dto.getRoleId());
+        user.setAuthId(authId);
 
         if(codeRole.equals("STAFF")){
             user.setCinemaId(dto.getCinemaId());

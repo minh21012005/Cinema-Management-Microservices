@@ -3,6 +3,7 @@ package com.example.controller;
 import com.example.client.UserClient;
 import com.example.domain.entity.AuthUser;
 import com.example.domain.entity.Role;
+import com.example.domain.entity.UserAuthDTO;
 import com.example.domain.request.ChangePasswordRequest;
 import com.example.domain.request.UserUpdateDTO;
 import com.example.domain.response.ResUserDTO;
@@ -10,7 +11,6 @@ import com.example.service.AuthUserService;
 import com.example.service.RoleService;
 import com.example.util.error.IdInvalidException;
 import jakarta.validation.Valid;
-import jakarta.ws.rs.Path;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -104,5 +104,29 @@ public class UserController {
                 () -> new IdInvalidException("Không tìm thấy user trong hệ thống!")
         );
         return user.getEmail();
+    }
+
+    @PostMapping
+    @PreAuthorize("hasPermission(null, 'USER_CREATE')")
+    public String createUser(@RequestBody UserAuthDTO userAuthDTO) {
+        String hashedPassword = passwordEncoder.encode(userAuthDTO.getPassword());
+        Role role = roleService.findById(userAuthDTO.getRoleId()).orElse(
+                roleService.findByCode("CUSTOMER").orElse(null));
+        // Tạo User profile
+        AuthUser user = new AuthUser();
+        user.setEmail(userAuthDTO.getEmail());
+        user.setPassword(hashedPassword);
+        user.setRole(role);
+        authUserService.save(user);
+
+        return String.valueOf(user.getId());
+    }
+
+    @GetMapping("/fetch-id-by-email")
+    public String fetchIdByEmail(@RequestParam("email") String email) throws IdInvalidException {
+        AuthUser user = authUserService.findByEmail(email).orElseThrow(
+                () -> new IdInvalidException("Không tìm thấy user trong hệ thống!")
+        );
+        return String.valueOf(user.getId());
     }
 }

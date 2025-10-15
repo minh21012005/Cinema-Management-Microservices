@@ -1,5 +1,6 @@
 package com.example.client;
 
+import com.example.domain.entity.UserAuthDTO;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -12,6 +13,11 @@ class AuthClientFallback implements AuthClient {
 
     @Override
     public boolean isUserEnabled(String email) {
+        throw new RuntimeException("Không thể kết nối Auth service, vui lòng thử lại sau");
+    }
+
+    @Override
+    public String createUser(UserAuthDTO UserAuthDTO) {
         throw new RuntimeException("Không thể kết nối Auth service, vui lòng thử lại sau");
     }
 }

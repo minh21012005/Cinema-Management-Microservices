@@ -17,6 +17,7 @@ public class UserProfileDTO {
     private String email;
     private String address;
     private Long roleId;
+    private Long authId;
 }
 
 
