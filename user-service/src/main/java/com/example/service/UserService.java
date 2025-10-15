@@ -16,4 +16,5 @@ public interface UserService extends BaseService<User,Long, CreateUserRequest, R
     ResUserDTO createUser(CreateUserRequest dto) throws IdInvalidException;
     ResUserDTO updateUser(User user, UserUpdateDTO dto) throws IdInvalidException;
     Optional<User> findByEmail(String email);
+    String getNameByEmail(String email) throws IdInvalidException;
 }

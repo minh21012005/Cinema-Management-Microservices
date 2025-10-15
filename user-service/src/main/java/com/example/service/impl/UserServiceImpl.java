@@ -176,6 +176,13 @@ public class UserServiceImpl
         return userRepository.findByEmail(email);
     }
 
+    @Override
+    public String getNameByEmail(String email) throws IdInvalidException {
+        return userRepository.findByEmail(email).orElseThrow(
+                () -> new IdInvalidException("Email không hợp lệ!")
+        ).getName();
+    }
+
     public ResUserDTO convertToResUserDTO(User user) throws IdInvalidException {
         ResUserDTO res = new ResUserDTO();
         boolean isUserEnabled = authClient.isUserEnabled(user.getEmail());

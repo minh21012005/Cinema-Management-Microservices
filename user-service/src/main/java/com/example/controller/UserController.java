@@ -60,6 +60,11 @@ public class UserController {
         return userService.isPhoneExist(phone);
     }
 
+    @GetMapping("/fetch-name-by-email")
+    public String getNameByEmail(@RequestParam("email") String email) throws IdInvalidException {
+        return userService.getNameByEmail(email);
+    }
+
     @GetMapping("/check-phone-update")
     public Boolean checkPhone(
             @RequestParam("email") String email,

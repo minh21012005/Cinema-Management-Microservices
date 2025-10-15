@@ -12,7 +12,7 @@ public interface RatingMapper extends BaseMapper<Rating, RatingReqDTO, RatingRes
     @Override
     @Mapping(source = "movie.title", target = "movieTitle")
     @Mapping(source = "status", target = "status")
-    @Mapping(source = "createdAt", target = "createdAt", dateFormat = "yyyy-MM-dd HH:mm:ss")
+    @Mapping(source = "createdAt", target = "createdAt", dateFormat = "dd/MM/yyyy")
     RatingResDTO toDto(Rating entity);
 
     @Override
