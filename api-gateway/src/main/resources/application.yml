@@ -71,6 +71,7 @@ security:
     - /movie-service/v3/api-docs/**
     - /movie-service/swagger-resources/**
     - /movie-service/webjars/**
+    - /movie-service/api/v1/ratings/movies/*
     - /media-service/swagger-ui/**
     - /media-service/v3/api-docs/**
     - /media-service/swagger-resources/**

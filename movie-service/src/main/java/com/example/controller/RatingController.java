@@ -34,7 +34,6 @@ public class RatingController extends BaseController<Rating, Long, RatingReqDTO,
     }
 
     @GetMapping("/movies/{id}")
-    @PreAuthorize("hasPermission(null, 'RATING_VIEW')")
     public ResponseEntity<ResultPaginationDTO> getRatingsByMovie(
             @PathVariable("id") Long id, Pageable pageable) throws IdInvalidException {
         return ResponseEntity.ok(ratingService.getRatingsByMovie(id, pageable));

@@ -20,4 +20,6 @@ public class MovieResDTO {
     private String trailerUrl; // Link trailer YouTube
     private List<String> categoryCodes;
     private List<String> categoryNames;
+    private double ratingAvg;
+    private int ratingCount;
 }
