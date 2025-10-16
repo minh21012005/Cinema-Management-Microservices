@@ -21,6 +21,7 @@
         <module>media-service</module>
         <module>booking-service</module>
         <module>content-service</module>
+        <module>communication-service</module>
     </modules>
 
     <properties>
