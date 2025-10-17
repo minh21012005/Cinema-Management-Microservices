@@ -30,6 +30,26 @@ public class CinemaToolService {
         }
     }
 
+    @Tool(description = "Lấy thông tin phim theo tên, bao gồm đánh giá trung bình và số lượt đánh giá.")
+    public String getMovieByTitle(String title) {
+        List<MovieResDTO> movies = movieClient.getMovieByTitle(title).getData();
+        if (movies == null || movies.isEmpty()) {
+            return "Hiện tại không có phim với tên: " + title;
+        }
+
+        return movies.stream()
+                .map(m -> {
+                    String status = m.isActive() ? "Đang chiếu" : "Không chiếu";
+                    String ratingInfo = m.getRatingCount() > 0
+                            ? String.format("Đánh giá trung bình %.1f/5 từ %d người đánh giá",
+                            m.getRatingAvg(), m.getRatingCount())
+                            : "Chưa có đánh giá";
+                    return String.format("%s (Đạo diễn: %s, Diễn viên: %s, Phát hành: %s, Trạng thái: %s, %s)",
+                            m.getTitle(), m.getDirector(), m.getCast(), m.getReleaseDate(), status, ratingInfo);
+                })
+                .collect(Collectors.joining("\n"));
+    }
+
     @Tool(description = "Hiển thị menu combo đồ ăn tại rạp.")
     public String getFoodMenu() {
         // call internal service if any

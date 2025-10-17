@@ -17,7 +17,7 @@ import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -29,66 +29,90 @@ public class ChatBotServiceImpl implements ChatBotService {
     private final ChatMessageMapper messageMapper;
     private final FaqRepository faqRepository;
     private final ChatClient chatClient;
-    private final CinemaToolService cinemaToolService; // tool bean
+    private final CinemaToolService cinemaToolService;
 
     @Override
     @Transactional
     public ChatMessageResDTO handleUserMessage(ChatMessageReqDTO req) {
-        // 1. find or create session
+        // 1️⃣ Tìm hoặc tạo session
         ChatSession session = findOrCreateSession(req);
 
-        // 2. save user message
-        ChatMessage userMessage = messageMapper.toEntity(req);
-        userMessage.setSession(session);
-        userMessage.setSender(MessageSender.USER);
-        userMessage.setType(MessageType.AI_GENERATED);
-        messageRepository.save(userMessage);
+        // 2️⃣ Lưu tin nhắn user
+        ChatMessage userMsg = messageMapper.toEntity(req);
+        userMsg.setSession(session);
+        userMsg.setSender(MessageSender.USER);
+        userMsg.setType(MessageType.AI_GENERATED);
+        messageRepository.save(userMsg);
 
-        // 3. quick FAQ exact match (optional)
+        // 3️⃣ Kiểm tra FAQ trùng khớp
         var optFaq = faqRepository.findByQuestionIgnoreCase(req.getContent());
         if (optFaq.isPresent() && optFaq.get().isActive()) {
-            String faqAnswer = optFaq.get().getAnswer();
-            ChatMessage botMsg = new ChatMessage();
-            botMsg.setSession(session);
-            botMsg.setSender(MessageSender.BOT);
-            botMsg.setType(MessageType.FAQ_STATIC);
-            botMsg.setContent(faqAnswer);
-            messageRepository.save(botMsg);
-            return messageMapper.toDto(botMsg);
+            return saveBotMessage(session, optFaq.get().getAnswer(), MessageType.FAQ_STATIC);
         }
 
-        // 4. call OpenAI via ChatClient with tools registered
-        // build prompt with system instructions + sample FAQs
-        String system = "Bạn là chatbot rạp CNM Cinemas. Nếu câu hỏi trùng FAQ, trả trực tiếp theo nội dung FAQ. Nếu cần dữ liệu thời gian thực, hãy gọi tool tương ứng.";
+        // 4️⃣ Build lịch sử hội thoại (context)
+        List<ChatMessage> messages = messageRepository.findBySessionOrderByCreatedAtAsc(session);
+
+        // 5️⃣ Tạo system prompt
+        String systemPrompt = """
+                Bạn là trợ lý ảo của rạp chiếu phim CNM Cinemas.
+                Mục tiêu của bạn là hỗ trợ khách hàng một cách thân thiện, tự nhiên và chuyên nghiệp.
+                
+                Ngữ cảnh:
+                - Bạn có quyền truy cập vào toàn bộ nội dung hội thoại trước đó, vì vậy hãy duy trì sự mạch lạc và nhất quán trong câu trả lời.
+                - Nếu người dùng hỏi lại hoặc nhắc đến thông tin cũ, hãy dựa vào lịch sử hội thoại để phản hồi phù hợp.
+                - Nếu câu hỏi yêu cầu dữ liệu thời gian thực (ví dụ: lịch chiếu, vé, thanh toán...), hãy sử dụng công cụ CinemaToolService để lấy dữ liệu thay vì tự suy luận.
+                
+                Phong cách phản hồi:
+                - Trả lời ngắn gọn, rõ ràng, dễ hiểu.
+                - Giữ giọng điệu lịch sự, gần gũi như một nhân viên chăm sóc khách hàng thật.
+                - Không nhắc lại toàn bộ câu hỏi của người dùng trừ khi cần thiết để làm rõ ngữ cảnh.
+                """;
+
+        // 6️⃣ Xây ngữ cảnh hội thoại
+        StringBuilder contextBuilder = new StringBuilder();
+        for (ChatMessage msg : messages) {
+            contextBuilder.append(msg.getSender() == MessageSender.USER ? "Người dùng: " : "Chatbot: ")
+                    .append(msg.getContent())
+                    .append("\n");
+        }
+
+        // 7️⃣ Gọi Spring AI (bản 1.0.3 chỉ có .user)
         var response = chatClient.prompt()
-                .system(system)
+                .system(systemPrompt + "\n\nDưới đây là hội thoại trước đó:\n" + contextBuilder)
                 .user(req.getContent())
-                .tools(cinemaToolService)
                 .call();
 
-        // 5. response.content() contains final textual reply (Spring AI calls tools automatically)
         String botReply = response.content();
 
-        // 6. save bot message
+        // 8️⃣ Lưu phản hồi
+        return saveBotMessage(session,
+                botReply != null ? botReply : "Xin lỗi, tôi hiện không trả lời được.",
+                MessageType.AI_GENERATED);
+
+    }
+
+    private ChatMessageResDTO saveBotMessage(ChatSession session, String content, MessageType type) {
         ChatMessage botMsg = new ChatMessage();
         botMsg.setSession(session);
         botMsg.setSender(MessageSender.BOT);
-        // If model invoked tools, you may choose type INTERNAL_API; but Spring AI doesn't expose that in response directly.
-        botMsg.setType(MessageType.AI_GENERATED);
-        botMsg.setContent(botReply != null ? botReply : "Xin lỗi, tôi hiện không trả lời được.");
+        botMsg.setType(type);
+        botMsg.setContent(content);
         messageRepository.save(botMsg);
-
         return messageMapper.toDto(botMsg);
     }
 
     private ChatSession findOrCreateSession(ChatMessageReqDTO req) {
         if (req.getSessionId() != null) {
-            Optional<ChatSession> sOpt = sessionRepository.findBySessionId(req.getSessionId());
-            if (sOpt.isPresent()) return sOpt.get();
+            return sessionRepository.findBySessionId(req.getSessionId())
+                    .orElseGet(() -> createSession(req.getSessionId()));
         }
+        return createSession(UUID.randomUUID().toString());
+    }
+
+    private ChatSession createSession(String sessionId) {
         ChatSession s = new ChatSession();
-        s.setSessionId(req.getSessionId() == null ? UUID.randomUUID().toString() : req.getSessionId());
-        s.setUserId(null);
+        s.setSessionId(sessionId);
         s.setActive(true);
         sessionRepository.save(s);
         return s;

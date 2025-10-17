@@ -13,4 +13,5 @@ public class ChatMessageResDTO {
     private MessageSender sender;
     private MessageType type;
     private String createdAt;
+    private String sessionId;
 }

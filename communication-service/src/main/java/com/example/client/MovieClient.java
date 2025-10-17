@@ -15,4 +15,6 @@ public interface MovieClient {
     @GetMapping("/api/v1/movies/showing")
     ApiResponse<List<MovieResDTO>> getNowShowing(@RequestParam(value = "limit", defaultValue = "100") int limit);
 
+    @GetMapping("/api/v1/movies/search")
+    ApiResponse<List<MovieResDTO>> getMovieByTitle(@RequestParam("title") String title);
 }

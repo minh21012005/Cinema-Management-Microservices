@@ -12,6 +12,7 @@ public interface ChatMessageMapper extends BaseMapper<ChatMessage, ChatMessageRe
     @Override
     @Mapping(source = "sender", target = "sender")
     @Mapping(source = "type", target = "type")
+    @Mapping(source = "session.sessionId", target = "sessionId")
     @Mapping(source = "createdAt", target = "createdAt", dateFormat = "dd/MM/yyyy HH:mm")
     ChatMessageResDTO toDto(ChatMessage entity);
 

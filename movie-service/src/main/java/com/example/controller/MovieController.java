@@ -76,7 +76,6 @@ public class MovieController extends BaseController<Movie, Long, MovieReqDTO, Mo
 
     @GetMapping("/search")
     @ApiMessage("Fetched movies by title")
-    @PreAuthorize("hasPermission(null, 'MOVIE_VIEW')")
     public ResponseEntity<List<MovieResDTO>> searchByTitle(@RequestParam("title") String title) {
         return ResponseEntity.ok(movieService.searchByTitle(title));
     }
