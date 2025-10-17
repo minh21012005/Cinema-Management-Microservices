@@ -79,6 +79,7 @@ public class ChatBotServiceImpl implements ChatBotService {
 
         // 7️⃣ Gọi Spring AI (bản 1.0.3 chỉ có .user)
         var response = chatClient.prompt()
+                .tools(cinemaToolService) // 👈 Cho phép model gọi các hàm @Tool
                 .system(systemPrompt + "\n\nDưới đây là hội thoại trước đó:\n" + contextBuilder)
                 .user(req.getContent())
                 .call();
