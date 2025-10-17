@@ -16,8 +16,6 @@ public class ChatSession extends BaseEntity<Long> {
 
     private Long userId; // Nếu có đăng nhập thì lưu, nếu guest thì null
 
-    private String topic; // ví dụ: "Hỏi về thanh toán", "Đặt vé phim"
-
     private boolean active = true; // đánh dấu session còn hoạt động
 
     @OneToMany(mappedBy = "session", cascade = CascadeType.ALL, fetch = FetchType.LAZY)

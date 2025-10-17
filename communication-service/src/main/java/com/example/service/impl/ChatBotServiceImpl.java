@@ -14,6 +14,9 @@ import com.example.service.ChatBotService;
 import com.example.service.internal.CinemaToolService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -104,10 +107,28 @@ public class ChatBotServiceImpl implements ChatBotService {
     }
 
     private ChatSession findOrCreateSession(ChatMessageReqDTO req) {
+        ChatSession session;
+
         if (req.getSessionId() != null) {
-            return sessionRepository.findBySessionId(req.getSessionId())
-                    .orElseGet(() -> createSession(req.getSessionId()));
+            session = sessionRepository.findBySessionId(req.getSessionId()).orElse(null);
+            if (session != null) {
+                // Nếu người dùng hiện tại đã đăng nhập mà session chưa có userId thì cập nhật
+                Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+                if (authentication != null && authentication.isAuthenticated()
+                        && !(authentication instanceof AnonymousAuthenticationToken)) {
+                    try {
+                        Long userId = Long.valueOf(authentication.getName());
+                        if (session.getUserId() == null) {
+                            session.setUserId(userId);
+                            sessionRepository.save(session);
+                        }
+                    } catch (NumberFormatException ignored) {}
+                }
+                return session;
+            }
         }
+
+        // Nếu không có sessionId hoặc session không tồn tại → tạo mới
         return createSession(UUID.randomUUID().toString());
     }
 
@@ -115,6 +136,16 @@ public class ChatBotServiceImpl implements ChatBotService {
         ChatSession s = new ChatSession();
         s.setSessionId(sessionId);
         s.setActive(true);
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated()
+                && !(authentication instanceof AnonymousAuthenticationToken)) {
+            try {
+                Long userId = Long.valueOf(authentication.getName());
+                s.setUserId(userId);
+            } catch (NumberFormatException ignored) {}
+        }
+
         sessionRepository.save(s);
         return s;
     }

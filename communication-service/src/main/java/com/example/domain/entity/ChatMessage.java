@@ -24,11 +24,4 @@ public class ChatMessage extends BaseEntity<Long> {
 
     @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
-
-    private String intent; // ví dụ: "booking_status", "refund_request", "showtime_today"
-
-    private boolean resolved = false; // true nếu chatbot đã xử lý xong
-
-    private String relatedEntity; // ví dụ: "MOVIE", "BOOKING", "ORDER"
-    private Long relatedId;       // id của entity nếu có (vd: movieId = 12)
 }

@@ -88,5 +88,6 @@ security:
     - /movie-service/api/v1/movies/fetch/**
     - /cinema-service/api/v1/showtime/movie/**
     - /cinema-service/api/v1/cinemas/active
+`    - /communication-service/api/v1/chat-bot
 
 
