@@ -9,5 +9,7 @@ import java.util.Optional;
 @Repository
 public interface ChatSessionRepository extends BaseRepository<ChatSession, Long> {
     Optional<ChatSession> findBySessionId(String sessionId);
+    Optional<ChatSession> findBySessionIdAndActiveTrue(String sessionId);
+    Optional<ChatSession> findByUserIdAndActiveTrue(Long userId);
     List<ChatSession> findByUserId(Long userId);
 }

@@ -3,12 +3,18 @@ package com.example.domain.entity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+
 import java.util.List;
 
 @Entity
 @Getter
 @Setter
-@Table(name = "chat_sessions")
+@Table(
+        name = "chat_sessions",
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = {"user_id", "active"})
+        }
+)
 public class ChatSession extends BaseEntity<Long> {
 
     @Column(nullable = false, unique = true)

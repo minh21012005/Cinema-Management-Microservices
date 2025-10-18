@@ -12,7 +12,9 @@ import com.example.repository.ChatSessionRepository;
 import com.example.repository.FaqRepository;
 import com.example.service.ChatBotService;
 import com.example.service.internal.CinemaToolService;
+import com.example.util.error.IdInvalidException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -23,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ChatBotServiceImpl implements ChatBotService {
@@ -96,6 +99,24 @@ public class ChatBotServiceImpl implements ChatBotService {
 
     }
 
+    @Override
+    public List<ChatMessageResDTO> getChatHistory(String sessionId) throws IdInvalidException {
+        ChatSession chatSession = sessionRepository.findBySessionIdAndActiveTrue(sessionId).orElseThrow(
+                () -> new IdInvalidException("Session không hợp lệ")
+        );
+
+        return chatSession.getMessages().stream().map(messageMapper::toDto).toList();
+    }
+
+    @Override
+    public List<ChatMessageResDTO> getChatHistoryForUser(Long userId) throws IdInvalidException {
+        ChatSession chatSession = sessionRepository.findByUserIdAndActiveTrue(userId).orElseThrow(
+                () -> new IdInvalidException("Session không hợp lệ")
+        );
+
+        return chatSession.getMessages().stream().map(messageMapper::toDto).toList();
+    }
+
     private ChatMessageResDTO saveBotMessage(ChatSession session, String content, MessageType type) {
         ChatMessage botMsg = new ChatMessage();
         botMsg.setSession(session);
@@ -107,28 +128,38 @@ public class ChatBotServiceImpl implements ChatBotService {
     }
 
     private ChatSession findOrCreateSession(ChatMessageReqDTO req) {
-        ChatSession session;
+        ChatSession session = null;
 
-        if (req.getSessionId() != null) {
-            session = sessionRepository.findBySessionId(req.getSessionId()).orElse(null);
-            if (session != null) {
-                // Nếu người dùng hiện tại đã đăng nhập mà session chưa có userId thì cập nhật
-                Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-                if (authentication != null && authentication.isAuthenticated()
-                        && !(authentication instanceof AnonymousAuthenticationToken)) {
-                    try {
-                        Long userId = Long.valueOf(authentication.getName());
-                        if (session.getUserId() == null) {
-                            session.setUserId(userId);
-                            sessionRepository.save(session);
-                        }
-                    } catch (NumberFormatException ignored) {}
-                }
-                return session;
-            }
+        // Lấy thông tin user từ Spring Security
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Long userId = null;
+        if (authentication != null && authentication.isAuthenticated()
+                && !(authentication instanceof AnonymousAuthenticationToken)) {
+            try {
+                userId = Long.valueOf(authentication.getName());
+            } catch (NumberFormatException ignored) {}
         }
 
-        // Nếu không có sessionId hoặc session không tồn tại → tạo mới
+        // Nếu user đã login → lấy session active theo userId
+        if (userId != null) {
+            session = sessionRepository.findByUserIdAndActiveTrue(userId).orElse(null);
+            if (session != null) return session;
+        }
+
+        // Nếu chưa login (guest) → lấy session theo sessionId từ request
+        if (req.getSessionId() != null) {
+            session = sessionRepository.findBySessionId(req.getSessionId()).orElse(null);
+
+            // Nếu guest login sau đó → gán userId
+            if (session != null && userId != null && session.getUserId() == null) {
+                session.setUserId(userId);
+                sessionRepository.save(session);
+            }
+
+            if (session != null) return session;
+        }
+
+        // Nếu không có session → tạo mới
         return createSession(UUID.randomUUID().toString());
     }
 
@@ -143,7 +174,8 @@ public class ChatBotServiceImpl implements ChatBotService {
             try {
                 Long userId = Long.valueOf(authentication.getName());
                 s.setUserId(userId);
-            } catch (NumberFormatException ignored) {}
+            } catch (NumberFormatException ignored) {
+            }
         }
 
         sessionRepository.save(s);
