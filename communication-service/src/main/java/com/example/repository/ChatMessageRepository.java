@@ -9,5 +9,4 @@ import java.util.List;
 @Repository
 public interface ChatMessageRepository extends BaseRepository<ChatMessage, Long> {
     List<ChatMessage> findBySessionOrderByCreatedAtAsc(ChatSession session);
-    List<ChatMessage> findBySessionId(Long sessionId);
 }

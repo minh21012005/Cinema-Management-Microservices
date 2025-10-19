@@ -5,6 +5,8 @@ import com.example.domain.request.ChatSessionReqDTO;
 import com.example.domain.response.ChatSessionResDTO;
 import com.example.mapper.ChatSessionMapper;
 import com.example.service.ChatSessionService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -17,5 +19,10 @@ public class ChatSessionController extends BaseController<ChatSession, Long, Cha
     protected ChatSessionController(ChatSessionService chatSessionService, ChatSessionMapper chatSessionMapper) {
         super(chatSessionService, chatSessionMapper);
         this.chatSessionService = chatSessionService;
+    }
+
+    @PostMapping("/reset")
+    public ResponseEntity<ChatSessionResDTO> resetSession() {
+        return ResponseEntity.ok(chatSessionService.resetSessionForCurrentUser());
     }
 }

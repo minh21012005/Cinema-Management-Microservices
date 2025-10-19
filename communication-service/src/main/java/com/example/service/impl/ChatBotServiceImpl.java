@@ -2,36 +2,34 @@ package com.example.service.impl;
 
 import com.example.domain.entity.ChatMessage;
 import com.example.domain.entity.ChatSession;
+import com.example.domain.entity.FAQ;
 import com.example.domain.enums.MessageSender;
 import com.example.domain.enums.MessageType;
 import com.example.domain.request.ChatMessageReqDTO;
 import com.example.domain.response.ChatMessageResDTO;
 import com.example.mapper.ChatMessageMapper;
 import com.example.repository.ChatMessageRepository;
-import com.example.repository.ChatSessionRepository;
 import com.example.repository.FaqRepository;
 import com.example.service.ChatBotService;
+import com.example.service.ChatMessageService;
+import com.example.service.ChatSessionService;
 import com.example.service.internal.CinemaToolService;
-import com.example.util.error.IdInvalidException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.security.authentication.AnonymousAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.UUID;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class ChatBotServiceImpl implements ChatBotService {
 
-    private final ChatSessionRepository sessionRepository;
     private final ChatMessageRepository messageRepository;
+    private final ChatSessionService chatSessionService;
+    private final ChatMessageService chatMessageService;
     private final ChatMessageMapper messageMapper;
     private final FaqRepository faqRepository;
     private final ChatClient chatClient;
@@ -41,7 +39,7 @@ public class ChatBotServiceImpl implements ChatBotService {
     @Transactional
     public ChatMessageResDTO handleUserMessage(ChatMessageReqDTO req) {
         // 1️⃣ Tìm hoặc tạo session
-        ChatSession session = findOrCreateSession(req);
+        ChatSession session = chatSessionService.findOrCreateSession(req);
 
         // 2️⃣ Lưu tin nhắn user
         ChatMessage userMsg = messageMapper.toEntity(req);
@@ -51,9 +49,28 @@ public class ChatBotServiceImpl implements ChatBotService {
         messageRepository.save(userMsg);
 
         // 3️⃣ Kiểm tra FAQ trùng khớp
-        var optFaq = faqRepository.findByQuestionIgnoreCase(req.getContent());
-        if (optFaq.isPresent() && optFaq.get().isActive()) {
-            return saveBotMessage(session, optFaq.get().getAnswer(), MessageType.FAQ_STATIC);
+        List<FAQ> relatedFaqs = faqRepository.searchByKeyword(req.getContent());
+
+        if (!relatedFaqs.isEmpty()) {
+            // 3.1️⃣ Tạo danh sách FAQ cho AI chọn câu trả lời hợp lý nhất
+            String faqList = relatedFaqs.stream()
+                    .map(f -> "- " + f.getQuestion() + ": " + f.getAnswer())
+                    .reduce("", (a, b) -> a + "\n" + b);
+
+            var faqResponse = chatClient.prompt()
+                    .system("""
+                            Bạn là trợ lý ảo của rạp chiếu phim CNM Cinemas.
+                            Dưới đây là danh sách các câu hỏi thường gặp (FAQ).
+                            Hãy đọc danh sách này và chọn ra câu trả lời phù hợp nhất với câu hỏi người dùng.
+                            Nếu không có câu nào thật sự phù hợp, hãy trả lời ngắn gọn rằng bạn không chắc và sẽ kiểm tra thêm.
+                            """)
+                    .user("Câu hỏi người dùng: " + req.getContent() + "\n\nDanh sách FAQ:\n" + faqList)
+                    .call();
+
+            String faqAnswer = faqResponse.content();
+            if (faqAnswer != null && !faqAnswer.isBlank()) {
+                return chatMessageService.saveBotMessage(session, faqAnswer, MessageType.FAQ_STATIC);
+            }
         }
 
         // 4️⃣ Build lịch sử hội thoại (context)
@@ -83,6 +100,8 @@ public class ChatBotServiceImpl implements ChatBotService {
                     .append("\n");
         }
 
+        cinemaToolService.resetFlag();
+
         // 7️⃣ Gọi Spring AI (bản 1.0.3 chỉ có .user)
         var response = chatClient.prompt()
                 .tools(cinemaToolService) // 👈 Cho phép model gọi các hàm @Tool
@@ -92,93 +111,14 @@ public class ChatBotServiceImpl implements ChatBotService {
 
         String botReply = response.content();
 
+        MessageType type = cinemaToolService.isToolUsed()
+                ? MessageType.INTERNAL_API
+                : MessageType.AI_GENERATED;
+
         // 8️⃣ Lưu phản hồi
-        return saveBotMessage(session,
+        return chatMessageService.saveBotMessage(session,
                 botReply != null ? botReply : "Xin lỗi, tôi hiện không trả lời được.",
-                MessageType.AI_GENERATED);
+                type);
 
-    }
-
-    @Override
-    public List<ChatMessageResDTO> getChatHistory(String sessionId) throws IdInvalidException {
-        ChatSession chatSession = sessionRepository.findBySessionIdAndActiveTrue(sessionId).orElseThrow(
-                () -> new IdInvalidException("Session không hợp lệ")
-        );
-
-        return chatSession.getMessages().stream().map(messageMapper::toDto).toList();
-    }
-
-    @Override
-    public List<ChatMessageResDTO> getChatHistoryForUser(Long userId) throws IdInvalidException {
-        ChatSession chatSession = sessionRepository.findByUserIdAndActiveTrue(userId).orElseThrow(
-                () -> new IdInvalidException("Session không hợp lệ")
-        );
-
-        return chatSession.getMessages().stream().map(messageMapper::toDto).toList();
-    }
-
-    private ChatMessageResDTO saveBotMessage(ChatSession session, String content, MessageType type) {
-        ChatMessage botMsg = new ChatMessage();
-        botMsg.setSession(session);
-        botMsg.setSender(MessageSender.BOT);
-        botMsg.setType(type);
-        botMsg.setContent(content);
-        messageRepository.save(botMsg);
-        return messageMapper.toDto(botMsg);
-    }
-
-    private ChatSession findOrCreateSession(ChatMessageReqDTO req) {
-        ChatSession session = null;
-
-        // Lấy thông tin user từ Spring Security
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Long userId = null;
-        if (authentication != null && authentication.isAuthenticated()
-                && !(authentication instanceof AnonymousAuthenticationToken)) {
-            try {
-                userId = Long.valueOf(authentication.getName());
-            } catch (NumberFormatException ignored) {}
-        }
-
-        // Nếu user đã login → lấy session active theo userId
-        if (userId != null) {
-            session = sessionRepository.findByUserIdAndActiveTrue(userId).orElse(null);
-            if (session != null) return session;
-        }
-
-        // Nếu chưa login (guest) → lấy session theo sessionId từ request
-        if (req.getSessionId() != null) {
-            session = sessionRepository.findBySessionId(req.getSessionId()).orElse(null);
-
-            // Nếu guest login sau đó → gán userId
-            if (session != null && userId != null && session.getUserId() == null) {
-                session.setUserId(userId);
-                sessionRepository.save(session);
-            }
-
-            if (session != null) return session;
-        }
-
-        // Nếu không có session → tạo mới
-        return createSession(UUID.randomUUID().toString());
-    }
-
-    private ChatSession createSession(String sessionId) {
-        ChatSession s = new ChatSession();
-        s.setSessionId(sessionId);
-        s.setActive(true);
-
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.isAuthenticated()
-                && !(authentication instanceof AnonymousAuthenticationToken)) {
-            try {
-                Long userId = Long.valueOf(authentication.getName());
-                s.setUserId(userId);
-            } catch (NumberFormatException ignored) {
-            }
-        }
-
-        sessionRepository.save(s);
-        return s;
     }
 }

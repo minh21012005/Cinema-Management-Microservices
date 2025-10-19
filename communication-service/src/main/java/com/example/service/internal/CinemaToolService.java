@@ -2,6 +2,7 @@ package com.example.service.internal;
 
 import com.example.client.MovieClient;
 import com.example.domain.response.MovieResDTO;
+import lombok.Getter;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
@@ -14,8 +15,16 @@ public class CinemaToolService {
 
     private final MovieClient movieClient; // optional: Feign client to movie-service
 
+    @Getter
+    private boolean toolUsed = false;
+
+    public void resetFlag() {
+        this.toolUsed = false;
+    }
+
     @Tool(description = "Lấy danh sách phim đang chiếu (no args).")
     public String getNowPlayingMovies() {
+        this.toolUsed = true;
         // Example calling internal movie-service; fallback to hardcoded if client missing
         try {
             List<MovieResDTO> movies = movieClient.getNowShowing(100).getData();
@@ -32,6 +41,7 @@ public class CinemaToolService {
 
     @Tool(description = "Lấy thông tin phim theo tên, bao gồm đánh giá trung bình và số lượt đánh giá.")
     public String getMovieByTitle(String title) {
+        this.toolUsed = true;
         List<MovieResDTO> movies = movieClient.getMovieByTitle(title).getData();
         if (movies == null || movies.isEmpty()) {
             return "Hiện tại không có phim với tên: " + title;
@@ -52,12 +62,14 @@ public class CinemaToolService {
 
     @Tool(description = "Hiển thị menu combo đồ ăn tại rạp.")
     public String getFoodMenu() {
+        this.toolUsed = true;
         // call internal service if any
         return "Combo A: Bắp nhỏ + Nước nhỏ; Combo B: Bắp lớn + Nước lớn; Giá tham khảo: 70k - 150k.";
     }
 
     @Tool(description = "Hướng dẫn cách đặt vé.")
     public String getBookingGuide() {
+        this.toolUsed = true;
         return "Để đặt vé: chọn phim -> chọn suất -> chọn ghế -> thanh toán. Hệ thống gửi mã vé vào email/SMS.";
     }
 }

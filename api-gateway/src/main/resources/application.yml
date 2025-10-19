@@ -89,6 +89,6 @@ security:
     - /cinema-service/api/v1/showtime/movie/**
     - /cinema-service/api/v1/cinemas/active
     - /communication-service/api/v1/chat-bot
-    - /communication-service/api/v1/chat-bot/history/*
+    - /communication-service/api/v1/chat-messages/history/*
 
 
