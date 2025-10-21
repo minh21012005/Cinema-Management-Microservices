@@ -40,6 +40,12 @@ springdoc:
         url: /movie-service/v3/api-docs
       - name: media-service
         url: /media-service/v3/api-docs
+      - name: content-service
+        url: /content-service/v3/api-docs
+      - name: booking-service
+        url: /booking-service/v3/api-docs
+      - name: communication-service
+        url: /communication-service/v3/api-docs
 
 minhnb:
   jwt:
@@ -80,6 +86,18 @@ security:
     - /cinema-service/v3/api-docs/**
     - /cinema-service/swagger-resources/**
     - /cinema-service/webjars/**
+    - /booking-service/swagger-ui/**
+    - /booking-service/v3/api-docs/**
+    - /booking-service/swagger-resources/**
+    - /booking-service/webjars/**
+    - /content-service/swagger-ui/**
+    - /content-service/v3/api-docs/**
+    - /content-service/swagger-resources/**
+    - /content-service/webjars/**
+    - /communication-service/swagger-ui/**
+    - /communication-service/v3/api-docs/**
+    - /communication-service/swagger-resources/**
+    - /communication-service/webjars/**
     - /booking-service/api/v1/sepay/**
     - /movie-service/api/v1/movies/coming-soon
     - /movie-service/api/v1/movies/showing

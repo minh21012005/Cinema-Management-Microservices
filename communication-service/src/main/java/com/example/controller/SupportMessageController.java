@@ -7,6 +7,7 @@ import com.example.domain.response.SupportMessageResDTO;
 import com.example.mapper.SupportMessageMapper;
 import com.example.service.SupportMessageService;
 import com.example.util.error.IdInvalidException;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -26,15 +27,14 @@ public class SupportMessageController extends
     }
 
     @PostMapping("/user")
-    public SupportMessageResDTO sendUserMessage(@RequestBody SupportMessageReqDTO dto) throws IdInvalidException {
-        return supportMessageService.sendUserMessage(dto);
+    public ResponseEntity<SupportMessageResDTO> sendUserMessage(@RequestBody SupportMessageReqDTO dto) throws IdInvalidException {
+        return ResponseEntity.ok(supportMessageService.sendUserMessage(dto));
     }
 
-    @PostMapping("/agent/{agentId}")
-    public SupportMessageResDTO sendAgentMessage(
-            @PathVariable("agentId") Long agentId,
+    @PostMapping("/agent")
+    public ResponseEntity<SupportMessageResDTO> sendAgentMessage(
             @RequestBody SupportMessageReqDTO dto) throws IdInvalidException {
-        return supportMessageService.sendAgentMessage(agentId, dto);
+        return ResponseEntity.ok(supportMessageService.sendAgentMessage(dto));
     }
 
     @PostMapping("/read")
@@ -42,9 +42,15 @@ public class SupportMessageController extends
         supportMessageService.markAsRead(dto);
     }
 
+    @GetMapping("/session")
+    public ResponseEntity<List<SupportMessageResDTO>> getMessageHistory(){
+        return ResponseEntity.ok(supportMessageService.getMessageHistory());
+    }
+
     @GetMapping("/session/{sessionId}")
-    public List<SupportMessageResDTO> getMessagesBySession(@PathVariable String sessionId) {
-        return supportMessageService.getMessagesBySession(sessionId);
+    public ResponseEntity<List<SupportMessageResDTO>> getMessagesBySession
+            (@PathVariable("sessionId") String sessionId) throws IdInvalidException {
+        return ResponseEntity.ok(supportMessageService.getMessagesBySession(sessionId));
     }
 }
 

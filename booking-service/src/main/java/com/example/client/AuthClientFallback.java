@@ -1,6 +1,5 @@
 package com.example.client;
 
-import com.example.domain.response.ApiResponse;
 import org.springframework.stereotype.Component;
 
 @Component

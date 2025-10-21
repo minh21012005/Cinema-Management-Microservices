@@ -32,7 +32,11 @@ public class SecurityConfig implements WebMvcConfigurer {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
-        String[] whiteList = {"/ws/**", "/api/v1/sepay/**"};
+        String[] whiteList = {
+                "/swagger-ui/**", "/swagger-ui.html",
+                "/v3/api-docs", "/v3/api-docs/**",
+                "/ws/**", "/api/v1/sepay/**"
+        };
 
         http
                 .csrf(AbstractHttpConfigurer::disable)

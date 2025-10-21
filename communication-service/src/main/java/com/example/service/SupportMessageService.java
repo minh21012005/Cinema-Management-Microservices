@@ -13,9 +13,11 @@ public interface SupportMessageService extends
 
     SupportMessageResDTO sendUserMessage(SupportMessageReqDTO dto) throws IdInvalidException;
 
-    SupportMessageResDTO sendAgentMessage(Long agentId, SupportMessageReqDTO dto) throws IdInvalidException;
+    SupportMessageResDTO sendAgentMessage(SupportMessageReqDTO dto) throws IdInvalidException;
 
     void markAsRead(SupportMessageReadReqDTO dto) throws IdInvalidException;
 
-    List<SupportMessageResDTO> getMessagesBySession(String sessionId);
+    List<SupportMessageResDTO> getMessagesBySession(String sessionId) throws IdInvalidException;
+
+    List<SupportMessageResDTO> getMessageHistory();
 }
