@@ -1,24 +1,30 @@
 package com.example.service.impl;
 
+import com.example.client.UserClient;
 import com.example.domain.entity.SupportChatSession;
 import com.example.domain.entity.SupportMessage;
 import com.example.domain.enums.SupportChatStatus;
 import com.example.domain.enums.SupportMessageSender;
 import com.example.domain.request.SupportMessageReadReqDTO;
 import com.example.domain.request.SupportMessageReqDTO;
+import com.example.domain.response.SupportChatSessionResDTO;
 import com.example.domain.response.SupportMessageResDTO;
+import com.example.mapper.SupportChatSessionMapper;
 import com.example.mapper.SupportMessageMapper;
 import com.example.repository.SupportChatSessionRepository;
 import com.example.repository.SupportMessageRepository;
 import com.example.service.SupportChatSessionService;
 import com.example.service.SupportMessageService;
 import com.example.util.error.IdInvalidException;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -30,16 +36,25 @@ public class SupportMessageServiceImpl
     private final SupportChatSessionService supportChatSessionService;
     private final SupportChatSessionRepository supportChatSessionRepository;
     private final SupportMessageMapper supportMessageMapper;
+    private final SimpMessagingTemplate messagingTemplate;
+    private final SupportChatSessionMapper supportChatSessionMapper;
+    private final UserClient userClient;
 
     protected SupportMessageServiceImpl(SupportMessageRepository supportMessageRepository,
                                         SupportChatSessionService supportChatSessionService,
                                         SupportChatSessionRepository supportChatSessionRepository,
-                                        SupportMessageMapper supportMessageMapper) {
+                                        SupportMessageMapper supportMessageMapper,
+                                        SimpMessagingTemplate messagingTemplate,
+                                        SupportChatSessionMapper supportChatSessionMapper,
+                                        UserClient userClient) {
         super(supportMessageRepository);
         this.supportMessageRepository = supportMessageRepository;
         this.supportChatSessionService = supportChatSessionService;
         this.supportChatSessionRepository = supportChatSessionRepository;
         this.supportMessageMapper = supportMessageMapper;
+        this.messagingTemplate = messagingTemplate;
+        this.supportChatSessionMapper = supportChatSessionMapper;
+        this.userClient = userClient;
     }
 
     @Override
@@ -50,9 +65,30 @@ public class SupportMessageServiceImpl
         message.setSession(session);
         message.setSender(SupportMessageSender.USER);
         message.setContent(dto.getContent());
-        supportMessageRepository.save(message);
 
-        return supportMessageMapper.toDto(message);
+        if (session.getMessages() == null)
+            session.setMessages(new ArrayList<>());
+
+        session.getMessages().add(message);
+        supportChatSessionRepository.save(session);
+
+        SupportMessageResDTO saved = supportMessageMapper.toDto(message);
+
+        Map<Long, String> userMap = userClient.getNamesByIds(List.of(session.getUserId())).getData();
+
+        SupportChatSessionResDTO chatSessionResDTO = supportChatSessionMapper.toDto(session);
+        chatSessionResDTO.setCustomerName(userMap.get(session.getUserId()));
+        chatSessionResDTO.setLastMessage(message.getContent());
+
+        boolean isNewSession = session.getMessages().size() == 1;
+        if (isNewSession) {
+            messagingTemplate.convertAndSend("/topic/support-sessions", chatSessionResDTO);
+        }
+
+        messagingTemplate.convertAndSend(
+                "/topic/user/support-messages/" + session.getSessionId(), saved);
+
+        return saved;
     }
 
     @Override
@@ -70,9 +106,13 @@ public class SupportMessageServiceImpl
         message.setSession(session);
         message.setSender(SupportMessageSender.AGENT);
         message.setContent(dto.getContent());
-        supportMessageRepository.save(message);
 
-        return supportMessageMapper.toDto(message);
+        SupportMessageResDTO saved = supportMessageMapper.toDto(supportMessageRepository.save(message));
+
+        messagingTemplate.convertAndSend(
+                "/topic/agent/support-messages/" + session.getSessionId(), saved);
+
+        return saved;
     }
 
     @Override

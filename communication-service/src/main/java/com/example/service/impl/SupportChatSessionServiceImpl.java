@@ -9,6 +9,7 @@ import com.example.mapper.SupportChatSessionMapper;
 import com.example.repository.SupportChatSessionRepository;
 import com.example.service.SupportChatSessionService;
 import com.example.util.error.IdInvalidException;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -24,14 +25,17 @@ public class SupportChatSessionServiceImpl
         implements SupportChatSessionService {
 
     private final SupportChatSessionRepository supportChatSessionRepository;
+    private final SimpMessagingTemplate messagingTemplate;
     private final SupportChatSessionMapper supportChatSessionMapper;
     private final UserClient userClient;
 
     protected SupportChatSessionServiceImpl(SupportChatSessionRepository supportChatSessionRepository,
+                                            SimpMessagingTemplate messagingTemplate,
                                             SupportChatSessionMapper supportChatSessionMapper,
                                             UserClient userClient) {
         super(supportChatSessionRepository);
         this.supportChatSessionRepository = supportChatSessionRepository;
+        this.messagingTemplate = messagingTemplate;
         this.supportChatSessionMapper = supportChatSessionMapper;
         this.userClient = userClient;
     }
@@ -75,16 +79,21 @@ public class SupportChatSessionServiceImpl
         // Nếu user đã có session OPEN/ASSIGNED thì trả về session cũ
         Optional<SupportChatSession> existing = supportChatSessionRepository
                 .findByUserIdAndStatusNot(userId, SupportChatStatus.CLOSED);
-        if (existing.isPresent())
-            return existing.get();
+        SupportChatSession session;
 
-        String sessionId = UUID.randomUUID().toString();
+        if (existing.isPresent()) {
+            session = existing.get();
+        } else {
+            String sessionId = UUID.randomUUID().toString();
 
-        SupportChatSession session = new SupportChatSession();
-        session.setSessionId(sessionId);
-        session.setUserId(userId);
-        session.setStatus(SupportChatStatus.OPEN);
-        return supportChatSessionRepository.save(session);
+            session = new SupportChatSession();
+            session.setSessionId(sessionId);
+            session.setUserId(userId);
+            session.setStatus(SupportChatStatus.OPEN);
+            session = supportChatSessionRepository.save(session);
+        }
+
+        return session;
     }
 
     @Override
