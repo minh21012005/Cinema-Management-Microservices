@@ -54,12 +54,20 @@ public class SupportChatSessionServiceImpl
 
         SupportChatSession session = supportChatSessionRepository.findBySessionId(sessionId)
                 .orElseThrow(() -> new IdInvalidException("Phiên chat không tồn tại"));
+
         if (session.getStatus() != SupportChatStatus.OPEN)
             throw new IdInvalidException("Phiên chat đã được xử lý hoặc đóng.");
 
         session.setAgentId(agentId);
         session.setStatus(SupportChatStatus.ASSIGNED);
-        return supportChatSessionMapper.toDto(supportChatSessionRepository.save(session));
+
+        SupportChatSession saved = supportChatSessionRepository.save(session);
+        SupportChatSessionResDTO dto = supportChatSessionMapper.toDto(saved);
+
+        // 🟢 Gửi realtime thông báo tới tất cả agent
+        messagingTemplate.convertAndSend("/topic/support-session-updates", dto);
+
+        return dto;
     }
 
     @Override
