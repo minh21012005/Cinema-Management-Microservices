@@ -2,11 +2,14 @@ package com.example.service.impl;
 
 import com.example.client.UserClient;
 import com.example.domain.entity.SupportChatSession;
+import com.example.domain.entity.SupportMessage;
 import com.example.domain.enums.SupportChatStatus;
+import com.example.domain.enums.SupportMessageSender;
 import com.example.domain.request.SupportChatSessionReqDTO;
 import com.example.domain.response.SupportChatSessionResDTO;
 import com.example.mapper.SupportChatSessionMapper;
 import com.example.repository.SupportChatSessionRepository;
+import com.example.repository.SupportMessageRepository;
 import com.example.service.SupportChatSessionService;
 import com.example.util.error.IdInvalidException;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -25,16 +28,19 @@ public class SupportChatSessionServiceImpl
         implements SupportChatSessionService {
 
     private final SupportChatSessionRepository supportChatSessionRepository;
+    private final SupportMessageRepository supportMessageRepository;
     private final SimpMessagingTemplate messagingTemplate;
     private final SupportChatSessionMapper supportChatSessionMapper;
     private final UserClient userClient;
 
     protected SupportChatSessionServiceImpl(SupportChatSessionRepository supportChatSessionRepository,
+                                            SupportMessageRepository supportMessageRepository,
                                             SimpMessagingTemplate messagingTemplate,
                                             SupportChatSessionMapper supportChatSessionMapper,
                                             UserClient userClient) {
         super(supportChatSessionRepository);
         this.supportChatSessionRepository = supportChatSessionRepository;
+        this.supportMessageRepository = supportMessageRepository;
         this.messagingTemplate = messagingTemplate;
         this.supportChatSessionMapper = supportChatSessionMapper;
         this.userClient = userClient;
@@ -131,6 +137,12 @@ public class SupportChatSessionServiceImpl
             SupportChatSessionResDTO dto = supportChatSessionMapper.toDto(s);
             dto.setCustomerName(userMap.get(s.getUserId())); // gán username
             dto.setLastMessage(s.getMessages().getLast().getContent());
+
+            List<SupportMessage> messageList = supportMessageRepository
+                    .findBySession_SessionIdAndSenderAndReadAtIsNull(s.getSessionId(), SupportMessageSender.USER);
+
+            dto.setUnreadCountForAgent(messageList.size());
+
             return dto;
         }).toList();
     }

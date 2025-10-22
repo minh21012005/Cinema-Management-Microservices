@@ -16,4 +16,5 @@ public class SupportChatSessionResDTO {
     private String lastMessage;
     private String createdAt;
     private String updatedAt;
+    private int unreadCountForAgent;
 }

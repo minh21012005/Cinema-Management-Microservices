@@ -59,17 +59,28 @@ public class ChatBotServiceImpl implements ChatBotService {
 
             var faqResponse = chatClient.prompt()
                     .system("""
-                            Bạn là trợ lý ảo của rạp chiếu phim CNM Cinemas.
-                            Dưới đây là danh sách các câu hỏi thường gặp (FAQ).
-                            Hãy đọc danh sách này và chọn ra câu trả lời phù hợp nhất với câu hỏi người dùng.
-                            Nếu không có câu nào thật sự phù hợp, hãy trả lời ngắn gọn rằng bạn không chắc và sẽ kiểm tra thêm.
-                            """)
+                    Bạn là trợ lý ảo của rạp chiếu phim CNM Cinemas.
+                    Dưới đây là danh sách các câu hỏi thường gặp (FAQ).
+                    Hãy đọc danh sách này và chọn ra câu trả lời phù hợp nhất với câu hỏi người dùng.
+                    Nếu không có câu nào thật sự phù hợp, hãy trả lời ngắn gọn rằng bạn không chắc và sẽ kiểm tra thêm.
+                    """)
                     .user("Câu hỏi người dùng: " + req.getContent() + "\n\nDanh sách FAQ:\n" + faqList)
                     .call();
 
             String faqAnswer = faqResponse.content();
             if (faqAnswer != null && !faqAnswer.isBlank()) {
-                return chatMessageService.saveBotMessage(session, faqAnswer, MessageType.FAQ_STATIC);
+                String normalized = faqAnswer.toLowerCase();
+
+                // Nếu AI nói mơ hồ → bỏ qua FAQ, chuyển xuống gọi tool
+                if (normalized.contains("không chắc")
+                        || normalized.contains("không rõ")
+                        || normalized.contains("kiểm tra thêm")
+                        || normalized.contains("không tìm thấy")
+                        || normalized.contains("xin lỗi")) {
+                    log.info("FAQ không chắc chắn, chuyển xuống xử lý bằng tool...");
+                } else {
+                    return chatMessageService.saveBotMessage(session, faqAnswer.trim(), MessageType.FAQ_STATIC);
+                }
             }
         }
 

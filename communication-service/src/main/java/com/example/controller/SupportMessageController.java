@@ -42,8 +42,8 @@ public class SupportMessageController extends
     }
 
     @PostMapping("/agent/read")
-    public void markAgentAsRead() throws IdInvalidException {
-        supportMessageService.markAgentAsRead();
+    public void markAgentAsRead(@RequestParam("sessionId") String sessionId) throws IdInvalidException {
+        supportMessageService.markAgentAsRead(sessionId);
     }
 
     @GetMapping("/session")

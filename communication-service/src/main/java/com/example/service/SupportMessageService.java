@@ -16,7 +16,7 @@ public interface SupportMessageService extends
 
     void markUserAsRead() throws IdInvalidException;
 
-    void markAgentAsRead() throws IdInvalidException;
+    void markAgentAsRead(String sessionId) throws IdInvalidException;
 
     List<SupportMessageResDTO> getMessagesBySession(String sessionId) throws IdInvalidException;
 

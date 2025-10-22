@@ -5,7 +5,6 @@ import com.example.domain.entity.SupportChatSession;
 import com.example.domain.entity.SupportMessage;
 import com.example.domain.enums.SupportChatStatus;
 import com.example.domain.enums.SupportMessageSender;
-import com.example.domain.request.SupportMessageReadReqDTO;
 import com.example.domain.request.SupportMessageReqDTO;
 import com.example.domain.response.SupportChatSessionResDTO;
 import com.example.domain.response.SupportMessageResDTO;
@@ -132,8 +131,25 @@ public class SupportMessageServiceImpl
     }
 
     @Override
-    public void markAgentAsRead() throws IdInvalidException {
+    public void markAgentAsRead(String sessionId) throws IdInvalidException {
+        SupportChatSession session = supportChatSessionRepository
+                .findBySessionId(sessionId).orElseThrow(
+                        () -> new IdInvalidException("Session không tồn tại!"));
 
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Long agentId = Long.valueOf(authentication.getName());
+
+        if(!agentId.equals(session.getAgentId())){
+            throw new IdInvalidException("Agent không có truy cập phiên này.");
+        }
+
+        List<SupportMessage> unreadMessages = supportMessageRepository
+                .findBySession_SessionIdAndSenderAndReadAtIsNull(sessionId, SupportMessageSender.USER);
+
+        if (!unreadMessages.isEmpty()) {
+            unreadMessages.forEach(msg -> msg.setReadAt(LocalDateTime.now()));
+            supportMessageRepository.saveAll(unreadMessages);
+        }
     }
 
     @Override
