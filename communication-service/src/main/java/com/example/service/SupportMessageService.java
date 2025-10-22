@@ -1,7 +1,6 @@
 package com.example.service;
 
 import com.example.domain.entity.SupportMessage;
-import com.example.domain.request.SupportMessageReadReqDTO;
 import com.example.domain.request.SupportMessageReqDTO;
 import com.example.domain.response.SupportMessageResDTO;
 import com.example.util.error.IdInvalidException;
@@ -15,7 +14,9 @@ public interface SupportMessageService extends
 
     SupportMessageResDTO sendAgentMessage(SupportMessageReqDTO dto) throws IdInvalidException;
 
-    void markAsRead(SupportMessageReadReqDTO dto) throws IdInvalidException;
+    void markUserAsRead() throws IdInvalidException;
+
+    void markAgentAsRead() throws IdInvalidException;
 
     List<SupportMessageResDTO> getMessagesBySession(String sessionId) throws IdInvalidException;
 

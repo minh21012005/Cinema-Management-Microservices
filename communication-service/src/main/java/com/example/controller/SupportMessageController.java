@@ -1,7 +1,6 @@
 package com.example.controller;
 
 import com.example.domain.entity.SupportMessage;
-import com.example.domain.request.SupportMessageReadReqDTO;
 import com.example.domain.request.SupportMessageReqDTO;
 import com.example.domain.response.SupportMessageResDTO;
 import com.example.mapper.SupportMessageMapper;
@@ -37,9 +36,14 @@ public class SupportMessageController extends
         return ResponseEntity.ok(supportMessageService.sendAgentMessage(dto));
     }
 
-    @PostMapping("/read")
-    public void markAsRead(@RequestBody SupportMessageReadReqDTO dto) throws IdInvalidException {
-        supportMessageService.markAsRead(dto);
+    @PostMapping("/user/read")
+    public void markUserAsRead() throws IdInvalidException {
+        supportMessageService.markUserAsRead();
+    }
+
+    @PostMapping("/agent/read")
+    public void markAgentAsRead() throws IdInvalidException {
+        supportMessageService.markAgentAsRead();
     }
 
     @GetMapping("/session")

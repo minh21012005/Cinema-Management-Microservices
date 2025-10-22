@@ -1,6 +1,7 @@
 package com.example.repository;
 
 import com.example.domain.entity.SupportMessage;
+import com.example.domain.enums.SupportMessageSender;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -13,4 +14,5 @@ public interface SupportMessageRepository extends BaseRepository<SupportMessage,
 
     List<SupportMessage> findBySession_UserIdOrderByCreatedAtAsc(Long userId);
 
+    List<SupportMessage> findBySession_SessionIdAndSenderAndReadAtIsNull(String sessionId, SupportMessageSender sender);
 }

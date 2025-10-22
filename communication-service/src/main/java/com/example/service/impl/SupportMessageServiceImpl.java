@@ -116,11 +116,24 @@ public class SupportMessageServiceImpl
     }
 
     @Override
-    public void markAsRead(SupportMessageReadReqDTO dto) throws IdInvalidException {
-        SupportMessage message = supportMessageRepository.findById(dto.getMessageId())
-                .orElseThrow(() -> new IdInvalidException("Không tìm thấy tin nhắn."));
-        message.setReadAt(LocalDateTime.now());
-        supportMessageRepository.save(message);
+    public void markUserAsRead() throws IdInvalidException {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Long userId = Long.valueOf(authentication.getName());
+
+        SupportChatSession session = supportChatSessionRepository
+                .findByUserIdAndStatus(userId, SupportChatStatus.ASSIGNED)
+                .orElseThrow(() -> new IdInvalidException("Session không tồn tại!"));
+
+        List<SupportMessage> unreadMessages = supportMessageRepository
+                .findBySession_SessionIdAndSenderAndReadAtIsNull(session.getSessionId(), SupportMessageSender.AGENT);
+
+        unreadMessages.forEach(msg -> msg.setReadAt(LocalDateTime.now()));
+        supportMessageRepository.saveAll(unreadMessages);
+    }
+
+    @Override
+    public void markAgentAsRead() throws IdInvalidException {
+
     }
 
     @Override
