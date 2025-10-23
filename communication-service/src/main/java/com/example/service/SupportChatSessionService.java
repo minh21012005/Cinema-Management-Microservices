@@ -13,7 +13,9 @@ public interface SupportChatSessionService extends
 
     SupportChatSessionResDTO assignAgent(String sessionId) throws IdInvalidException;
 
-    SupportChatSessionResDTO closeSession(String sessionId) throws IdInvalidException;
+    SupportChatSessionResDTO agentCloseSession(String sessionId) throws IdInvalidException;
+
+    SupportChatSessionResDTO userCloseSession() throws IdInvalidException;
 
     SupportChatSessionResDTO findBySessionId(String sessionId) throws IdInvalidException;
 

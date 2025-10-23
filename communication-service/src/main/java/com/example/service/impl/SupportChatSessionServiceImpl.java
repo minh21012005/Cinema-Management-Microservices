@@ -77,12 +77,44 @@ public class SupportChatSessionServiceImpl
     }
 
     @Override
-    public SupportChatSessionResDTO closeSession(String sessionId) throws IdInvalidException {
+    public SupportChatSessionResDTO agentCloseSession(String sessionId) throws IdInvalidException {
         SupportChatSession session = supportChatSessionRepository.findBySessionId(sessionId)
                 .orElseThrow(() -> new IdInvalidException("Phiên chat không tồn tại"));
 
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Long agentId = Long.valueOf(authentication.getName());
+
+        if (!agentId.equals(session.getAgentId())) {
+            throw new IdInvalidException("Agent không có quyền đóng phiên chat này!");
+        }
+
         session.setStatus(SupportChatStatus.CLOSED);
-        return supportChatSessionMapper.toDto(supportChatSessionRepository.save(session));
+        SupportChatSession saved = supportChatSessionRepository.save(session);
+        SupportChatSessionResDTO resDTO = supportChatSessionMapper.toDto(saved);
+
+        messagingTemplate.convertAndSend(
+                "/topic/agent/close/support-sessions/" + session.getSessionId(), resDTO);
+
+        return resDTO;
+    }
+
+    @Override
+    public SupportChatSessionResDTO userCloseSession() throws IdInvalidException {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Long userId = Long.valueOf(authentication.getName());
+
+        SupportChatSession session = supportChatSessionRepository
+                .findByUserIdAndStatusNot(userId, SupportChatStatus.CLOSED)
+                .orElseThrow(() -> new IdInvalidException("Không còn phiên chat nào chưa đóng!"));
+
+        session.setStatus(SupportChatStatus.CLOSED);
+        SupportChatSession saved = supportChatSessionRepository.save(session);
+        SupportChatSessionResDTO resDTO = supportChatSessionMapper.toDto(saved);
+
+        messagingTemplate.convertAndSend(
+                "/topic/user/close/support-sessions/" + session.getSessionId(), resDTO);
+
+        return resDTO;
     }
 
     @Override

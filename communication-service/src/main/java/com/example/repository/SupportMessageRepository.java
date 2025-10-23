@@ -12,7 +12,5 @@ public interface SupportMessageRepository extends BaseRepository<SupportMessage,
     // Lấy danh sách tin nhắn theo sessionId, sắp xếp theo thời gian tạo tăng dần
     List<SupportMessage> findBySession_SessionIdOrderByCreatedAtAsc(String sessionId);
 
-    List<SupportMessage> findBySession_UserIdOrderByCreatedAtAsc(Long userId);
-
     List<SupportMessage> findBySession_SessionIdAndSenderAndReadAtIsNull(String sessionId, SupportMessageSender sender);
 }

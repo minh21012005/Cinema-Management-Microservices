@@ -24,6 +24,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -95,6 +96,11 @@ public class SupportMessageServiceImpl
         SupportChatSession session = supportChatSessionRepository.findBySessionId(dto.getSessionId())
                 .orElseThrow(() -> new IdInvalidException("Phiên chat không tồn tại"));
 
+        if(session.getStatus().equals(SupportChatStatus.CLOSED)){
+            throw new IdInvalidException("Phiên chat đã kết thúc, không thể gửi tin nhắn!");
+
+        }
+
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Long agentId = Long.valueOf(authentication.getName());
 
@@ -139,7 +145,7 @@ public class SupportMessageServiceImpl
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Long agentId = Long.valueOf(authentication.getName());
 
-        if(!agentId.equals(session.getAgentId())){
+        if (!agentId.equals(session.getAgentId())) {
             throw new IdInvalidException("Agent không có truy cập phiên này.");
         }
 
@@ -172,7 +178,15 @@ public class SupportMessageServiceImpl
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Long userId = Long.valueOf(authentication.getName());
 
-        List<SupportMessage> list = supportMessageRepository.findBySession_UserIdOrderByCreatedAtAsc(userId);
+        Optional<SupportChatSession> session = supportChatSessionRepository
+                .findByUserIdAndStatusNot(userId, SupportChatStatus.CLOSED);
+
+        if (session.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        List<SupportMessage> list = supportMessageRepository
+                .findBySession_SessionIdOrderByCreatedAtAsc(session.get().getSessionId());
         return list.stream().map(supportMessageMapper::toDto).collect(Collectors.toList());
     }
 }

@@ -38,9 +38,14 @@ public class SupportChatSessionController extends
         return supportChatSessionService.assignAgent(sessionId);
     }
 
-    @PostMapping("/{sessionId}/close")
-    public SupportChatSessionResDTO closeSession(@PathVariable String sessionId) throws IdInvalidException {
-        return supportChatSessionService.closeSession(sessionId);
+    @PostMapping("/agent/close/{sessionId}")
+    public SupportChatSessionResDTO agentCloseSession(@PathVariable("sessionId") String sessionId) throws IdInvalidException {
+        return supportChatSessionService.agentCloseSession(sessionId);
+    }
+
+    @PostMapping("/user/close")
+    public SupportChatSessionResDTO userCloseSession() throws IdInvalidException {
+        return supportChatSessionService.userCloseSession();
     }
 
     @GetMapping("/{sessionId}")
