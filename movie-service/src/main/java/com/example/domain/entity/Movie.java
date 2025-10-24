@@ -52,6 +52,10 @@ public class Movie extends BaseEntity<Long> {
     @Column(name = "trailer_url")
     private String trailerUrl;
 
+    @Lob
+    @Column(columnDefinition = "TEXT")
+    private String embedding;
+
     @ManyToMany
     @JoinTable(
             name = "movie_category",

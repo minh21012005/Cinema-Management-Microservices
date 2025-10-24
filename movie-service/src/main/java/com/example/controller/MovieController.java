@@ -110,4 +110,12 @@ public class MovieController extends BaseController<Movie, Long, MovieReqDTO, Mo
     public boolean isExistsById(@PathVariable("id") Long id) {
         return movieService.existsById(id);
     }
+
+    @GetMapping("/{id}/similar")
+    public ResponseEntity<List<MovieResDTO>> getSimilarMovies
+            (@PathVariable("id") Long id, @RequestParam(defaultValue = "5", name = "top") int top)
+            throws IdInvalidException {
+        List<MovieResDTO> result = movieService.getSimilarMovies(id, top);
+        return ResponseEntity.ok(result);
+    }
 }

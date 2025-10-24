@@ -10,17 +10,20 @@ import com.example.mapper.MovieMapper;
 import com.example.repository.CategoryRepository;
 import com.example.repository.MovieRepository;
 import com.example.service.MovieService;
+import com.example.service.RecommendationService;
 import com.example.service.specification.MovieSpecification;
 import com.example.util.error.IdInvalidException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nimbusds.jose.util.Pair;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import com.fasterxml.jackson.core.type.TypeReference;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -35,14 +38,17 @@ public class MovieServiceImpl
     private final CategoryRepository categoryRepository;
     private final MovieMapper movieMapper;
     private final ShowtimeClient showtimeClient;
+    private final RecommendationService recommendationService;
 
     protected MovieServiceImpl(MovieRepository movieRepository, MovieMapper movieMapper,
-                               CategoryRepository categoryRepository, ShowtimeClient showtimeClient) {
+                               CategoryRepository categoryRepository, ShowtimeClient showtimeClient,
+                               RecommendationService recommendationService) {
         super(movieRepository);
         this.movieRepository = movieRepository;
         this.categoryRepository = categoryRepository;
         this.movieMapper = movieMapper;
         this.showtimeClient = showtimeClient;
+        this.recommendationService = recommendationService;
     }
 
     @Override
@@ -180,6 +186,22 @@ public class MovieServiceImpl
         movie.setCategories(categories);
         movie.setActive(false); // mặc định khi tạo là active
 
+//        String embeddingStr = recommendationService.createMovieEmbedding(movie); //open ai
+//        movie.setEmbedding(embeddingStr);
+
+        // --- TÍNH TF-IDF ---
+        List<Movie> allMovies = movieRepository.findAll(); // load tất cả phim hiện tại
+        Map<String, Double> tfidf = recommendationService.createMovieEmbeddingTfIdf(movie, allMovies);
+
+        // Chuyển Map<String, Double> thành JSON string lưu vào DB
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            String tfidfJson = mapper.writeValueAsString(tfidf);
+            movie.setEmbedding(tfidfJson);
+        } catch (Exception e) {
+            throw new RuntimeException("Lỗi khi serialize embedding TF-IDF", e);
+        }
+
         // Save
         Movie saved = movieRepository.save(movie);
 
@@ -273,6 +295,18 @@ public class MovieServiceImpl
         List<Category> categories = categoryRepository.findAllById(dto.getCategoryIds());
         movie.setCategories(categories);
 
+        List<Movie> allMovies = movieRepository.findAll(); // load tất cả phim hiện tại
+        Map<String, Double> tfidf = recommendationService.createMovieEmbeddingTfIdf(movie, allMovies);
+
+        // Chuyển Map<String, Double> thành JSON string lưu vào DB
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            String tfidfJson = mapper.writeValueAsString(tfidf);
+            movie.setEmbedding(tfidfJson);
+        } catch (Exception e) {
+            throw new RuntimeException("Lỗi khi serialize embedding TF-IDF", e);
+        }
+
         Movie updated = movieRepository.save(movie);
         return movieMapper.toDto(updated);
     }
@@ -290,4 +324,76 @@ public class MovieServiceImpl
                 (LocalDate.now(), PageRequest.of(0, limit)).stream().map(
                 movieMapper::toDto).toList();
     }
+
+    public List<Movie> recommendMovies(Movie target, List<Movie> allMovies, int topN) {
+        float[] targetVec = byteArrayToFloatArray(Base64.getDecoder().decode(target.getEmbedding()));
+
+        return allMovies.stream()
+                .filter(m -> !m.getId().equals(target.getId()))
+                .map(m -> {
+                    float[] vec = byteArrayToFloatArray(Base64.getDecoder().decode(m.getEmbedding()));
+                    float sim = recommendationService.cosineSimilarity(targetVec, vec);
+                    return new MovieScore(m, sim);
+                })
+                .sorted((a, b) -> Float.compare(b.score, a.score))
+                .limit(topN)
+                .map(ms -> ms.movie)
+                .collect(Collectors.toList());
+    }
+
+    private float[] byteArrayToFloatArray(byte[] bytes) {
+        float[] floats = new float[bytes.length / 4];
+        for (int i = 0; i < floats.length; i++) {
+            int intBits = ((bytes[i * 4] & 0xFF) << 24) |
+                    ((bytes[i * 4 + 1] & 0xFF) << 16) |
+                    ((bytes[i * 4 + 2] & 0xFF) << 8) |
+                    ((bytes[i * 4 + 3] & 0xFF));
+            floats[i] = Float.intBitsToFloat(intBits);
+        }
+        return floats;
+    }
+
+    private record MovieScore(Movie movie, float score) {}
+
+    @Override
+    public List<MovieResDTO> getSimilarMovies(Long movieId, int topN) throws IdInvalidException {
+        Movie target = movieRepository.findById(movieId)
+                .orElseThrow(() -> new IdInvalidException("Không tìm thấy phim với ID = " + movieId));
+
+        // Deserialize TF-IDF của phim cần so sánh
+        ObjectMapper mapper = new ObjectMapper();
+        Map<String, Double> targetVec;
+        try {
+            targetVec = mapper.readValue(target.getEmbedding(), new TypeReference<Map<String, Double>>() {});
+        } catch (Exception e) {
+            throw new RuntimeException("Không thể đọc embedding TF-IDF của phim", e);
+        }
+
+        // Lấy tất cả phim khác
+        List<Movie> allMovies = movieRepository.findAll().stream()
+                .filter(m -> !Objects.equals(m.getId(), movieId))
+                .toList();
+
+        List<Pair<Movie, Double>> similarities = new ArrayList<>();
+
+        for (Movie m : allMovies) {
+            if (m.getEmbedding() == null) continue;
+
+            try {
+                Map<String, Double> vec = mapper.readValue(m.getEmbedding(), new TypeReference<Map<String, Double>>() {});
+                double sim = recommendationService.cosineSimilarity(targetVec, vec);
+                similarities.add(Pair.of(m, sim));
+            } catch (Exception ignored) {}
+        }
+
+        // Sắp xếp giảm dần theo độ tương đồng
+        similarities.sort((a, b) -> Double.compare(b.getRight(), a.getRight()));
+
+        // Lấy top N
+        return similarities.stream()
+                .limit(topN)
+                .map(pair -> movieMapper.toDto(pair.getLeft()))
+                .collect(Collectors.toList());
+    }
+
 }
