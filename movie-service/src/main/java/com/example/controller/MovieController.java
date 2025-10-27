@@ -5,6 +5,7 @@ import com.example.domain.request.MovieReqDTO;
 import com.example.domain.response.MovieResDTO;
 import com.example.domain.response.ResultPaginationDTO;
 import com.example.mapper.MovieMapper;
+import com.example.service.CollaborativeFilteringService;
 import com.example.service.MovieService;
 import com.example.util.annotation.ApiMessage;
 import com.example.util.error.IdInvalidException;
@@ -13,6 +14,8 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -23,10 +26,13 @@ import java.util.List;
 public class MovieController extends BaseController<Movie, Long, MovieReqDTO, MovieResDTO> {
 
     private final MovieService movieService;
+    private final CollaborativeFilteringService collaborativeFilteringService;
 
-    protected MovieController(MovieService movieService, MovieMapper movieMapper) {
+    protected MovieController(MovieService movieService, MovieMapper movieMapper,
+                              CollaborativeFilteringService collaborativeFilteringService) {
         super(movieService, movieMapper);
         this.movieService = movieService;
+        this.collaborativeFilteringService = collaborativeFilteringService;
     }
 
     @GetMapping("/all")
@@ -117,5 +123,14 @@ public class MovieController extends BaseController<Movie, Long, MovieReqDTO, Mo
             throws IdInvalidException {
         List<MovieResDTO> result = movieService.getSimilarMovies(id, top);
         return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/recommend")
+    public ResponseEntity<List<MovieResDTO>> recommend() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Long userId = Long.valueOf(authentication.getName());
+
+        List<MovieResDTO> movies = collaborativeFilteringService.recommendByItemBased(userId, 10);
+        return ResponseEntity.ok(movies);
     }
 }

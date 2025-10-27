@@ -295,6 +295,9 @@ public class MovieServiceImpl
         List<Category> categories = categoryRepository.findAllById(dto.getCategoryIds());
         movie.setCategories(categories);
 
+//        String embeddingStr = recommendationService.createMovieEmbedding(movie); //open ai
+//        movie.setEmbedding(embeddingStr);
+
         List<Movie> allMovies = movieRepository.findAll(); // load tất cả phim hiện tại
         Map<String, Double> tfidf = recommendationService.createMovieEmbeddingTfIdf(movie, allMovies);
 
@@ -325,11 +328,18 @@ public class MovieServiceImpl
                 movieMapper::toDto).toList();
     }
 
-    public List<Movie> recommendMovies(Movie target, List<Movie> allMovies, int topN) {
+    @Override
+    public List<MovieResDTO> recommendMovies(Long movieId, int topN) throws IdInvalidException {
+        Movie target = movieRepository.findById(movieId)
+                .orElseThrow(() -> new IdInvalidException("Không tìm thấy phim với ID = " + movieId));
+
         float[] targetVec = byteArrayToFloatArray(Base64.getDecoder().decode(target.getEmbedding()));
 
+        List<Movie> allMovies = movieRepository.findAll().stream()
+                .filter(m -> !Objects.equals(m.getId(), target.getId()))
+                .toList();
+
         return allMovies.stream()
-                .filter(m -> !m.getId().equals(target.getId()))
                 .map(m -> {
                     float[] vec = byteArrayToFloatArray(Base64.getDecoder().decode(m.getEmbedding()));
                     float sim = recommendationService.cosineSimilarity(targetVec, vec);
@@ -337,8 +347,7 @@ public class MovieServiceImpl
                 })
                 .sorted((a, b) -> Float.compare(b.score, a.score))
                 .limit(topN)
-                .map(ms -> ms.movie)
-                .collect(Collectors.toList());
+                .map(ms -> movieMapper.toDto(ms.movie)).toList();
     }
 
     private float[] byteArrayToFloatArray(byte[] bytes) {
