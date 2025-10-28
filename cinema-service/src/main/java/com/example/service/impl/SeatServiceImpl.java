@@ -14,6 +14,7 @@ import com.example.service.SeatService;
 import com.example.util.error.IdInvalidException;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -188,6 +189,11 @@ public class SeatServiceImpl
                         .booked(bookedSeatIds.contains(seat.getId())) // ghế đã đặt
                         .build())
                 .toList();
+    }
+
+    @Override
+    public Long countActiveSeatsByMonth() {
+        return seatRepository.countActiveSeatsByMonth(LocalDate.now().getYear(), LocalDate.now().getMonthValue());
     }
 
     public Optional<SeatType> findSeatTypeById(Long id) {

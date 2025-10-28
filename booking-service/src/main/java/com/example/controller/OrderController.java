@@ -11,6 +11,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+
 @RestController
 @RequestMapping("/api/v1/orders")
 public class OrderController extends BaseController<Order, Long, OrderReqDTO, OrderResDTO> {
@@ -43,4 +45,14 @@ public class OrderController extends BaseController<Order, Long, OrderReqDTO, Or
         return ResponseEntity.ok(null);
     }
 
+    @GetMapping("/revenue/today")
+    public ResponseEntity<Double> getDailyRevenue() {
+        return ResponseEntity.ok(orderService.getRevenueByDay(LocalDate.now()));
+    }
+
+    @GetMapping("/revenue/this-month")
+    public ResponseEntity<Double> getRevenueByMonth() {
+        return ResponseEntity.ok(orderService.getRevenueByMonth(
+                LocalDate.now().getYear(), LocalDate.now().getMonthValue()));
+    }
 }

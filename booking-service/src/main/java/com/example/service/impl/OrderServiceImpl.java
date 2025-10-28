@@ -1,6 +1,6 @@
 package com.example.service.impl;
 
-import com.example.client.ShowtimeClient;
+import com.example.client.CinemaServiceClient;
 import com.example.domain.entity.Order;
 import com.example.domain.entity.OrderItem;
 import com.example.domain.entity.Payment;
@@ -24,6 +24,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -36,14 +37,14 @@ public class OrderServiceImpl
     private final OrderRepository orderRepository;
     private final SimpMessagingTemplate messagingTemplate;
     private final OrderMapper orderMapper;
-    private final ShowtimeClient showtimeClient;
+    private final CinemaServiceClient cinemaServiceClient;
     private final PaymentService paymentService;
     private final PaymentRepository paymentRepository;
 
     public OrderServiceImpl(TicketRepository ticketRepository,
                             OrderRepository orderRepository,
                             OrderMapper orderMapper,
-                            ShowtimeClient showtimeClient,
+                            CinemaServiceClient cinemaServiceClient,
                             PaymentRepository paymentRepository,
                             PaymentService paymentService,
                             SimpMessagingTemplate simpMessagingTemplate) {
@@ -51,7 +52,7 @@ public class OrderServiceImpl
         this.ticketRepository = ticketRepository;
         this.orderRepository = orderRepository;
         this.orderMapper = orderMapper;
-        this.showtimeClient = showtimeClient;
+        this.cinemaServiceClient = cinemaServiceClient;
         this.paymentRepository = paymentRepository;
         this.paymentService = paymentService;
         this.messagingTemplate = simpMessagingTemplate;
@@ -62,7 +63,7 @@ public class OrderServiceImpl
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         //Kiểm tra xuất chiếu đã xong chưa
-        boolean isShowtimeEnd = showtimeClient.isShowtimeEnd(request.getShowtimeId());
+        boolean isShowtimeEnd = cinemaServiceClient.isShowtimeEnd(request.getShowtimeId());
         if (isShowtimeEnd) {
             throw new IdInvalidException("Xuất chiếu đã kết thúc, không thể đặt vé!");
         }
@@ -165,7 +166,7 @@ public class OrderServiceImpl
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         //Kiểm tra xuất chiếu đã xong chưa
-        boolean isShowtimeEnd = showtimeClient.isShowtimeEnd(request.getShowtimeId());
+        boolean isShowtimeEnd = cinemaServiceClient.isShowtimeEnd(request.getShowtimeId());
         if (isShowtimeEnd) {
             throw new IdInvalidException("Xuất chiếu đã kết thúc, không thể đặt vé!");
         }
@@ -259,11 +260,11 @@ public class OrderServiceImpl
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Long userId = Long.valueOf(authentication.getName()); //ID của staff hoặc customer
 
-        if(order.getUserId() != null){
+        if (order.getUserId() != null) {
             if (!Objects.equals(order.getUserId(), userId)) {
                 throw new IdInvalidException("Không có quyền hủy order này!");
             }
-        }else{
+        } else {
             if (!Objects.equals(order.getStaffId(), userId)) {
                 throw new IdInvalidException("Không có quyền hủy order này!");
             }
@@ -289,6 +290,35 @@ public class OrderServiceImpl
             messagingTemplate.convertAndSend("/topic/seats/" + showtimeId, payload);
 
         }
+    }
+
+    /**
+     * ✅ Tính tổng doanh thu trong tháng được chỉ định (VD: 2025-10)
+     */
+    public Double getRevenueByMonth(int year, int month) {
+        LocalDateTime start = LocalDate.of(year, month, 1).atStartOfDay();
+        LocalDateTime end = start.plusMonths(1).minusSeconds(1);
+        return orderRepository.getTotalRevenueBetween(start, end);
+    }
+
+    /**
+     * ✅ Tính doanh thu trong một ngày cụ thể
+     */
+    @Override
+    public Double getRevenueByDay(LocalDate date) {
+        LocalDateTime start = date.atStartOfDay();
+        LocalDateTime end = start.plusDays(1).minusSeconds(1);
+        return orderRepository.getTotalRevenueBetween(start, end);
+    }
+
+    /**
+     * ✅ Tính tổng doanh thu từ đầu năm đến hiện tại
+     */
+    public Double getRevenueFromYearStart() {
+        LocalDate today = LocalDate.now();
+        LocalDateTime startOfYear = LocalDate.of(today.getYear(), 1, 1).atStartOfDay();
+        LocalDateTime now = LocalDateTime.now();
+        return orderRepository.getTotalRevenueBetween(startOfYear, now);
     }
 
     @Scheduled(fixedRate = 60000)

@@ -84,4 +84,9 @@ public class SeatController extends BaseController<Seat, Long, ReqSeatDTO, ResSe
     public ResponseEntity<Void> delete(Long aLong) throws IdInvalidException {
         throw new UnsupportedOperationException("Delete seat is not supported!");
     }
+
+    @GetMapping("/count-active")
+    public Long countActiveSeats() {
+        return seatService.countActiveSeatsByMonth();
+    }
 }

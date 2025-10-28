@@ -10,4 +10,5 @@ import org.springframework.data.domain.Pageable;
 public interface RatingService extends BaseService<Rating, Long, RatingReqDTO, RatingResDTO> {
     RatingResDTO create(RatingReqDTO dto) throws IdInvalidException;
     ResultPaginationDTO getRatingsByMovie(Long id, Pageable pageable) throws IdInvalidException;
+    Double getAverageRatingSystem();
 }

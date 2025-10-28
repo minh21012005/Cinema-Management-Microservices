@@ -1,7 +1,7 @@
 package com.example.service.impl;
 
 import com.example.client.AuthClient;
-import com.example.client.ShowtimeClient;
+import com.example.client.CinemaServiceClient;
 import com.example.domain.entity.*;
 import com.example.domain.enums.PaymentStatus;
 import com.example.domain.request.ItemDTO;
@@ -38,7 +38,7 @@ public class PaymentServiceImpl
     private final OrderMapper orderMapper;
     private final SepayRepository sepayRepository;
     private final SimpMessagingTemplate messagingTemplate;
-    private final ShowtimeClient showtimeClient;
+    private final CinemaServiceClient cinemaServiceClient;
     private final AuthClient authClient;
     private final EmailService emailService;
 
@@ -48,7 +48,7 @@ public class PaymentServiceImpl
                                  SepayMapper sepayMapper,
                                  OrderMapper orderMapper,
                                  SepayRepository sepayRepository,
-                                 ShowtimeClient showtimeClient,
+                                 CinemaServiceClient cinemaServiceClient,
                                  AuthClient authClient,
                                  EmailService emailService,
                                  SimpMessagingTemplate messagingTemplate) {
@@ -59,7 +59,7 @@ public class PaymentServiceImpl
         this.sepayMapper = sepayMapper;
         this.orderMapper = orderMapper;
         this.sepayRepository = sepayRepository;
-        this.showtimeClient = showtimeClient;
+        this.cinemaServiceClient = cinemaServiceClient;
         this.authClient = authClient;
         this.emailService = emailService;
         this.messagingTemplate = messagingTemplate;
@@ -190,7 +190,7 @@ public class PaymentServiceImpl
             request.setFoods(foods);
             request.setCombos(combos);
 
-            TicketEmailDTO ticketData = showtimeClient.fetchTicketData(showtimeId, request).getData();
+            TicketEmailDTO ticketData = cinemaServiceClient.fetchTicketData(showtimeId, request).getData();
             ticketData.setTotalPrice(order.getTotalAmount());
 
             emailService.sendTicketEmail(email, ticketData);

@@ -8,7 +8,7 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 
 @FeignClient(name = "cinema-service", configuration = SecurityConfig.class)
-public interface ShowtimeClient {
+public interface CinemaServiceClient {
 
     @GetMapping("/api/v1/showtime/{id}/is-end")
     boolean isShowtimeEnd(@PathVariable("id") Long id);
@@ -17,4 +17,7 @@ public interface ShowtimeClient {
     ApiResponse<TicketEmailDTO> fetchTicketData(
             @PathVariable("id") Long id,
             @RequestBody TicketDataRequest request);
+
+    @GetMapping("/api/v1/seats/count-active")
+    ApiResponse<Long> countActiveSeatsByMonth();
 }

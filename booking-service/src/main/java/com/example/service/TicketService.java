@@ -9,4 +9,6 @@ import java.util.List;
 
 public interface TicketService extends BaseService<Ticket, Long, TicketReqDTO, TicketResDTO> {
     List<Long> findLockedSeats(Long id, LocalDateTime time);
+    Long getTicketsSoldToday();
+    Double getOccupancyRate();
 }

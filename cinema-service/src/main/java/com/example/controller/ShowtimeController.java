@@ -119,6 +119,16 @@ public class ShowtimeController extends BaseController<Showtime, Long, ShowtimeR
                 request.getCombos()));
     }
 
+    @GetMapping("/active")
+    public ResponseEntity<Long> getActiveShowtimes() {
+        return ResponseEntity.ok(showtimeService.getActiveShowtimesCount());
+    }
+
+    @GetMapping("/now-showing")
+    public ResponseEntity<Long> getNowShowingMovies() {
+        return ResponseEntity.ok(showtimeService.getNowShowingMoviesCount());
+    }
+
     @Override
     public ResponseEntity<Void> delete(@PathVariable("id") Long id) throws IdInvalidException {
         throw new UnsupportedOperationException("Delete showtime is not supported!");

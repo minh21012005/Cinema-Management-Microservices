@@ -20,4 +20,5 @@ public interface UserService extends BaseService<User,Long, CreateUserRequest, R
     Optional<User> findByEmail(String email);
     String getNameByEmail(String email) throws IdInvalidException;
     Map<Long, String > getNamesByIds(List<Long> ids);
+    Long getNewUsersCount();
 }

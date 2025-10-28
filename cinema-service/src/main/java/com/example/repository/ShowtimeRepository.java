@@ -56,4 +56,15 @@ public interface ShowtimeRepository extends BaseRepository<Showtime, Long>, JpaS
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate
     );
+
+    @Query("SELECT COUNT(s) FROM Showtime s " +
+            "WHERE s.active = true " +
+            "AND :now BETWEEN s.startTime AND s.endTime")
+    Long countActiveShowtimes(@Param("now") LocalDateTime now);
+
+    @Query("SELECT COUNT(DISTINCT s.movieId) " +
+            "FROM Showtime s " +
+            "WHERE s.active = true " +
+            "AND :now BETWEEN s.startTime AND s.endTime")
+    Long countMoviesNowShowing(@Param("now") LocalDateTime now);
 }

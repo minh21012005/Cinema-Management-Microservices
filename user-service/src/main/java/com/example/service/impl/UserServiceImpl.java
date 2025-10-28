@@ -20,6 +20,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -190,6 +191,12 @@ public class UserServiceImpl
         // Chuyển sang Map<authId, name>
         return users.stream()
                 .collect(Collectors.toMap(User::getAuthId, User::getName));
+    }
+
+    @Override
+    public Long getNewUsersCount() {
+        LocalDate sevenDaysAgo = LocalDate.now().minusDays(7);
+        return userRepository.countByCreatedAtAfter(sevenDaysAgo.atStartOfDay());
     }
 
     public ResUserDTO convertToResUserDTO(User user) throws IdInvalidException {

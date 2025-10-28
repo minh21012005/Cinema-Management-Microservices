@@ -5,6 +5,7 @@ import com.example.domain.request.TicketReqDTO;
 import com.example.domain.response.TicketResDTO;
 import com.example.mapper.TicketMapper;
 import com.example.service.TicketService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,5 +27,16 @@ public class TicketController extends BaseController<Ticket, Long, TicketReqDTO,
     @PreAuthorize("hasPermission(null, 'SEAT_VIEW')")
     public List<Long> getBookedSeats(@PathVariable("id") Long id) {
         return ticketService.findLockedSeats(id, LocalDateTime.now().minusMinutes(5));
+    }
+
+    @GetMapping("/sold/today")
+    public ResponseEntity<Long> getTicketsSoldToday() {
+        return ResponseEntity.ok(ticketService.getTicketsSoldToday());
+    }
+
+    @GetMapping("/occupancy-rate")
+    public ResponseEntity<Double> getOccupancyRate() {
+        double rate = ticketService.getOccupancyRate();
+        return ResponseEntity.ok(ticketService.getOccupancyRate());
     }
 }

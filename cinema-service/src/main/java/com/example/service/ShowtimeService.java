@@ -26,4 +26,6 @@ public interface ShowtimeService extends BaseService<Showtime, Long, ShowtimeReq
             (Long id, String date, Long cinemaId) throws IdInvalidException;
     TicketEmailDTO fetchTicketData(Long id, List<Long> seatIds, List<ItemDTO> foods, List<ItemDTO> combos)
             throws IdInvalidException;
+    Long getActiveShowtimesCount();
+    Long getNowShowingMoviesCount();
 }

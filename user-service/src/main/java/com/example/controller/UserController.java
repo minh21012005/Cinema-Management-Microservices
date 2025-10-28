@@ -118,4 +118,9 @@ public class UserController {
         }
         return user.getCinemaId();
     }
+
+    @GetMapping("/new-users")
+    public ResponseEntity<Long> getNewUsersCount() {
+        return ResponseEntity.ok(userService.getNewUsersCount());
+    }
 }

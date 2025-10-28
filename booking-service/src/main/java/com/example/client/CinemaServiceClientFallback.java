@@ -6,7 +6,7 @@ import com.example.domain.response.ApiResponse;
 import org.springframework.stereotype.Component;
 
 @Component
-class ShowtimeClientFallback implements ShowtimeClient {
+class CinemaServiceClientFallback implements CinemaServiceClient {
 
     @Override
     public boolean isShowtimeEnd(Long id) {
@@ -18,4 +18,8 @@ class ShowtimeClientFallback implements ShowtimeClient {
         throw new RuntimeException("Không thể kết nối Showtime service, vui lòng thử lại sau");
     }
 
+    @Override
+    public ApiResponse<Long> countActiveSeatsByMonth() {
+        throw new RuntimeException("Không thể kết nối Showtime service, vui lòng thử lại sau");
+    }
 }

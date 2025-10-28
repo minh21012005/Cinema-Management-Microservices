@@ -31,5 +31,20 @@ public interface TicketRepository extends BaseRepository<Ticket, Long>, JpaSpeci
     boolean existsBySeatIdAndShowtimeIdAndPaidTrueOrReservedTrue(
             @Param("seatId") Long seatId,
             @Param("showtimeId") Long showtimeId,
-            @Param("expiredTime") LocalDateTime expiredTime);
+            @Param("expiredTime") LocalDateTime expiredTime
+    );
+
+    @Query("SELECT COUNT(t) FROM Ticket t " +
+            "WHERE t.paid = true " +
+            "AND t.createdAt BETWEEN :start AND :end")
+    Long countTicketsSoldBetween(
+            @Param("start") LocalDateTime start,
+            @Param("end") LocalDateTime end
+    );
+
+    @Query("SELECT COUNT(t) FROM Ticket t " +
+            "WHERE t.paid = true " +
+            "AND MONTH(t.createdAt) = MONTH(CURRENT_DATE) " +
+            "AND YEAR(t.createdAt) = YEAR(CURRENT_DATE)")
+    Long countTicketsSoldThisMonth();
 }

@@ -135,4 +135,8 @@ public class RatingServiceImpl
         return rs;
     }
 
+    @Override
+    public Double getAverageRatingSystem() {
+        return ratingRepository.getAverageRatingSystem();
+    }
 }

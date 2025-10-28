@@ -14,8 +14,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/api/v1/ratings")
 public class RatingController extends BaseController<Rating, Long, RatingReqDTO, RatingResDTO> {
@@ -37,5 +35,10 @@ public class RatingController extends BaseController<Rating, Long, RatingReqDTO,
     public ResponseEntity<ResultPaginationDTO> getRatingsByMovie(
             @PathVariable("id") Long id, Pageable pageable) throws IdInvalidException {
         return ResponseEntity.ok(ratingService.getRatingsByMovie(id, pageable));
+    }
+
+    @GetMapping("/average")
+    public ResponseEntity<Double> getSystemAverageRating() {
+        return ResponseEntity.ok(ratingService.getAverageRatingSystem());
     }
 }

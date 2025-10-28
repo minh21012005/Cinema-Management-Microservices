@@ -446,6 +446,15 @@ public class ShowtimeServiceImpl
         return dto;
     }
 
+    @Override
+    public Long getActiveShowtimesCount() {
+        return showtimeRepository.countActiveShowtimes(LocalDateTime.now());
+    }
+
+    @Override
+    public Long getNowShowingMoviesCount() {
+        return showtimeRepository.countMoviesNowShowing(LocalDateTime.now());
+    }
 
     public void validateShowtime(Long roomId, LocalDateTime startTime, LocalDateTime endTime) {
         List<Showtime> overlaps = showtimeRepository.findOverlappingShowtimes(roomId, startTime, endTime);
