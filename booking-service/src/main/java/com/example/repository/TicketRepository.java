@@ -1,6 +1,7 @@
 package com.example.repository;
 
 import com.example.domain.entity.Ticket;
+import com.example.domain.response.MonthlyRevenueDTO;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,10 +14,10 @@ import java.util.List;
 public interface TicketRepository extends BaseRepository<Ticket, Long>, JpaSpecificationExecutor<Ticket> {
 
     @Query("""
-        SELECT t FROM Ticket t
-        WHERE t.showtimeId = :showtimeId
-        AND (t.paid = true OR (t.reserved = true AND t.reservedAt >= :time))
-    """)
+                SELECT t FROM Ticket t
+                WHERE t.showtimeId = :showtimeId
+                AND (t.paid = true OR (t.reserved = true AND t.reservedAt >= :time))
+            """)
     List<Ticket> findLockedSeats(
             @Param("showtimeId") Long showtimeId,
             @Param("time") LocalDateTime time
@@ -47,4 +48,6 @@ public interface TicketRepository extends BaseRepository<Ticket, Long>, JpaSpeci
             "AND MONTH(t.createdAt) = MONTH(CURRENT_DATE) " +
             "AND YEAR(t.createdAt) = YEAR(CURRENT_DATE)")
     Long countTicketsSoldThisMonth();
+
+    List<Ticket> findAllByPaidTrue();
 }

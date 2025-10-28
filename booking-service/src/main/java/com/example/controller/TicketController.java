@@ -2,6 +2,7 @@ package com.example.controller;
 
 import com.example.domain.entity.Ticket;
 import com.example.domain.request.TicketReqDTO;
+import com.example.domain.response.MonthlyRevenueDTO;
 import com.example.domain.response.TicketResDTO;
 import com.example.mapper.TicketMapper;
 import com.example.service.TicketService;
@@ -38,5 +39,11 @@ public class TicketController extends BaseController<Ticket, Long, TicketReqDTO,
     public ResponseEntity<Double> getOccupancyRate() {
         double rate = ticketService.getOccupancyRate();
         return ResponseEntity.ok(ticketService.getOccupancyRate());
+    }
+
+    @GetMapping("/monthly-revenue")
+    public ResponseEntity<List<MonthlyRevenueDTO>> getMonthlyRevenue() {
+        List<MonthlyRevenueDTO> data = ticketService.getMonthlyRevenueChartData();
+        return ResponseEntity.ok(data);
     }
 }

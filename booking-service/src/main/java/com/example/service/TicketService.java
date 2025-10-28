@@ -2,6 +2,7 @@ package com.example.service;
 
 import com.example.domain.entity.Ticket;
 import com.example.domain.request.TicketReqDTO;
+import com.example.domain.response.MonthlyRevenueDTO;
 import com.example.domain.response.TicketResDTO;
 
 import java.time.LocalDateTime;
@@ -11,4 +12,5 @@ public interface TicketService extends BaseService<Ticket, Long, TicketReqDTO, T
     List<Long> findLockedSeats(Long id, LocalDateTime time);
     Long getTicketsSoldToday();
     Double getOccupancyRate();
+    List<MonthlyRevenueDTO> getMonthlyRevenueChartData();
 }
