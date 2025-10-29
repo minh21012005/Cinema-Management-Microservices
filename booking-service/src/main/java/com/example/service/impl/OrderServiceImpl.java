@@ -12,6 +12,7 @@ import com.example.domain.request.BookingRequest;
 import com.example.domain.request.OrderReqDTO;
 import com.example.domain.response.OrderResDTO;
 import com.example.domain.response.TopUserDTO;
+import com.example.domain.response.TransactionResDTO;
 import com.example.mapper.OrderMapper;
 import com.example.repository.OrderRepository;
 import com.example.repository.PaymentRepository;
@@ -29,7 +30,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 public class OrderServiceImpl
@@ -359,6 +364,40 @@ public class OrderServiceImpl
         }
 
         return topUsers;
+    }
+
+    @Override
+    public List<TransactionResDTO> getOrdersByDate(LocalDate date) {
+        List<Order> orders = orderRepository.findByCreatedAtBetween(
+                date.atTime(LocalTime.MIN),
+                date.atTime(LocalTime.MAX)
+        );
+
+        orders.sort(Comparator.comparing(Order::getCreatedAt).reversed());
+
+        Set<Long> userIds = orders.stream()
+                .flatMap(o -> Stream.of(o.getStaffId(), o.getUserId()))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        Map<Long, String> userNames = userClient.getNamesByIds(userIds.stream().toList()).getData();
+
+        return orders.stream().map(order -> {
+            List<Payment> payments = order.getPayments();
+            String method = (payments != null && !payments.isEmpty())
+                    ? payments.getLast().getMethod().name()
+                    : "N/A";
+
+            return TransactionResDTO.builder()
+                    .id(order.getId())
+                    .amount(order.getTotalAmount())
+                    .staffName(order.getStaffId() != null ? userNames.get(order.getStaffId()) : "N/A")
+                    .customerName(order.getUserId() != null ? userNames.get(order.getUserId()) : "N/A")
+                    .date(order.getCreatedAt().format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss")))
+                    .method(method)
+                    .status(order.isPaid() ? "PAID" : "PENDING")
+                    .build();
+        }).toList();
     }
 
     /**

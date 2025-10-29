@@ -22,4 +22,6 @@ public interface OrderRepository extends BaseRepository<Order, Long>, JpaSpecifi
     );
 
     List<Order> findByPaidTrue();
+
+    List<Order> findByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
 }

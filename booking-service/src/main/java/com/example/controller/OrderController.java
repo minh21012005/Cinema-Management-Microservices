@@ -4,6 +4,7 @@ import com.example.domain.entity.Order;
 import com.example.domain.request.OrderReqDTO;
 import com.example.domain.response.OrderResDTO;
 import com.example.domain.response.TopUserDTO;
+import com.example.domain.response.TransactionResDTO;
 import com.example.mapper.OrderMapper;
 import com.example.service.OrderService;
 import com.example.util.error.IdInvalidException;
@@ -61,5 +62,11 @@ public class OrderController extends BaseController<Order, Long, OrderReqDTO, Or
     @GetMapping("/top-customers")
     public ResponseEntity<List<TopUserDTO>> getTopCustomers(@RequestParam(name = "topN", defaultValue = "3")  int topN) {
         return ResponseEntity.ok(orderService.getTopCustomers(topN));
+    }
+
+    @GetMapping("/today")
+    public ResponseEntity<List<TransactionResDTO>> getOrdersToday() {
+        List<TransactionResDTO> resDTOS = orderService.getOrdersByDate(LocalDate.now());
+        return ResponseEntity.ok(resDTOS);
     }
 }
