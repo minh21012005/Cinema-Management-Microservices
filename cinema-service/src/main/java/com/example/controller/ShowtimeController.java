@@ -16,6 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -36,6 +37,13 @@ public class ShowtimeController extends BaseController<Showtime, Long, ShowtimeR
     @PreAuthorize("hasPermission(null, 'SHOWTIME_CREATE')")
     public ResponseEntity<ShowtimeResDTO> create(@RequestBody ShowtimeReqDTO dto) throws IdInvalidException {
         return ResponseEntity.status(HttpStatus.CREATED).body(showtimeService.create(dto));
+    }
+
+    @PostMapping("/import")
+    @PreAuthorize("hasPermission(null, 'SHOWTIME_CREATE')")
+    public ResponseEntity<List<ShowtimeResDTO>> importExcel(@RequestParam("file") MultipartFile file) throws IdInvalidException {
+        List<ShowtimeResDTO> result = showtimeService.importExcel(file);
+        return ResponseEntity.ok(result);
     }
 
     @GetMapping("/cinemas/{id}")

@@ -9,6 +9,7 @@ import com.example.domain.response.ResultPaginationDTO;
 import com.example.domain.response.ShowtimeResDTO;
 import com.example.util.error.IdInvalidException;
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -30,4 +31,5 @@ public interface ShowtimeService extends BaseService<Showtime, Long, ShowtimeReq
     Long getActiveShowtimesCount();
     Long getNowShowingMoviesCount();
     Map<String , Double> getTopMovieRevenue(Map<Long, Double> showtimeToRevenue);
+    List<ShowtimeResDTO> importExcel(MultipartFile file) throws IdInvalidException;
 }

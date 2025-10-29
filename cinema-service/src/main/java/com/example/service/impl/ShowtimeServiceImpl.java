@@ -14,15 +14,22 @@ import com.example.service.ShowtimeService;
 import com.example.service.specification.ShowtimeSpecification;
 import com.example.util.error.IdInvalidException;
 import feign.FeignException;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -486,6 +493,61 @@ public class ShowtimeServiceImpl
         });
 
         return result;
+    }
+
+    @Override
+    public List<ShowtimeResDTO> importExcel(MultipartFile file) throws IdInvalidException {
+        List<ShowtimeResDTO> createdShowtimes = new ArrayList<>();
+
+        try (InputStream is = file.getInputStream()) {
+            Workbook workbook = new XSSFWorkbook(is);
+            Sheet sheet = workbook.getSheetAt(0);
+
+            for (int i = 1; i <= sheet.getLastRowNum(); i++) { // bỏ header
+                Row row = sheet.getRow(i);
+                if (row == null) continue;
+
+                Long roomId = (long) row.getCell(0).getNumericCellValue();
+                Long movieId = (long) row.getCell(1).getNumericCellValue();
+
+                Cell timeCell = row.getCell(2);
+                String startTimeStr;
+
+                if (timeCell == null) continue;
+
+                // ⚙️ Nếu Excel lưu dạng text
+                if (timeCell.getCellType() == CellType.STRING) {
+                    startTimeStr = timeCell.getStringCellValue();
+                }
+                // ⚙️ Nếu Excel lưu dạng ngày (DATE)
+                else if (timeCell.getCellType() == CellType.NUMERIC) {
+                    startTimeStr = new SimpleDateFormat("yyyy-MM-dd HH:mm")
+                            .format(timeCell.getDateCellValue());
+                } else {
+                    continue;
+                }
+
+                LocalDateTime startTime = LocalDateTime.parse(
+                        startTimeStr,
+                        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+                );
+
+                ShowtimeReqDTO dto = new ShowtimeReqDTO();
+                dto.setRoomId(roomId);
+                dto.setMovieId(movieId);
+                dto.setStartTime(startTime);
+
+                ShowtimeResDTO created = this.create(dto);
+                createdShowtimes.add(created);
+            }
+
+            workbook.close();
+        } catch (IdInvalidException e) {
+            throw new IdInvalidException("Lỗi khi tạo suất chiếu: " + e.getMessage());
+        } catch (IOException e) {
+            throw new IdInvalidException("Không thể đọc file Excel: " + e.getMessage());
+        }
+        return createdShowtimes;
     }
 
     public void validateShowtime(Long roomId, LocalDateTime startTime, LocalDateTime endTime) {
