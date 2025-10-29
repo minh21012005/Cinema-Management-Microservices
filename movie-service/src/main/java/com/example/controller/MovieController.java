@@ -2,6 +2,7 @@ package com.example.controller;
 
 import com.example.domain.entity.Movie;
 import com.example.domain.request.MovieReqDTO;
+import com.example.domain.response.MovieGenreDistributionDTO;
 import com.example.domain.response.MovieResDTO;
 import com.example.domain.response.ResultPaginationDTO;
 import com.example.mapper.MovieMapper;
@@ -132,5 +133,11 @@ public class MovieController extends BaseController<Movie, Long, MovieReqDTO, Mo
 
         List<MovieResDTO> movies = collaborativeFilteringService.recommendByItemBased(userId, 10);
         return ResponseEntity.ok(movies);
+    }
+
+    @GetMapping("/genres-distribution")
+    public ResponseEntity<List<MovieGenreDistributionDTO>> getGenresDistribution() {
+        List<MovieGenreDistributionDTO> distribution = movieService.getGenresDistribution();
+        return ResponseEntity.ok(distribution);
     }
 }

@@ -4,6 +4,7 @@ import com.example.client.ShowtimeClient;
 import com.example.domain.entity.Category;
 import com.example.domain.entity.Movie;
 import com.example.domain.request.MovieReqDTO;
+import com.example.domain.response.MovieGenreDistributionDTO;
 import com.example.domain.response.MovieResDTO;
 import com.example.domain.response.ResultPaginationDTO;
 import com.example.mapper.MovieMapper;
@@ -348,6 +349,36 @@ public class MovieServiceImpl
                 .sorted((a, b) -> Float.compare(b.score, a.score))
                 .limit(topN)
                 .map(ms -> movieMapper.toDto(ms.movie)).toList();
+    }
+
+    @Override
+    public List<MovieGenreDistributionDTO> getGenresDistribution() {
+        List<Movie> movies = movieRepository.findAll();
+        List<Category> categories = categoryRepository.findAll();
+
+        // Nếu không có phim → tránh chia cho 0
+        if (movies.isEmpty()) {
+            return categories.stream()
+                    .map(cat -> new MovieGenreDistributionDTO(cat.getName(), 0.0))
+                    .toList();
+        }
+
+        Map<String, Double> genreCountMap = new HashMap<>();
+
+        // Đếm số lượng phim cho từng thể loại
+        for (Movie movie : movies) {
+            for (Category category : movie.getCategories()) {
+                genreCountMap.merge(category.getName(), 1.0, Double::sum);
+            }
+        }
+
+        // Tính phần trăm
+        return genreCountMap.entrySet().stream()
+                .map(entry -> new MovieGenreDistributionDTO(
+                        entry.getKey(),
+                        (entry.getValue() / movies.size()) * 100
+                ))
+                .toList();
     }
 
     private float[] byteArrayToFloatArray(byte[] bytes) {

@@ -2,6 +2,7 @@ package com.example.service;
 
 import com.example.domain.entity.Movie;
 import com.example.domain.request.MovieReqDTO;
+import com.example.domain.response.MovieGenreDistributionDTO;
 import com.example.domain.response.MovieResDTO;
 import com.example.domain.response.ResultPaginationDTO;
 import com.example.util.error.IdInvalidException;
@@ -24,4 +25,5 @@ public interface MovieService extends BaseService<Movie, Long, MovieReqDTO, Movi
     List<MovieResDTO> getComingSoonMovies(int limit);
     List<MovieResDTO> getSimilarMovies(Long movieId, int topN) throws IdInvalidException;
     List<MovieResDTO> recommendMovies(Long movieId, int topN) throws IdInvalidException;
+    List<MovieGenreDistributionDTO> getGenresDistribution();
 }
