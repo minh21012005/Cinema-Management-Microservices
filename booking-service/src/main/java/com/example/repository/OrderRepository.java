@@ -20,4 +20,6 @@ public interface OrderRepository extends BaseRepository<Order, Long>, JpaSpecifi
             @Param("start") LocalDateTime start,
             @Param("end") LocalDateTime end
     );
+
+    List<Order> findByPaidTrue();
 }

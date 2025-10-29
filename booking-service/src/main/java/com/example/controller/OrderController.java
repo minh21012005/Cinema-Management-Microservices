@@ -3,6 +3,7 @@ package com.example.controller;
 import com.example.domain.entity.Order;
 import com.example.domain.request.OrderReqDTO;
 import com.example.domain.response.OrderResDTO;
+import com.example.domain.response.TopUserDTO;
 import com.example.mapper.OrderMapper;
 import com.example.service.OrderService;
 import com.example.util.error.IdInvalidException;
@@ -12,6 +13,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/orders")
@@ -54,5 +56,10 @@ public class OrderController extends BaseController<Order, Long, OrderReqDTO, Or
     public ResponseEntity<Double> getRevenueByMonth() {
         return ResponseEntity.ok(orderService.getRevenueByMonth(
                 LocalDate.now().getYear(), LocalDate.now().getMonthValue()));
+    }
+
+    @GetMapping("/top-customers")
+    public ResponseEntity<List<TopUserDTO>> getTopCustomers(@RequestParam(name = "topN", defaultValue = "3")  int topN) {
+        return ResponseEntity.ok(orderService.getTopCustomers(topN));
     }
 }

@@ -1,6 +1,7 @@
 package com.example.service.impl;
 
 import com.example.client.CinemaServiceClient;
+import com.example.client.UserClient;
 import com.example.domain.entity.Order;
 import com.example.domain.entity.OrderItem;
 import com.example.domain.entity.Payment;
@@ -10,6 +11,7 @@ import com.example.domain.enums.PaymentStatus;
 import com.example.domain.request.BookingRequest;
 import com.example.domain.request.OrderReqDTO;
 import com.example.domain.response.OrderResDTO;
+import com.example.domain.response.TopUserDTO;
 import com.example.mapper.OrderMapper;
 import com.example.repository.OrderRepository;
 import com.example.repository.PaymentRepository;
@@ -17,6 +19,7 @@ import com.example.repository.TicketRepository;
 import com.example.service.OrderService;
 import com.example.service.PaymentService;
 import com.example.util.error.IdInvalidException;
+import com.nimbusds.jose.util.Pair;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.Authentication;
@@ -38,6 +41,7 @@ public class OrderServiceImpl
     private final SimpMessagingTemplate messagingTemplate;
     private final OrderMapper orderMapper;
     private final CinemaServiceClient cinemaServiceClient;
+    private final UserClient userClient;
     private final PaymentService paymentService;
     private final PaymentRepository paymentRepository;
 
@@ -46,6 +50,7 @@ public class OrderServiceImpl
                             OrderMapper orderMapper,
                             CinemaServiceClient cinemaServiceClient,
                             PaymentRepository paymentRepository,
+                            UserClient userClient,
                             PaymentService paymentService,
                             SimpMessagingTemplate simpMessagingTemplate) {
         super(orderRepository);
@@ -54,6 +59,7 @@ public class OrderServiceImpl
         this.orderMapper = orderMapper;
         this.cinemaServiceClient = cinemaServiceClient;
         this.paymentRepository = paymentRepository;
+        this.userClient = userClient;
         this.paymentService = paymentService;
         this.messagingTemplate = simpMessagingTemplate;
     }
@@ -299,6 +305,60 @@ public class OrderServiceImpl
         LocalDateTime start = LocalDate.of(year, month, 1).atStartOfDay();
         LocalDateTime end = start.plusMonths(1).minusSeconds(1);
         return orderRepository.getTotalRevenueBetween(start, end);
+    }
+
+    @Override
+    public List<TopUserDTO> getTopCustomers(int topN) {
+        if (topN <= 0) {
+            return List.of();
+        }
+
+        List<Order> orders = orderRepository.findByPaidTrue();
+        Map<Long, Pair<Long, Double>> userStats = new HashMap<>();
+
+        for (Order order : orders) {
+            if (order.getUserId() != null) {
+                userStats.merge(
+                        order.getUserId(),
+                        Pair.of((long) order.getTickets().size(), order.getTotalAmount()),
+                        (oldVal, newVal) -> Pair.of(
+                                oldVal.getLeft() + newVal.getLeft(),
+                                oldVal.getRight() + newVal.getRight()
+                        )
+                );
+            }
+        }
+
+        List<TopUserDTO> topUsers = userStats.entrySet().stream()
+                .sorted((e1, e2) -> Double.compare(e2.getValue().getRight(), e1.getValue().getRight()))
+                .limit(topN)
+                .map(entry -> TopUserDTO.builder()
+                        .id(entry.getKey())
+                        .tickets(entry.getValue().getLeft())
+                        .spending(entry.getValue().getRight())
+                        .build())
+                .toList();
+
+        // Lấy danh sách userId để gọi sang user service
+        List<Long> userIds = topUsers.stream().map(TopUserDTO::getId).toList();
+        Map<Long, String> userNames = userClient.getNamesByIds(userIds).getData();
+
+        // Gán tên cho từng user
+        for (int i = 0; i < topUsers.size(); i++) {
+            TopUserDTO topUser = topUsers.get(i);
+            topUser.setName(userNames.get(topUser.getId()));
+
+            // Gán tier theo vị trí
+            if (i == 0) {
+                topUser.setTier("Vàng");
+            } else if (i == 1) {
+                topUser.setTier("Bạc");
+            } else {
+                topUser.setTier("Đồng");
+            }
+        }
+
+        return topUsers;
     }
 
     /**
