@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/showtime")
@@ -127,6 +128,12 @@ public class ShowtimeController extends BaseController<Showtime, Long, ShowtimeR
     @GetMapping("/now-showing")
     public ResponseEntity<Long> getNowShowingMovies() {
         return ResponseEntity.ok(showtimeService.getNowShowingMoviesCount());
+    }
+
+    @PostMapping("/movie-revenue")
+    public ResponseEntity<Map<String, Double>> getTopMovieRevenue
+            (@RequestBody Map<Long, Double> showtimeToRevenue) {
+        return ResponseEntity.ok(showtimeService.getTopMovieRevenue(showtimeToRevenue));
     }
 
     @Override

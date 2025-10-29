@@ -4,6 +4,7 @@ import com.example.client.CinemaServiceClient;
 import com.example.domain.entity.Ticket;
 import com.example.domain.request.TicketReqDTO;
 import com.example.domain.response.MonthlyRevenueDTO;
+import com.example.domain.response.MovieRevenueDTO;
 import com.example.domain.response.TicketResDTO;
 import com.example.repository.TicketRepository;
 import com.example.service.TicketService;
@@ -11,9 +12,11 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.IsoFields;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -92,6 +95,46 @@ public class TicketServiceImpl
                     return new MonthlyRevenueDTO(month, revenue, ticketCount);
                 })
                 .sorted(Comparator.comparingInt(MonthlyRevenueDTO::getMonth))
+                .toList();
+    }
+
+    @Override
+    public List<MovieRevenueDTO> getTopMoviesCurrentQuarter(int topN) {
+        // 1️⃣ Lấy quý hiện tại
+        LocalDate now = LocalDate.now();
+        int currentQuarter = now.get(IsoFields.QUARTER_OF_YEAR);
+        int currentYear = now.getYear();
+
+        // 2️⃣ Lấy tất cả vé đã thanh toán
+        List<Ticket> tickets = ticketRepository.findAllByPaidTrue();
+
+        // 3️⃣ Lọc vé theo quý hiện tại (dựa trên createdAt)
+        List<Ticket> filteredTickets = tickets.stream()
+                .filter(ticket -> {
+                    LocalDate createdDate = ticket.getCreatedAt().toLocalDate();
+                    int ticketQuarter = createdDate.get(IsoFields.QUARTER_OF_YEAR);
+                    int ticketYear = createdDate.getYear();
+                    return ticketQuarter == currentQuarter && ticketYear == currentYear;
+                })
+                .toList();
+
+        // 4️⃣ Gom doanh thu theo showtimeId
+        Map<Long, Double> showtimeToRevenue = filteredTickets.stream()
+                .collect(Collectors.groupingBy(
+                        Ticket::getShowtimeId,
+                        Collectors.summingDouble(Ticket::getPrice)
+                ));
+
+        // 5️⃣ Gọi sang service khác để nhóm theo movie
+        Map<String, Double> movieToRevenue = cinemaServiceClient
+                .getTopMovie(showtimeToRevenue)
+                .getData();
+
+        // 6️⃣ Trả về top N phim có doanh thu cao nhất
+        return movieToRevenue.entrySet().stream()
+                .map(entry -> new MovieRevenueDTO(entry.getKey(), entry.getValue()))
+                .sorted(Comparator.comparingDouble(MovieRevenueDTO::getRevenue).reversed())
+                .limit(topN)
                 .toList();
     }
 }

@@ -12,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 public interface ShowtimeService extends BaseService<Showtime, Long, ShowtimeReqDTO, ShowtimeResDTO> {
     ShowtimeResDTO create(ShowtimeReqDTO dto) throws IdInvalidException;
@@ -28,4 +29,5 @@ public interface ShowtimeService extends BaseService<Showtime, Long, ShowtimeReq
             throws IdInvalidException;
     Long getActiveShowtimesCount();
     Long getNowShowingMoviesCount();
+    Map<String , Double> getTopMovieRevenue(Map<Long, Double> showtimeToRevenue);
 }

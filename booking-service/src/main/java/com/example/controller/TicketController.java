@@ -3,6 +3,7 @@ package com.example.controller;
 import com.example.domain.entity.Ticket;
 import com.example.domain.request.TicketReqDTO;
 import com.example.domain.response.MonthlyRevenueDTO;
+import com.example.domain.response.MovieRevenueDTO;
 import com.example.domain.response.TicketResDTO;
 import com.example.mapper.TicketMapper;
 import com.example.service.TicketService;
@@ -45,5 +46,11 @@ public class TicketController extends BaseController<Ticket, Long, TicketReqDTO,
     public ResponseEntity<List<MonthlyRevenueDTO>> getMonthlyRevenue() {
         List<MonthlyRevenueDTO> data = ticketService.getMonthlyRevenueChartData();
         return ResponseEntity.ok(data);
+    }
+
+    @GetMapping("/top-movies/current-quarter")
+    public ResponseEntity<List<MovieRevenueDTO>> getTopMoviesCurrentQuarter(@RequestParam(name = "topN", defaultValue = "6") int topN) {
+        List<MovieRevenueDTO> topMovies = ticketService.getTopMoviesCurrentQuarter(topN);
+        return ResponseEntity.ok(topMovies);
     }
 }

@@ -23,8 +23,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -454,6 +453,39 @@ public class ShowtimeServiceImpl
     @Override
     public Long getNowShowingMoviesCount() {
         return showtimeRepository.countMoviesNowShowing(LocalDateTime.now());
+    }
+
+    @Override
+    public Map<String, Double> getTopMovieRevenue(Map<Long, Double> showtimeToRevenue) {
+        // 1️⃣ Lấy tất cả showtime liên quan trong 1 lần
+        List<Showtime> showtimes = showtimeRepository.findAllById(showtimeToRevenue.keySet());
+        Map<Long, Long> showtimeIdToMovieId = showtimes.stream()
+                .collect(Collectors.toMap(Showtime::getId, Showtime::getMovieId));
+
+        // 2️⃣ Nhóm doanh thu theo movieId
+        Map<Long, Double> movieToRevenue = new HashMap<>();
+        showtimeToRevenue.forEach((showtimeId, revenue) -> {
+            Long movieId = showtimeIdToMovieId.get(showtimeId);
+            if (movieId != null) {
+                movieToRevenue.merge(movieId, revenue, Double::sum);
+            }
+        });
+
+        // 3️⃣ Lấy thông tin movie
+        List<Long> movieIds = new ArrayList<>(movieToRevenue.keySet());
+        List<MovieResDTO> movies = movieClient.findByIds(movieIds).getData();
+
+        Map<String, Double> result = new HashMap<>();
+        movieToRevenue.forEach((movieId, revenue) -> {
+            String title = movies.stream()
+                    .filter(m -> m.getId().equals(movieId))
+                    .map(MovieResDTO::getTitle)
+                    .findFirst()
+                    .orElse("Unknown Movie");
+            result.put(title, revenue);
+        });
+
+        return result;
     }
 
     public void validateShowtime(Long roomId, LocalDateTime startTime, LocalDateTime endTime) {
