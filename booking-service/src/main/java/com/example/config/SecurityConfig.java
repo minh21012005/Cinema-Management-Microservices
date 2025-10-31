@@ -35,7 +35,7 @@ public class SecurityConfig implements WebMvcConfigurer {
         String[] whiteList = {
                 "/swagger-ui/**", "/swagger-ui.html",
                 "/v3/api-docs", "/v3/api-docs/**",
-                "/ws/**", "/api/v1/sepay/**"
+                "/ws/**", "/api/v1/sepay/**", "/actuator/**"
         };
 
         http

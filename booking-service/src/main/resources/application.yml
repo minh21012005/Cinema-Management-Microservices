@@ -49,6 +49,19 @@ eureka:
     prefer-ip-address: true      # Dùng IP thay vì hostname
     ip-address: 127.0.0.1
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health,info,prometheus"
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+  endpoint:
+    prometheus:
+      enabled: true
+
 minhnb:
   jwt:
     base64-secret: Muw9kQMoEFTnfKm5sHbvqus3GvSYF4mSCL3ay11sjkRGLpMnvBTpsRF/bDHZmuI5ROhJ23QuZhOb1Cx3OZxy0w==
