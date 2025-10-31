@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true" scanPeriod="30 seconds">
+    <!-- Cho phép Spring Boot override cấu hình -->
+    <springProperty scope="context" name="springAppName" source="spring.application.name" defaultValue="unknown-service"/>
+    <springProperty scope="context" name="logstashHost" source="LOGSTASH_HOST" defaultValue="localhost"/>
+    <springProperty scope="context" name="logstashPort" source="LOGSTASH_PORT" defaultValue="5044"/>
+
+    <!-- Đặt pattern log cơ bản -->
+    <property name="CONSOLE_LOG_PATTERN"
+              value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"/>
+
+    <!-- ============================== -->
+    <!-- 1️⃣ Appender: Console Logging -->
+    <!-- ============================== -->
+    <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <!-- ===================================== -->
+    <!-- 2️⃣ Appender: Logstash JSON TCP Output -->
+    <!-- ===================================== -->
+    <appender name="Logstash" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
+        <!-- Kết nối tới Logstash container -->
+        <destination>${logstashHost}:${logstashPort}</destination>
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <!-- Thông tin cơ bản -->
+                <timestamp/>
+                <pattern>
+                    <pattern>
+                        {
+                        "app": "${springAppName}",
+                        "level": "%level",
+                        "thread": "%thread",
+                        "logger": "%logger",
+                        "message": "%message",
+                        "context": "%mdc",
+                        "exception": "%exception{5}"
+                        }
+                    </pattern>
+                </pattern>
+            </providers>
+        </encoder>
+
+        <!-- Giới hạn retry nếu Logstash tạm ngắt -->
+        <keepAliveDuration>5 minutes</keepAliveDuration>
+        <reconnectionDelay>10 seconds</reconnectionDelay>
+    </appender>
+
+    <!-- ============================== -->
+    <!-- 3️⃣ Gộp Appender vào Root logger -->
+    <!-- ============================== -->
+    <root level="INFO">
+        <appender-ref ref="Console"/>
+        <appender-ref ref="Logstash"/>
+    </root>
+
+    <!-- ============================== -->
+    <!-- 4️⃣ Logger riêng cho các package cụ thể -->
+    <!-- ============================== -->
+    <logger name="org.springframework.web" level="INFO"/>
+    <logger name="org.hibernate" level="WARN"/>
+    <logger name="com.example" level="DEBUG"/>
+
+</configuration>

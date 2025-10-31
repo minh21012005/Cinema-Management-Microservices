@@ -22,6 +22,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -495,6 +496,7 @@ public class ShowtimeServiceImpl
         return result;
     }
 
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public List<ShowtimeResDTO> importExcel(MultipartFile file) throws IdInvalidException {
         List<ShowtimeResDTO> createdShowtimes = new ArrayList<>();

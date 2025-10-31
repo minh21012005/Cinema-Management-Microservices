@@ -109,5 +109,13 @@ security:
     - /communication-service/api/v1/chat-bot
     - /communication-service/api/v1/chat-messages/history/*
     - /movie-service/api/v1/movies/*/similar
+    - /movie-service/actuator/**
+    - /cinema-service/actuator/**
+    - /auth-service/actuator/**
+    - /user-service/actuator/**
+    - /booking-service/actuator/**
+    - /media-service/actuator/**
+    - /content-service/actuator/**
+    - /communication-service/actuator/**
 
 

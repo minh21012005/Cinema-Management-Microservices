@@ -1,0 +1,43 @@
+global:
+  scrape_interval: 5s
+
+scrape_configs:
+  - job_name: 'movie-service'
+    metrics_path: '/movie-service/actuator/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:8080']
+
+  - job_name: 'cinema-service'
+    metrics_path: '/cinema-service/actuator/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:8080']
+
+  - job_name: 'auth-service'
+    metrics_path: '/auth-service/actuator/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:8080']
+
+  - job_name: 'user-service'
+    metrics_path: '/user-service/actuator/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:8080']
+
+  - job_name: 'booking-service'
+    metrics_path: '/booking-service/actuator/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:8080']
+
+  - job_name: 'media-service'
+    metrics_path: '/media-service/actuator/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:8080']
+
+  - job_name: 'content-service'
+    metrics_path: '/content-service/actuator/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:8080']
+
+  - job_name: 'communication-service'
+    metrics_path: '/communication-service/actuator/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:8080']

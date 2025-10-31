@@ -36,9 +36,11 @@ public class FormatRestResponse implements ResponseBodyAdvice<Object> {
 
         String path = request.getURI().getPath();
 
-        if (path.startsWith("/v3/api-docs") || path.startsWith("/swagger-ui")) {
+        if (path.startsWith("/actuator") || path.startsWith("/error")
+                || path.startsWith("/v3/api-docs") || path.startsWith("/swagger-ui")) {
             return body;
         }
+
         // ko nên format hiển thị, để frontend tự format
         if (body instanceof String || body instanceof Resource || body instanceof Boolean) {
             return body;
