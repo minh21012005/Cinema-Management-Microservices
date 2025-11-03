@@ -312,16 +312,17 @@ services:
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=21012005
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka
-      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
+      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=false
 #      - LOGSTASH_HOST=logstash
 #      - LOGSTASH_PORT=5044
       - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,prometheus
       - MAIL_USERNAME=minhhtestt@gmail.com
       - MAIL_PASSWORD=hmsu cwcg qsmq fekl
     depends_on:
-      - mysql-auth
-      - discovery-server
-#      - logstash
+      discovery-server:
+        condition: service_healthy
+      mysql-auth:
+        condition: service_healthy
     networks:
       - monitoring
     restart: always
@@ -336,14 +337,15 @@ services:
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=21012005
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka
-      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
+      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=false
 #      - LOGSTASH_HOST=logstash
 #      - LOGSTASH_PORT=5044
       - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,prometheus
     depends_on:
-      - mysql-user
-      - discovery-server
-#      - logstash
+      discovery-server:
+        condition: service_healthy
+      mysql-user:
+        condition: service_healthy
     networks:
       - monitoring
     restart: always
@@ -358,14 +360,15 @@ services:
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=21012005
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka
-      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
+      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=false
 #      - LOGSTASH_HOST=logstash
 #      - LOGSTASH_PORT=5044
       - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,prometheus
     depends_on:
-      - mysql-cinema
-      - discovery-server
-#      - logstash
+      discovery-server:
+        condition: service_healthy
+      mysql-cinema:
+        condition: service_healthy
     networks:
       - monitoring
     restart: always
@@ -380,14 +383,15 @@ services:
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=21012005
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka
-      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
+      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=false
 #      - LOGSTASH_HOST=logstash
 #      - LOGSTASH_PORT=5044
       - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,prometheus
     depends_on:
-      - mysql-movie
-      - discovery-server
-#      - logstash
+      discovery-server:
+        condition: service_healthy
+      mysql-movie:
+        condition: service_healthy
     networks:
       - monitoring
     restart: always
@@ -402,14 +406,15 @@ services:
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=21012005
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka
-      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
+      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=false
 #      - LOGSTASH_HOST=logstash
 #      - LOGSTASH_PORT=5044
       - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,prometheus
     depends_on:
-      - mysql-media
-      - discovery-server
-#      - logstash
+      discovery-server:
+        condition: service_healthy
+      mysql-media:
+        condition: service_healthy
     networks:
       - monitoring
     restart: always
@@ -424,7 +429,7 @@ services:
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=21012005
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka
-      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
+      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=false
 #      - LOGSTASH_HOST=logstash
 #      - LOGSTASH_PORT=5044
       - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,prometheus
@@ -434,9 +439,10 @@ services:
       - SEPAY_API_KEY=WFEHMVASBLOGKRDFYONQPLEAR0SZX8D36TQBUKQHCCPK3KV92SEIZ75YVXI20IRF
       - SEPAY_BANK=TPBank
     depends_on:
-      - mysql-booking
-      - discovery-server
-#      - logstash
+      discovery-server:
+        condition: service_healthy
+      mysql-booking:
+        condition: service_healthy
     networks:
       - monitoring
     restart: always
@@ -451,14 +457,15 @@ services:
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=21012005
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka
-      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
+      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=false
 #      - LOGSTASH_HOST=logstash
 #      - LOGSTASH_PORT=5044
       - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,prometheus
     depends_on:
-      - mysql-content
-      - discovery-server
-#      - logstash
+      discovery-server:
+        condition: service_healthy
+      mysql-content:
+        condition: service_healthy
     networks:
       - monitoring
     restart: always
@@ -473,14 +480,15 @@ services:
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=21012005
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka
-      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
+      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=false
 #      - LOGSTASH_HOST=logstash
 #      - LOGSTASH_PORT=5044
       - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,prometheus
     depends_on:
-      - mysql-communication
-      - discovery-server
-#      - logstash
+      discovery-server:
+        condition: service_healthy
+      mysql-communication:
+        condition: service_healthy
     networks:
       - monitoring
     restart: always
@@ -495,18 +503,11 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka
-      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
+      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=false
       - SPRING_CLOUD_GATEWAY_DISCOVERY_LOCATOR_ENABLED=true
     depends_on:
-      - discovery-server
-      - auth-service
-      - user-service
-      - cinema-service
-      - movie-service
-      - media-service
-      - booking-service
-      - content-service
-      - communication-service
+      discovery-server:
+        condition: service_healthy
     networks:
       - monitoring
     restart: always
