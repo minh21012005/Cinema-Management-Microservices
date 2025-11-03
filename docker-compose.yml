@@ -1,83 +1,81 @@
-version: '3.8'
-
 services:
   # ======================
   # 🔹 Elasticsearch
   # ======================
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.3
-    container_name: elasticsearch
-    environment:
-      - discovery.type=single-node
-      - xpack.security.enabled=false
-      - ES_JAVA_OPTS=-Xms1g -Xmx1g
-    ports:
-      - "9200:9200"
-    volumes:
-      - elastic_data:/usr/share/elasticsearch/data
-    networks:
-      - monitoring
-    restart: always
+#  elasticsearch:
+#    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.3
+#    container_name: elasticsearch
+#    environment:
+#      - discovery.type=single-node
+#      - xpack.security.enabled=false
+#      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+#    ports:
+#      - "9200:9200"
+#    volumes:
+#      - elastic_data:/usr/share/elasticsearch/data
+#    networks:
+#      - monitoring
+#    restart: always
 
   # ======================
   # 🔹 Kibana
   # ======================
-  kibana:
-    image: docker.elastic.co/kibana/kibana:8.15.3
-    container_name: kibana
-    environment:
-      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
-    ports:
-      - "5601:5601"
-    depends_on:
-      - elasticsearch
-    networks:
-      - monitoring
-    restart: always
+#  kibana:
+#    image: docker.elastic.co/kibana/kibana:8.15.3
+#    container_name: kibana
+#    environment:
+#      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+#    ports:
+#      - "5601:5601"
+#    depends_on:
+#      - elasticsearch
+#    networks:
+#      - monitoring
+#    restart: always
 
   # ======================
   # 🔹 Logstash
   # ======================
-  logstash:
-    image: docker.elastic.co/logstash/logstash:8.15.3
-    container_name: logstash
-    ports:
-      - "5044:5044"
-    volumes:
-      - ./elk/logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
-    depends_on:
-      - elasticsearch
-    networks:
-      - monitoring
-    restart: always
+#  logstash:
+#    image: docker.elastic.co/logstash/logstash:8.15.3
+#    container_name: logstash
+#    ports:
+#      - "5044:5044"
+#    volumes:
+#      - ./elk/logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
+#    depends_on:
+#      - elasticsearch
+#    networks:
+#      - monitoring
+#    restart: always
 
   # ======================
   # 🔹 Prometheus
   # ======================
-  prometheus:
-    image: prom/prometheus:v2.55.1
-    container_name: prometheus
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-    networks:
-      - monitoring
-    restart: always
+#  prometheus:
+#    image: prom/prometheus:v2.55.1
+#    container_name: prometheus
+#    ports:
+#      - "9090:9090"
+#    volumes:
+#      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+#    networks:
+#      - monitoring
+#    restart: always
 
   # ======================
   # 🔹 Grafana
   # ======================
-  grafana:
-    image: grafana/grafana:11.1.0
-    container_name: grafana
-    ports:
-      - "3000:3000"
-    depends_on:
-      - prometheus
-    networks:
-      - monitoring
-    restart: always
+#  grafana:
+#    image: grafana/grafana:11.1.0
+#    container_name: grafana
+#    ports:
+#      - "3000:3000"
+#    depends_on:
+#      - prometheus
+#    networks:
+#      - monitoring
+#    restart: always
 
   # ======================
   # 🧰 Redis
@@ -137,6 +135,7 @@ services:
     ports:
       - "3307:3306"
     volumes:
+      - ./sql/auth_db.sql:/docker-entrypoint-initdb.d/auth_db.sql:ro
       - mysql_auth_data:/var/lib/mysql
     networks:
       - monitoring
@@ -155,6 +154,7 @@ services:
     ports:
       - "3308:3306"
     volumes:
+      - ./sql/user_db.sql:/docker-entrypoint-initdb.d/user_db.sql:ro
       - mysql_user_data:/var/lib/mysql
     networks:
       - monitoring
@@ -173,6 +173,7 @@ services:
     ports:
       - "3309:3306"
     volumes:
+      - ./sql/cinema_db.sql:/docker-entrypoint-initdb.d/cinema_db.sql:ro
       - mysql_cinema_data:/var/lib/mysql
     networks:
       - monitoring
@@ -191,6 +192,7 @@ services:
     ports:
       - "3310:3306"
     volumes:
+      - ./sql/movie_db.sql:/docker-entrypoint-initdb.d/movie_db.sql:ro
       - mysql_movie_data:/var/lib/mysql
     networks:
       - monitoring
@@ -209,6 +211,7 @@ services:
     ports:
       - "3311:3306"
     volumes:
+      - ./sql/media_db.sql:/docker-entrypoint-initdb.d/media_db.sql:ro
       - mysql_media_data:/var/lib/mysql
     networks:
       - monitoring
@@ -227,6 +230,7 @@ services:
     ports:
       - "3312:3306"
     volumes:
+      - ./sql/booking_db.sql:/docker-entrypoint-initdb.d/booking_db.sql:ro
       - mysql_booking_data:/var/lib/mysql
     networks:
       - monitoring
@@ -245,6 +249,7 @@ services:
     ports:
       - "3313:3306"
     volumes:
+      - ./sql/content_db.sql:/docker-entrypoint-initdb.d/content_db.sql:ro
       - mysql_content_data:/var/lib/mysql
     networks:
       - monitoring
@@ -263,6 +268,7 @@ services:
     ports:
       - "3314:3306"
     volumes:
+      - ./sql/communication_db.sql:/docker-entrypoint-initdb.d/communication_db.sql:ro
       - mysql_communication_data:/var/lib/mysql
     networks:
       - monitoring
@@ -283,6 +289,11 @@ services:
       - "8761:8761"
     environment:
       - EUREKA_SERVER_PORT=8761
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8761/eureka/apps" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
     networks:
       - monitoring
     restart: always
@@ -296,18 +307,21 @@ services:
     ports:
       - "8081:8081"
     environment:
+      - SPRING_PROFILES_ACTIVE=docker
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-auth:3306/auth_db
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=21012005
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka
       - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
-      - LOGSTASH_HOST=logstash
-      - LOGSTASH_PORT=5044
+#      - LOGSTASH_HOST=logstash
+#      - LOGSTASH_PORT=5044
       - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,prometheus
+      - MAIL_USERNAME=minhhtestt@gmail.com
+      - MAIL_PASSWORD=hmsu cwcg qsmq fekl
     depends_on:
       - mysql-auth
       - discovery-server
-      - logstash
+#      - logstash
     networks:
       - monitoring
     restart: always
@@ -317,18 +331,19 @@ services:
     ports:
       - "8082:8082"
     environment:
+      - SPRING_PROFILES_ACTIVE=docker
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-user:3306/user_db
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=21012005
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka
       - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
-      - LOGSTASH_HOST=logstash
-      - LOGSTASH_PORT=5044
+#      - LOGSTASH_HOST=logstash
+#      - LOGSTASH_PORT=5044
       - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,prometheus
     depends_on:
       - mysql-user
       - discovery-server
-      - logstash
+#      - logstash
     networks:
       - monitoring
     restart: always
@@ -338,18 +353,19 @@ services:
     ports:
       - "8083:8083"
     environment:
+      - SPRING_PROFILES_ACTIVE=docker
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-cinema:3306/cinema_db
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=21012005
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka
       - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
-      - LOGSTASH_HOST=logstash
-      - LOGSTASH_PORT=5044
+#      - LOGSTASH_HOST=logstash
+#      - LOGSTASH_PORT=5044
       - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,prometheus
     depends_on:
       - mysql-cinema
       - discovery-server
-      - logstash
+#      - logstash
     networks:
       - monitoring
     restart: always
@@ -359,18 +375,19 @@ services:
     ports:
       - "8084:8084"
     environment:
+      - SPRING_PROFILES_ACTIVE=docker
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-movie:3306/movie_db
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=21012005
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka
       - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
-      - LOGSTASH_HOST=logstash
-      - LOGSTASH_PORT=5044
+#      - LOGSTASH_HOST=logstash
+#      - LOGSTASH_PORT=5044
       - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,prometheus
     depends_on:
       - mysql-movie
       - discovery-server
-      - logstash
+#      - logstash
     networks:
       - monitoring
     restart: always
@@ -380,18 +397,19 @@ services:
     ports:
       - "8085:8085"
     environment:
+      - SPRING_PROFILES_ACTIVE=docker
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-media:3306/media_db
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=21012005
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka
       - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
-      - LOGSTASH_HOST=logstash
-      - LOGSTASH_PORT=5044
+#      - LOGSTASH_HOST=logstash
+#      - LOGSTASH_PORT=5044
       - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,prometheus
     depends_on:
       - mysql-media
       - discovery-server
-      - logstash
+#      - logstash
     networks:
       - monitoring
     restart: always
@@ -401,18 +419,24 @@ services:
     ports:
       - "8086:8086"
     environment:
+      - SPRING_PROFILES_ACTIVE=docker
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-booking:3306/booking_db
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=21012005
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka
       - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
-      - LOGSTASH_HOST=logstash
-      - LOGSTASH_PORT=5044
+#      - LOGSTASH_HOST=logstash
+#      - LOGSTASH_PORT=5044
       - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,prometheus
+      - MAIL_USERNAME=minhhtestt@gmail.com
+      - MAIL_PASSWORD=hmsu cwcg qsmq fekl
+      - SEPAY_ACCOUNT=56711111111
+      - SEPAY_API_KEY=WFEHMVASBLOGKRDFYONQPLEAR0SZX8D36TQBUKQHCCPK3KV92SEIZ75YVXI20IRF
+      - SEPAY_BANK=TPBank
     depends_on:
       - mysql-booking
       - discovery-server
-      - logstash
+#      - logstash
     networks:
       - monitoring
     restart: always
@@ -422,18 +446,19 @@ services:
     ports:
       - "8087:8087"
     environment:
+      - SPRING_PROFILES_ACTIVE=docker
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-content:3306/content_db
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=21012005
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka
       - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
-      - LOGSTASH_HOST=logstash
-      - LOGSTASH_PORT=5044
+#      - LOGSTASH_HOST=logstash
+#      - LOGSTASH_PORT=5044
       - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,prometheus
     depends_on:
       - mysql-content
       - discovery-server
-      - logstash
+#      - logstash
     networks:
       - monitoring
     restart: always
@@ -443,18 +468,19 @@ services:
     ports:
       - "8088:8088"
     environment:
+      - SPRING_PROFILES_ACTIVE=docker
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-communication:3306/communication_db
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=21012005
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka
       - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
-      - LOGSTASH_HOST=logstash
-      - LOGSTASH_PORT=5044
+#      - LOGSTASH_HOST=logstash
+#      - LOGSTASH_PORT=5044
       - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,prometheus
     depends_on:
       - mysql-communication
       - discovery-server
-      - logstash
+#      - logstash
     networks:
       - monitoring
     restart: always
@@ -467,6 +493,7 @@ services:
     ports:
       - "8080:8080"
     environment:
+      - SPRING_PROFILES_ACTIVE=docker
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka
       - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
       - SPRING_CLOUD_GATEWAY_DISCOVERY_LOCATOR_ENABLED=true

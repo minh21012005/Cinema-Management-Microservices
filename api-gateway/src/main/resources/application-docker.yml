@@ -20,12 +20,9 @@ spring:
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: http://discovery-server:8761/eureka/
   instance:
     prefer-ip-address: true
-    # Chỉ dùng khi chạy local, nếu deploy nhiều máy nên để hostname
-    ip-address: 127.0.0.1
-    hostname: localhost
 
 springdoc:
   swagger-ui:
