@@ -15,7 +15,7 @@ services:
 #      - elastic_data:/usr/share/elasticsearch/data
 #    networks:
 #      - monitoring
-#    restart: always
+#    restart: unless-stopped
 
   # ======================
   # 🔹 Kibana
@@ -31,7 +31,7 @@ services:
 #      - elasticsearch
 #    networks:
 #      - monitoring
-#    restart: always
+#    restart: unless-stopped
 
   # ======================
   # 🔹 Logstash
@@ -47,7 +47,7 @@ services:
 #      - elasticsearch
 #    networks:
 #      - monitoring
-#    restart: always
+#    restart: unless-stopped
 
   # ======================
   # 🔹 Prometheus
@@ -61,7 +61,7 @@ services:
 #      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
 #    networks:
 #      - monitoring
-#    restart: always
+#    restart: unless-stopped
 
   # ======================
   # 🔹 Grafana
@@ -75,7 +75,7 @@ services:
 #      - prometheus
 #    networks:
 #      - monitoring
-#    restart: always
+#    restart: unless-stopped
 
   # ======================
   # 🧰 Redis
@@ -87,7 +87,7 @@ services:
       - "6379:6379"
     networks:
       - monitoring
-    restart: always
+    restart: unless-stopped
 
   # ======================
   # 📨 RabbitMQ (với giao diện quản lý)
@@ -103,7 +103,7 @@ services:
       RABBITMQ_DEFAULT_PASS: guest
     networks:
       - monitoring
-    restart: always
+    restart: unless-stopped
 
   # ======================
   # 🪣 MinIO (lưu trữ file)
@@ -119,10 +119,10 @@ services:
       - "9000:9000"  # API
       - "9001:9001"  # Web console
     volumes:
-      - minio_data:/data
+      - D:/minio-data:/data
     networks:
       - monitoring
-    restart: always
+    restart: unless-stopped
 
   # ======================
   # 🧩 MySQL Databases (healthcheck + restart)
@@ -144,7 +144,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    restart: always
+    restart: unless-stopped
 
   mysql-user:
     image: mysql:8.0
@@ -163,7 +163,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    restart: always
+    restart: unless-stopped
 
   mysql-cinema:
     image: mysql:8.0
@@ -182,7 +182,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    restart: always
+    restart: unless-stopped
 
   mysql-movie:
     image: mysql:8.0
@@ -201,7 +201,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    restart: always
+    restart: unless-stopped
 
   mysql-media:
     image: mysql:8.0
@@ -220,7 +220,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    restart: always
+    restart: unless-stopped
 
   mysql-booking:
     image: mysql:8.0
@@ -239,7 +239,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    restart: always
+    restart: unless-stopped
 
   mysql-content:
     image: mysql:8.0
@@ -258,7 +258,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    restart: always
+    restart: unless-stopped
 
   mysql-communication:
     image: mysql:8.0
@@ -277,7 +277,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    restart: always
+    restart: unless-stopped
 
   # ======================
   # 🌍 Discovery Server (Eureka)
@@ -296,7 +296,7 @@ services:
       retries: 10
     networks:
       - monitoring
-    restart: always
+    restart: unless-stopped
 
   # ======================
   # 🚀 Spring Boot Microservices
@@ -325,7 +325,7 @@ services:
         condition: service_healthy
     networks:
       - monitoring
-    restart: always
+    restart: unless-stopped
 
   user-service:
     build: ./user-service
@@ -348,7 +348,7 @@ services:
         condition: service_healthy
     networks:
       - monitoring
-    restart: always
+    restart: unless-stopped
 
   cinema-service:
     build: ./cinema-service
@@ -371,7 +371,7 @@ services:
         condition: service_healthy
     networks:
       - monitoring
-    restart: always
+    restart: unless-stopped
 
   movie-service:
     build: ./movie-service
@@ -384,6 +384,7 @@ services:
       - SPRING_DATASOURCE_PASSWORD=21012005
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka
       - EUREKA_INSTANCE_PREFER_IP_ADDRESS=false
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
 #      - LOGSTASH_HOST=logstash
 #      - LOGSTASH_PORT=5044
       - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,prometheus
@@ -394,7 +395,7 @@ services:
         condition: service_healthy
     networks:
       - monitoring
-    restart: always
+    restart: unless-stopped
 
   media-service:
     build: ./media-service
@@ -417,7 +418,7 @@ services:
         condition: service_healthy
     networks:
       - monitoring
-    restart: always
+    restart: unless-stopped
 
   booking-service:
     build: ./booking-service
@@ -445,7 +446,7 @@ services:
         condition: service_healthy
     networks:
       - monitoring
-    restart: always
+    restart: unless-stopped
 
   content-service:
     build: ./content-service
@@ -468,7 +469,7 @@ services:
         condition: service_healthy
     networks:
       - monitoring
-    restart: always
+    restart: unless-stopped
 
   communication-service:
     build: ./communication-service
@@ -481,6 +482,7 @@ services:
       - SPRING_DATASOURCE_PASSWORD=21012005
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka
       - EUREKA_INSTANCE_PREFER_IP_ADDRESS=false
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
 #      - LOGSTASH_HOST=logstash
 #      - LOGSTASH_PORT=5044
       - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,prometheus
@@ -491,7 +493,7 @@ services:
         condition: service_healthy
     networks:
       - monitoring
-    restart: always
+    restart: unless-stopped
 
   # ======================
   # 🌐 API Gateway
@@ -510,7 +512,7 @@ services:
         condition: service_healthy
     networks:
       - monitoring
-    restart: always
+    restart: unless-stopped
 
 # ======================
 # 🌐 Network & Volumes
