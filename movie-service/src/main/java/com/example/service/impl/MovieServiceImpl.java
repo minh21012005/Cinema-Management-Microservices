@@ -16,6 +16,9 @@ import com.example.service.specification.MovieSpecification;
 import com.example.util.error.IdInvalidException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.util.Pair;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -28,6 +31,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class MovieServiceImpl
         extends BaseServiceImpl<Movie, Long, MovieReqDTO, MovieResDTO>
         implements MovieService {
@@ -116,6 +120,7 @@ public class MovieServiceImpl
         return rs;
     }
 
+    @CacheEvict(value = "now_showing_movies", allEntries = true)
     @Override
     public MovieResDTO createMovie(MovieReqDTO dto) throws IdInvalidException {
         // Validate title
@@ -210,6 +215,7 @@ public class MovieServiceImpl
         return movieMapper.toDto(saved);
     }
 
+    @CacheEvict(value = "now_showing_movies", allEntries = true)
     @Override
     public MovieResDTO changeStatus(Long id) throws IdInvalidException {
         Movie movie = movieRepository.findById(id).orElseThrow(
@@ -231,6 +237,7 @@ public class MovieServiceImpl
         return movieMapper.toDto(movieRepository.save(movie));
     }
 
+    @CacheEvict(value = "now_showing_movies", allEntries = true)
     @Override
     public MovieResDTO updateMovie(Long id, MovieReqDTO dto) throws IdInvalidException {
         Movie movie = movieRepository.findById(id)
@@ -315,6 +322,7 @@ public class MovieServiceImpl
         return movieMapper.toDto(updated);
     }
 
+    @Cacheable(value = "now_showing_movies", key = "#limit")
     @Override
     public List<MovieResDTO> fetchShowingMovies(int limit) {
         return movieRepository.findNowShowingMovies

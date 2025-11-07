@@ -4,6 +4,8 @@ server:
 spring:
   application:
     name: movie-service
+  cache:
+    type: redis
   data:
     redis:
       host: localhost
