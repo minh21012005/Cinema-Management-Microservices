@@ -13,23 +13,9 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        service: [
-          api-gateway,
-          auth-service,
-          user-service,
-          movie-service,
-          booking-service,
-          cinema-service,
-          communication-service,
-          content-service,
-          discovery-server,
-          media-service
-        ]
 
     steps:
-      # 1️⃣ Lấy mã nguồn
+      # 1️⃣ Lấy code
       - name: Checkout source
         uses: actions/checkout@v4
 
@@ -40,17 +26,21 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      # 3️⃣ Build từng service
-      - name: Build ${{ matrix.service }}
-        run: mvn -f ${{ matrix.service }}/pom.xml clean package -DskipTests
+      # 3️⃣ Build toàn bộ project từ root pom.xml
+      - name: Build all modules
+        run: mvn clean package -DskipTests
 
       # 4️⃣ Đăng nhập Docker Hub
       - name: Login to Docker Hub
         run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USER }}" --password-stdin
 
-      # 5️⃣ Build và Push image lên Docker Hub
-      - name: Build and Push Docker image
+      # 5️⃣ Build và push Docker image từng service
+      - name: Build and Push Docker images
         run: |
-          IMAGE_NAME=${{ secrets.DOCKERHUB_USER }}/${{ matrix.service }}
-          docker build -t $IMAGE_NAME:latest ${{ matrix.service }}
-          docker push $IMAGE_NAME:latest
+          services=(api-gateway auth-service user-service movie-service booking-service cinema-service communication-service content-service discovery-server media-service)
+          for service in "${services[@]}"; do
+            IMAGE_NAME=${{ secrets.DOCKERHUB_USER }}/$service
+            echo "Building and pushing $IMAGE_NAME"
+            docker build -t $IMAGE_NAME:latest $service
+            docker push $IMAGE_NAME:latest
+          done
