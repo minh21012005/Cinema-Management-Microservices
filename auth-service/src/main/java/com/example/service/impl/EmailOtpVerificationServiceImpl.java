@@ -1,10 +1,10 @@
 package com.example.service.impl;
 
+import com.example.client.CommunicationClient;
 import com.example.domain.entity.EmailOtpVerification;
 import com.example.domain.request.CreateUserRequest;
 import com.example.repository.EmailOtpVerificationRepository;
 import com.example.service.EmailOtpVerificationService;
-import com.example.service.EmailService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.ResponseEntity;
@@ -19,13 +19,13 @@ import java.util.Random;
 public class EmailOtpVerificationServiceImpl implements EmailOtpVerificationService {
     private final EmailOtpVerificationRepository emailOtpVerificationRepository;
     private final ObjectMapper objectMapper;
-    private final EmailService emailService;
+    private final CommunicationClient communicationClient;
 
     public EmailOtpVerificationServiceImpl(EmailOtpVerificationRepository emailOtpVerificationRepository,
-                                           ObjectMapper objectMapper, EmailService emailService) {
+                                           ObjectMapper objectMapper, CommunicationClient communicationClient) {
         this.emailOtpVerificationRepository = emailOtpVerificationRepository;
         this.objectMapper = objectMapper;
-        this.emailService = emailService;
+        this.communicationClient = communicationClient;
     }
 
     @Override
@@ -45,7 +45,7 @@ public class EmailOtpVerificationServiceImpl implements EmailOtpVerificationServ
 
         emailOtpVerificationRepository.save(otpRecord);
 
-        emailService.sendOtpEmail(req.getEmail(), otp);
+        communicationClient.sendOtpEmail(req.getEmail(), otp);
 
         return ResponseEntity.ok(Map.of(
                 "message", "Mã OTP đã được gửi đến email của bạn",
@@ -53,7 +53,6 @@ public class EmailOtpVerificationServiceImpl implements EmailOtpVerificationServ
         ));
     }
 
-    @Override
     @Scheduled(cron = "0 0 * * * *")
     public void cleanExpiredOtp() {
         LocalDateTime now = LocalDateTime.now();

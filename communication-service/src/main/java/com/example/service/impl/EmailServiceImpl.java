@@ -46,9 +46,24 @@ public class EmailServiceImpl implements EmailService {
         }
     }
 
-    @Async
     @Override
-    public void sendTicketEmail(String toEmail, TicketEmailDTO ticketInfo) {
+    public void sendTicketEmail(TicketEmailDTO ticketInfo) {
+        try {
+            Context context = new Context();
+            context.setVariable("ticket", ticketInfo);
+
+            String htmlContent = templateEngine.process("email/ticket-confirmation.html", context);
+
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, "UTF-8");
+            helper.setTo(ticketInfo.getEmail());
+            helper.setSubject("🎟️ Vé xem phim của bạn tại CNM đã được xác nhận!");
+            helper.setText(htmlContent, true);
+
+            mailSender.send(message);
+        } catch (MessagingException e) {
+            throw new RuntimeException("Không thể gửi email vé", e);
+        }
     }
 
 }

@@ -16,8 +16,8 @@ import com.example.mapper.SepayMapper;
 import com.example.repository.OrderRepository;
 import com.example.repository.PaymentRepository;
 import com.example.repository.SepayRepository;
-import com.example.service.EmailService;
 import com.example.service.PaymentService;
+import com.example.service.TicketEventPublisher;
 import com.example.util.error.IdInvalidException;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -40,7 +40,7 @@ public class PaymentServiceImpl
     private final SimpMessagingTemplate messagingTemplate;
     private final CinemaServiceClient cinemaServiceClient;
     private final AuthClient authClient;
-    private final EmailService emailService;
+    private final TicketEventPublisher ticketEventPublisher;
 
     protected PaymentServiceImpl(PaymentRepository paymentRepository,
                                  OrderRepository orderRepository,
@@ -50,8 +50,8 @@ public class PaymentServiceImpl
                                  SepayRepository sepayRepository,
                                  CinemaServiceClient cinemaServiceClient,
                                  AuthClient authClient,
-                                 EmailService emailService,
-                                 SimpMessagingTemplate messagingTemplate) {
+                                 SimpMessagingTemplate messagingTemplate,
+                                 TicketEventPublisher ticketEventPublisher) {
         super(paymentRepository);
         this.paymentRepository = paymentRepository;
         this.orderRepository = orderRepository;
@@ -61,8 +61,8 @@ public class PaymentServiceImpl
         this.sepayRepository = sepayRepository;
         this.cinemaServiceClient = cinemaServiceClient;
         this.authClient = authClient;
-        this.emailService = emailService;
         this.messagingTemplate = messagingTemplate;
+        this.ticketEventPublisher = ticketEventPublisher;
     }
 
     @Override
@@ -192,8 +192,9 @@ public class PaymentServiceImpl
 
             TicketEmailDTO ticketData = cinemaServiceClient.fetchTicketData(showtimeId, request).getData();
             ticketData.setTotalPrice(order.getTotalAmount());
+            ticketData.setEmail(email);
 
-            emailService.sendTicketEmail(email, ticketData);
+            ticketEventPublisher.publishTicketPurchasedEvent(ticketData);
 
         } catch (Exception e) {
             System.err.println("❌ Lỗi khi gửi email vé: " + e.getMessage());
