@@ -73,6 +73,8 @@ minhnb:
     base64-secret: Muw9kQMoEFTnfKm5sHbvqus3GvSYF4mSCL3ay11sjkRGLpMnvBTpsRF/bDHZmuI5ROhJ23QuZhOb1Cx3OZxy0w==
     access-token-validity-in-seconds: 1800
     refresh-token-validity-in-seconds: 2592000
+encryption:
+  secret: +8Gcq3ZG4GK/dH91oNMYSIt6uIvnwtiqwKk/cukuFXY=
 
 sepay:
   account: ${SEPAY_ACCOUNT}

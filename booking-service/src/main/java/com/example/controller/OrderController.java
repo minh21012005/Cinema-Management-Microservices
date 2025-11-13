@@ -7,7 +7,9 @@ import com.example.domain.response.TopUserDTO;
 import com.example.domain.response.TransactionResDTO;
 import com.example.mapper.OrderMapper;
 import com.example.service.OrderService;
+import com.example.util.EncryptionUtil;
 import com.example.util.error.IdInvalidException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -21,6 +23,9 @@ import java.util.List;
 public class OrderController extends BaseController<Order, Long, OrderReqDTO, OrderResDTO> {
 
     private final OrderService orderService;
+
+    @Value("${encryption.secret}")
+    private String secret;
 
     protected OrderController(OrderService orderService, OrderMapper orderMapper) {
         super(orderService, orderMapper);
@@ -68,5 +73,21 @@ public class OrderController extends BaseController<Order, Long, OrderReqDTO, Or
     public ResponseEntity<List<TransactionResDTO>> getOrdersToday() {
         List<TransactionResDTO> resDTOS = orderService.getOrdersByDate(LocalDate.now());
         return ResponseEntity.ok(resDTOS);
+    }
+
+    @PostMapping("/scan-qr")
+    public ResponseEntity<String> scanQr(@RequestParam("qr") String encryptedOrderId) {
+        try {
+            // Giải mã orderId
+            String orderIdStr = EncryptionUtil.decrypt(encryptedOrderId, secret);
+            Long orderId = Long.parseLong(orderIdStr);
+
+            // Cập nhật vé liên quan là đã sử dụng
+            orderService.markTicketsUsed(orderId);
+
+            return ResponseEntity.ok("Đã cập nhật vé sử dụng cho orderId: " + orderId);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("QR không hợp lệ hoặc đã sử dụng: " + e.getMessage());
+        }
     }
 }

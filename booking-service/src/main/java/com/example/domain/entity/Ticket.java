@@ -23,6 +23,14 @@ public class Ticket extends BaseEntity<Long>{
     @Column(nullable = false)
     private boolean reserved = false; // Tạm giữ ghế
 
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean used = false;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean valid = true;
+
     private LocalDateTime reservedAt; // Thời điểm bắt đầu giữ ghế
 
     @Column(name = "seat_id", nullable = false)

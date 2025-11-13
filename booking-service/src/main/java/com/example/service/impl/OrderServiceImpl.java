@@ -400,6 +400,24 @@ public class OrderServiceImpl
         }).toList();
     }
 
+    @Transactional
+    public void markTicketsUsed(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order không tồn tại"));
+
+        order.getTickets().forEach(ticket -> {
+            if (!ticket.isValid()) {
+                throw new RuntimeException("Vé " + ticket.getId() + " đã hết hạn hoặc không hợp lệ");
+            }
+            if (ticket.isUsed()) {
+                throw new RuntimeException("Vé " + ticket.getId() + " đã được sử dụng");
+            }
+            ticket.setUsed(true); // đánh dấu đã quét
+        });
+
+        orderRepository.save(order);
+    }
+
     /**
      * ✅ Tính doanh thu trong một ngày cụ thể
      */
@@ -425,7 +443,10 @@ public class OrderServiceImpl
     public void releaseExpiredSeats() {
         LocalDateTime expiredTime = LocalDateTime.now().minusMinutes(5);
         List<Ticket> expiredSeats = ticketRepository.findByReservedTrueAndReservedAtBefore(expiredTime);
-        expiredSeats.forEach(seat -> seat.setReserved(false));
+        expiredSeats.forEach(seat -> {
+            seat.setReserved(false);
+            seat.setValid(false);
+        });
         ticketRepository.saveAll(expiredSeats);
     }
 }

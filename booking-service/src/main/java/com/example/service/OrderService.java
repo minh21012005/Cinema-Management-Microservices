@@ -18,4 +18,5 @@ public interface OrderService extends BaseService<Order, Long, OrderReqDTO, Orde
     Double getRevenueByMonth(int year, int month);
     List<TopUserDTO> getTopCustomers(int topN);
     List<TransactionResDTO> getOrdersByDate(LocalDate date);
+    void markTicketsUsed(Long orderId);
 }
