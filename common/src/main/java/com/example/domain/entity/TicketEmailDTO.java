@@ -12,6 +12,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TicketEmailDTO {
+    private Long orderId;
     private String email;
     private String movieTitle;
     private String cinemaName;

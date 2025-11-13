@@ -191,6 +191,7 @@ public class PaymentServiceImpl
             request.setCombos(combos);
 
             TicketEmailDTO ticketData = cinemaServiceClient.fetchTicketData(showtimeId, request).getData();
+            ticketData.setOrderId(order.getId());
             ticketData.setTotalPrice(order.getTotalAmount());
             ticketData.setEmail(email);
 
