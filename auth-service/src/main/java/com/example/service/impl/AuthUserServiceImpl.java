@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class AuthUserServiceImpl extends BaseServiceImpl<AuthUser, Long, CreateUserRequest, ResUserDTO> implements AuthUserService {
@@ -193,5 +194,33 @@ public class AuthUserServiceImpl extends BaseServiceImpl<AuthUser, Long, CreateU
     @Override
     public boolean existsById(Long aLong) {
         return authUserRepository.existsById(aLong);
+    }
+
+    @Override
+    public AuthUser registerOAuthUser(String email, String name) {
+        Optional<AuthUser> existingUser = authUserRepository.findByEmail(email);
+        if (existingUser.isPresent()) {
+            return existingUser.get();
+        }
+
+        AuthUser user = new AuthUser();
+        user.setEmail(email);
+
+        String hashedPassword = passwordEncoder.encode(UUID.randomUUID().toString());
+        user.setPassword(hashedPassword);
+
+        Role role = roleService.findByCode("CUSTOMER").orElseThrow();
+        user.setRole(role);
+
+        AuthUser savedUser = authUserRepository.save(user);
+
+        UserProfileDTO profileEvent = new UserProfileDTO();
+        profileEvent.setEmail(email);
+        profileEvent.setName(name);
+        profileEvent.setRoleId(role.getId());
+        profileEvent.setAuthId(savedUser.getId());
+        rabbitTemplate.convertAndSend(exchangeName, sendRoutingKey, profileEvent);
+
+        return savedUser;
     }
 }

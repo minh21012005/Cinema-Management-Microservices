@@ -20,4 +20,5 @@ public interface AuthUserService extends BaseService<AuthUser, Long, CreateUserR
     ResUserDTO updateUser(AuthUser user, Role role, UserUpdateDTO dto);
     ResUserDTO updateUserStatus(AuthUser user);
     ResUserDTO registerVerify(VerifyOtpRequest req) throws IdInvalidException, JsonProcessingException;
+    AuthUser registerOAuthUser(String email, String name);
 }

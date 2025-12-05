@@ -1,9 +1,31 @@
 server:
   port: 8081
+  forward-headers-strategy: framework
 
 spring:
   application:
     name: auth-service
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: 79734938400-lj7ubhkg3n8siomls9f1bgan87nduvmd.apps.googleusercontent.com
+            client-secret: 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
+            scope:
+              - email
+              - profile
+          facebook:
+            client-id: 1368309891655435
+            client-secret: a14c269eb52ebf07474e91114b33c4e1
+            scope:
+              - email
+              - public_profile
+        provider:
+          google:
+            user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
+          facebook:
+            user-info-uri: https://graph.facebook.com/me?fields=id,name,email
   data:
     redis:
       host: localhost

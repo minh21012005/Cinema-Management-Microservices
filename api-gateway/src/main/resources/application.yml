@@ -117,3 +117,7 @@ security:
     - /media-service/actuator/**
     - /content-service/actuator/**
     - /communication-service/actuator/**
+    - /auth-service/oauth2/authorization/google
+    - /auth-service/oauth2/authorization/facebook
+    - /auth-service/login/oauth2/code/google
+    - /auth-service/login/oauth2/code/facebook

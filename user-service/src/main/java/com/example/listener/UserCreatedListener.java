@@ -22,7 +22,7 @@ public class UserCreatedListener {
     @RabbitListener(queues = "${app.rabbitmq.listen-queue}")
     public void handleUserCreated(UserProfileDTO profileDTO) {
         // Check phone trùng
-        if (userService.isPhoneExist(profileDTO.getPhone())) {
+        if ((profileDTO.getPhone() != null) && userService.isPhoneExist(profileDTO.getPhone())) {
             // Log, gửi event rollback nếu muốn, hoặc báo lỗi
             throw new RuntimeException("Phone " + profileDTO.getPhone() + " đã tồn tại.");
         }
@@ -31,12 +31,20 @@ public class UserCreatedListener {
         User user = new User();
         user.setName(profileDTO.getName());
         user.setEmail(profileDTO.getEmail());
-        user.setPhone(profileDTO.getPhone());
-        user.setAddress(profileDTO.getAddress());
-        user.setDateOfBirth(profileDTO.getDateOfBirth());
-        user.setGender(GenderEnum.valueOf(profileDTO.getGender()));
-        user.setRoleId(profileDTO.getRoleId());
         user.setAuthId(profileDTO.getAuthId());
+        user.setRoleId(profileDTO.getRoleId());
+        if(profileDTO.getPhone() != null && !profileDTO.getPhone().isEmpty()) {
+            user.setPhone(profileDTO.getPhone());
+        }
+        if(profileDTO.getAddress() != null && !profileDTO.getAddress().isEmpty()) {
+            user.setAddress(profileDTO.getAddress());
+        }
+        if(profileDTO.getDateOfBirth() != null) {
+            user.setDateOfBirth(profileDTO.getDateOfBirth());
+        }
+        if(profileDTO.getGender() != null && !profileDTO.getGender().isEmpty()) {
+            user.setGender(GenderEnum.valueOf(profileDTO.getGender()));
+        }
         userService.save(user);
     }
 

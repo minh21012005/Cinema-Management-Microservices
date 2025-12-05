@@ -26,7 +26,7 @@ public class User extends BaseEntity<Long> {
     @Enumerated(EnumType.STRING)
     private GenderEnum gender;
 
-    @Column(nullable = false, unique = true)
+    @Column(unique = true)
     private String phone;
 
     private String address;

@@ -1,5 +1,6 @@
 package com.example.config;
 
+import com.example.service.AuthUserService;
 import com.example.util.JwtUtil;
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import com.nimbusds.jose.util.Base64;
@@ -33,13 +34,40 @@ public class SecurityConfiguration implements WebMvcConfigurer {
     @Value("${minhnb.jwt.base64-secret}")
     private String jwtKey;
 
+    // ==========================
+    // 1) PASSWORD ENCODER
+    // ==========================
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    // ==========================
+    // 2) CUSTOM OAUTH2 USER SERVICE
+    // ==========================
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public CustomOAuth2UserService customOAuth2UserService(AuthUserService authUserService) {
+        return new CustomOAuth2UserService(authUserService);
+    }
+
+    // ==========================
+    // 3) OAUTH2 SUCCESS HANDLER
+    // ==========================
+    @Bean
+    public OAuth2SuccessHandler oAuth2SuccessHandler(JwtUtil jwtUtil) {
+        return new OAuth2SuccessHandler(jwtUtil);
+    }
+
+    // ==========================
+    // 4) MAIN SECURITY FILTER CHAIN
+    // ==========================
+    @Bean
+    public SecurityFilterChain filterChain(
+            HttpSecurity http,
+            CustomOAuth2UserService customOAuth2UserService,
+            OAuth2SuccessHandler oAuth2SuccessHandler
+    ) throws Exception {
+
         String[] whiteList = {
                 "/api/v1/auth/login", "/api/v1/auth/refresh", "/api/v1/auth/register",
                 "/api/v1/auth/register-request", "/api/v1/auth/register-verify",
@@ -54,19 +82,33 @@ public class SecurityConfiguration implements WebMvcConfigurer {
                         .requestMatchers(whiteList).permitAll()
                         .anyRequest().authenticated()
                 )
+                .oauth2Login(oauth2 -> oauth2
+                        .userInfoEndpoint(userInfo ->
+                                userInfo.userService(customOAuth2UserService)
+                        )
+                        .successHandler(oAuth2SuccessHandler)
+                )
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt.decoder(jwtDecoder()))
                 )
                 .formLogin(f -> f.disable())
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                );
 
         return http.build();
     }
 
+    // ==========================
+    // 5) AUTHENTICATION MANAGER
+    // ==========================
     @Bean
-    public AuthenticationManager authenticationManager(HttpSecurity http,
-                                                       PasswordEncoder passwordEncoder,
-                                                       UserDetailsService userDetailsService) throws Exception {
+    public AuthenticationManager authenticationManager(
+            HttpSecurity http,
+            PasswordEncoder passwordEncoder,
+            UserDetailsService userDetailsService
+    ) throws Exception {
+
         AuthenticationManagerBuilder authBuilder =
                 http.getSharedObject(AuthenticationManagerBuilder.class);
 
@@ -74,27 +116,34 @@ public class SecurityConfiguration implements WebMvcConfigurer {
                 .userDetailsService(userDetailsService)
                 .passwordEncoder(passwordEncoder);
 
-        return authBuilder.build(); // Không cần .and()
+        return authBuilder.build();
     }
 
+    // ==========================
+    // 6) JWT CONVERTER
+    // ==========================
     @Bean
     public JwtAuthenticationConverter jwtAuthenticationConverter() {
-        JwtGrantedAuthoritiesConverter grantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
-        grantedAuthoritiesConverter.setAuthorityPrefix("ROLE_");
-        grantedAuthoritiesConverter.setAuthoritiesClaimName("permission");
+        JwtGrantedAuthoritiesConverter converter = new JwtGrantedAuthoritiesConverter();
+        converter.setAuthorityPrefix("ROLE_");
+        converter.setAuthoritiesClaimName("permission");
 
-        JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
-        jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(grantedAuthoritiesConverter);
-        return jwtAuthenticationConverter;
+        JwtAuthenticationConverter jwtConverter = new JwtAuthenticationConverter();
+        jwtConverter.setJwtGrantedAuthoritiesConverter(converter);
+        return jwtConverter;
     }
 
+    // ==========================
+    // 7) JWT DECODER
+    // ==========================
     @Bean
     public JwtDecoder jwtDecoder() {
-        NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withSecretKey(
+        NimbusJwtDecoder decoder = NimbusJwtDecoder.withSecretKey(
                 getSecretKey()).macAlgorithm(JwtUtil.JWT_ALGORITHM).build();
+
         return token -> {
             try {
-                return jwtDecoder.decode(token);
+                return decoder.decode(token);
             } catch (Exception e) {
                 System.out.println(">>> JWT error: " + e.getMessage());
                 throw e;
@@ -102,14 +151,24 @@ public class SecurityConfiguration implements WebMvcConfigurer {
         };
     }
 
+    // ==========================
+    // 8) JWT ENCODER
+    // ==========================
     @Bean
     public JwtEncoder jwtEncoder() {
         return new NimbusJwtEncoder(new ImmutableSecret<>(getSecretKey()));
     }
 
+    // ==========================
+    // 9) SECRET KEY
+    // ==========================
     private SecretKey getSecretKey() {
         byte[] keyBytes = Base64.from(jwtKey).decode();
-        return new SecretKeySpec(keyBytes, 0, keyBytes.length,
-                JwtUtil.JWT_ALGORITHM.getName());
+        return new SecretKeySpec(
+                keyBytes,
+                0,
+                keyBytes.length,
+                JwtUtil.JWT_ALGORITHM.getName()
+        );
     }
 }
