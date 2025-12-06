@@ -123,9 +123,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 
-        String redirectUrl = "http://localhost:5173/social-login"
-                + "?access_token=" + URLEncoder.encode(accessToken, StandardCharsets.UTF_8)
-                + "&user=" + userJson;
+        String redirectUrl = "http://localhost:5173/social-login";
 
         response.sendRedirect(redirectUrl);
     }
