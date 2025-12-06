@@ -58,6 +58,11 @@ public class SecurityConfiguration implements WebMvcConfigurer {
         return new OAuth2SuccessHandler(jwtUtil);
     }
 
+    @Bean
+    public OAuth2FailureHandler oAuth2FailureHandler() {
+        return new OAuth2FailureHandler();
+    }
+
     // ==========================
     // 4) MAIN SECURITY FILTER CHAIN
     // ==========================
@@ -65,7 +70,8 @@ public class SecurityConfiguration implements WebMvcConfigurer {
     public SecurityFilterChain filterChain(
             HttpSecurity http,
             CustomOAuth2UserService customOAuth2UserService,
-            OAuth2SuccessHandler oAuth2SuccessHandler
+            OAuth2SuccessHandler oAuth2SuccessHandler,
+            OAuth2FailureHandler oAuth2FailureHandler
     ) throws Exception {
 
         String[] whiteList = {
@@ -87,6 +93,7 @@ public class SecurityConfiguration implements WebMvcConfigurer {
                                 userInfo.userService(customOAuth2UserService)
                         )
                         .successHandler(oAuth2SuccessHandler)
+                        .failureHandler(oAuth2FailureHandler)
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt.decoder(jwtDecoder()))

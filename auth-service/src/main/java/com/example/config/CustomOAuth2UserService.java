@@ -30,7 +30,6 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
         OAuth2UserService<OAuth2UserRequest, OAuth2User> delegate = new DefaultOAuth2UserService();
         OAuth2User oAuth2User = delegate.loadUser(userRequest);
-        System.out.println("Google attributes: " + oAuth2User.getAttributes());
 
         String email = oAuth2User.getAttribute("email");
         String name = oAuth2User.getAttribute("name");
