@@ -1,4 +1,4 @@
-package com.example.config;
+package com.example.handler;
 
 import com.example.domain.entity.AuthUser;
 import com.example.domain.entity.Permission;

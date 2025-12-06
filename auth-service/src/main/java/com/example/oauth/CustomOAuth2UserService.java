@@ -1,4 +1,4 @@
-package com.example.config;
+package com.example.oauth;
 
 import com.example.domain.entity.AuthUser;
 import com.example.service.AuthUserService;

@@ -1,5 +1,8 @@
 package com.example.config;
 
+import com.example.handler.OAuth2FailureHandler;
+import com.example.handler.OAuth2SuccessHandler;
+import com.example.oauth.CustomOAuth2UserService;
 import com.example.service.AuthUserService;
 import com.example.util.JwtUtil;
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
